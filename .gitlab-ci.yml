@@ -1002,7 +1002,8 @@ check_SSE:
     - xvfb-run -s "-screen 0 1600x1200x24" make doc
   stage: test
   timeout: 45 minutes
-  tags: grenoble
+  tags:
+    - grenoble
   artifacts:
     paths:
       - install
