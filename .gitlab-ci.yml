@@ -780,7 +780,8 @@ test_SSE:
     - cat /etc/os-release
     - if grep -q "Arch Linux" /etc/issue; then /usr/sbin/uname -m; else  /usr/bin/dpkg --print-architecture ; fi
   timeout: 35 minutes
-  tags: grenoble
+  tags:
+    - grenoble
 
 check_16_04:
   <<: *check_definition
