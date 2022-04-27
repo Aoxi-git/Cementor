@@ -92,6 +92,9 @@ variables:
   <<: *platforms_definition
   <<: *gitlab_runner_retry_definition
   stage: build
+  tags:
+    - fast
+    - grenoble
   script:
     - cd ./data
     - git log --oneline -n 5
@@ -198,9 +201,6 @@ variables:
     - cat /etc/os-release
     - if grep -q "Arch Linux" /etc/issue; then /usr/sbin/uname -m; else  /usr/bin/dpkg --print-architecture ; fi
     - echo -e "\n\e[93m===\n(make_minimal only) clang-format reports CHANGED_LINES = "$CHANGED_LINES"\n===\e[0m\n";
-  tags:
-    - fast
-    - grenoble
 
 .artifacts_template: &artifacts_definition
   artifacts:
@@ -524,8 +524,8 @@ make_SSE:
     when: always
     paths:
       - screenshots
-    tags:
-      - grenoble
+  tags:
+    - grenoble
 
 test_16_04:
   <<: *test_definition
