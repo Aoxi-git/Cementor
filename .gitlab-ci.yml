@@ -96,6 +96,7 @@ variables:
     - fast
     - grenoble
   script:
+    - whoami
     - cd ./data
     - git log --oneline -n 5
     - cd ..
@@ -186,6 +187,9 @@ variables:
     - if [[ ${CI_RUNNER_DESCRIPTION} == "y8pak" || ${CI_RUNNER_DESCRIPTION} == "c8pak" || ${CI_RUNNER_DESCRIPTION} == "y9pak" || ${CI_RUNNER_DESCRIPTION} == "c9pak" || ${CI_RUNNER_DESCRIPTION} == "yade-nova1" || ${CI_RUNNER_DESCRIPTION} == "yade-nova2" ]] ; then export MAX_CCACHE="500.0G"; else export MAX_CCACHE="200.0G"; fi
     - if [[ ${CI_RUNNER_DESCRIPTION} == "atak0" ]] ; then export MAX_CCACHE="100.0G"; fi
     - echo "max_size = ${MAX_CCACHE}" > ~/.ccache/ccache.conf
+    - echo "temporary_dir = /tmp" >> ~/.ccache/ccache.conf
+    - echo "umask = 002" >> ~/.ccache/ccache.conf
+    - cat  ~/.ccache/ccache.conf
     - ccache -s
     - make install -j $JOBSNUM
     - make clean
