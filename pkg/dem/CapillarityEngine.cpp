@@ -141,6 +141,7 @@ void CapillarityEngine::solveBridgesT(Real suction, bool reset)
 	if (!scene) cerr << "scene not defined!";
 	shared_ptr<BodyContainer>& bodies = scene->bodies;
 	if (dtPbased.number_of_vertices() < 1) triangulateData();
+	if (dtPbased.number_of_vertices() < 1) return; //something went wrong, probably no input files, return
 	if (fusionDetection && !bodiesMenisciiList.initialized) bodiesMenisciiList.prepare(scene);
 	timingDeltas->checkpoint("init solver");
 
@@ -294,6 +295,7 @@ shared_ptr<CapillaryPhysDelaunay> CapillarityEngine::solveStandalone(
 {
 	if (dtPbased.number_of_vertices() < 1) triangulateData();
 	if (not bridge) bridge = shared_ptr<CapillaryPhysDelaunay>(new CapillaryPhysDelaunay());
+	if (dtPbased.number_of_vertices() < 1) return bridge; //something went wrong, probably no input files, return
 
 	Real Dinterpol = gap / R1;
 	Real Pinterpol = pressure * R1 / liquidTension;
