@@ -6,10 +6,8 @@ from __future__ import print_function
 ##### the screenshot parameters       #####
 ############################################
 from testGuiHelper import TestGUIHelper
-# FIXME: it should deduce the name automatically, it's the end of the filename. See also testGui.sh
-#        if you add a new file, you have to manually add it into scripts/checks-and-tests/gui/testGui.sh
-#        or even better finally fix this FIXME, so that it works automatically
-#        and just like scripts/checks-and-tests/checks/checkList.py is finding all the files to run.
+# FIXME: it should deduce the name automatically, it's the end of the filename.
+
 scr = TestGUIHelper("Simple")
 
 ############################################
