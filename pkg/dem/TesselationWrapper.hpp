@@ -14,6 +14,11 @@
 #include <core/Scene.hpp>
 #include <pkg/common/Sphere.hpp>
 #include <pkg/dem/MicroMacroAnalyser.hpp>
+#ifdef YADE_OPENGL
+#include <pkg/common/OpenGLRenderer.hpp>
+#include <lib/opengl/GLUtils.hpp>
+#include <lib/opengl/OpenGLWrapper.hpp>
+#endif
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -45,12 +50,13 @@ public:
 	typedef Tesselation::AlphaFace                           AlphaFace;
 	typedef Tesselation::AlphaCap                            AlphaCap;
 
-	mutable Tesselation* Tes; // Modifying internal state of Tesselation in read-only functions is allowed.
+	/*mutable */Tesselation* Tes; // Modifying internal state of Tesselation in read-only functions is allowed.
 	Real                 mean_radius, inf;
 	bool                 rad_divided;
 	bool                 bounded;
 	CGT::Point           Pmin;
 	CGT::Point           Pmax;
+	vector<Vector3r> 	 segments;
 
 	~TesselationWrapper();
 
@@ -75,10 +81,10 @@ public:
 	void computeTesselation(Real pminx, Real pmaxx, Real pminy, Real pmaxy, Real pminz, Real pmaxz);
 
 	void                testAlphaShape(Real alpha) { Tes->testAlphaShape(alpha); }
-	boost::python::list getAlphaFaces(Real alpha) const;
-	boost::python::list getAlphaCaps(Real alpha, Real shrinkedAlpha, bool fixedAlpha) const;
-	boost::python::list getAlphaVertices(Real alpha) const;
-	boost::python::list getAlphaGraph(Real alpha, Real shrinkedAlpha, bool fixedAlpha) const;
+	boost::python::list getAlphaFaces(Real alpha);
+	boost::python::list getAlphaCaps(Real alpha, Real shrinkedAlpha, bool fixedAlpha);
+	boost::python::list getAlphaVertices(Real alpha);
+	boost::python::list getAlphaGraph(Real alpha, Real shrinkedAlpha, bool fixedAlpha);
 	void                applyAlphaForces(Matrix3r stress, Real alpha, Real shrinkedAlpha, bool fixedAlpha);
 	void                applyAlphaVel(Matrix3r velGrad, Real alpha, Real shrinkedAlpha, bool fixedAlpha);
 	Matrix3r            calcAlphaStress(Real alpha, Real shrinkedAlpha, bool fixedAlpha);
@@ -134,7 +140,7 @@ public:
 	MicroMacroAnalyser  mma;
 
 	// clang-format off
-	YADE_CLASS_BASE_DOC_ATTRS_DEPREC_INIT_CTOR_PY(TesselationWrapper,GlobalEngine,"Handle the triangulation of spheres in a scene, build tesselation on request, and give access to computed quantities (see also the :ref:`dedicated section in user manual <MicroStressAndMicroStrain>`). The calculation of microstrain is explained in [Catalano2014a]_ \n\nSee example usage in script example/tesselationWrapper/tesselationWrapper.py.\n\nBelow is an output of the :yref:`defToVtk<TesselationWrapper::defToVtk>` function visualized with paraview (in this case Yade's TesselationWrapper was used to process experimental data obtained on sand by Edward Ando at Grenoble University, 3SR lab.)\n\n.. figure:: fig/localstrain.*\n\t:width: 9cm",
+	YADE_CLASS_BASE_DOC_ATTRS_DEPREC_INIT_CTOR_PY(TesselationWrapper,GlobalEngine,"Handle the triangulation of spheres in a scene, build tesselation on request, and give access to computed quantities (see also the :ref:`dedicated section in user manual <MicroStressAndMicroStrain>`). The calculation of microstrain is explained in [Catalano2014a]_ \n\nSee example usage in script example/tesselationWrapper/tesselationWrapper.py.\n\nBelow is an output of the :yref:`defToVtk<TesselationWrapper::defToVtk>` function visualized with paraview (in this case Yade's TesselationWrapper was used to process experimental data obtained on sand by Edward Ando at Grenoble University, 3SR lab.)\n\n.. figure:: fig/localstrain.*\n\t:width: 9cm\n\nThe definition of outer contours of arbitrary shapes and the application of stress on them, based on CGAL's 'alpha shapes' is also possible. See :ysrc:`scripts/examples/alphaShapes/GlDrawAlpha.py` (giving the figure below) and other examples therein. Read more in [Pekmezi2020]_ and further papers by the same authors. \n\n.. figure:: fig/alphaShape.*\n\t:width: 9cm",
 	((unsigned int,n_spheres,0,,"|ycomp|"))
 	((Real,far,10000.,,"Defines the radius of the large virtual spheres used to define nearly flat boundaries around the assembly. The radius will be the (scene's) bounding box size multiplied by 'far'. Higher values will minimize the error theoretically (since the infinite sphere really defines a plane), but it may increase numerical errors at some point. The default should give a resonable compromize."))
 	((Real,alphaCapsVol,0.,,"The volume of the packing as defined by the boundary alpha cap polygons"))
@@ -177,6 +183,52 @@ public:
 };
 REGISTER_SERIALIZABLE(TesselationWrapper);
 //} // namespace CGT
+
+#ifdef YADE_OPENGL
+
+class GlExtra_AlphaGraph : public GlExtraDrawer {
+public:
+	bool reset;
+	Real alpha;
+	Real shrinkedAlpha;
+	bool fixedAlpha;
+	static GLUquadric* gluQuadric;
+	static int glCylinderList, oneCylinder;
+	vector<Eigen::Transform<Real, 3, Eigen::Affine>> rots;
+	vector<Real> lengths;
+	vector<Vector3r> pos;
+// #define BREAK_OPENGL
+#ifndef BREAK_OPENGL // This declaration is fine, see the #ifdef  below
+	vector<Vector3r> segments;
+#endif
+
+	Real getAlpha() const {return  alpha;}; void setAlpha(Real a) {reset=true; alpha=a;};
+	Real getShrinkedAlpha() const {return  shrinkedAlpha;}; void setShrinkedAlpha(Real a) {reset=true; shrinkedAlpha=a;};
+	bool getFixedAlpha() const {return  fixedAlpha;}; void setFixedAlpha(bool a) {reset=true; fixedAlpha=a;};
+	void render() override;
+
+	// clang-format off
+	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(GlExtra_AlphaGraph,GlExtraDrawer,"Display the outer surface defined by alpha contour. Add it to qt.Renderer().extraDrawers. If no instance of TesselationWrapper is provided, the functor will create its own. See :ysrc:`scripts/examples/alphaShapes/GlDrawAlpha.py`.",
+		((shared_ptr<TesselationWrapper>,tesselationWrapper,shared_ptr<TesselationWrapper>(),,"Associated instance of TesselationWrapper."))
+#ifdef BREAK_OPENGL // for some reason QGLViewer hangs when 'segments' has python binding, reason is unknown. See the #ifndef above.
+		((vector<Vector3r>, segments,,,"segments describing the alpha contour"))
+#endif
+		((Vector3r, color,Vector3r(0.3, 0.3, 0.7),,"color"))
+		((Real, lineWidth,3,,"lineWidth in pixels"))
+		((Real, radius, 0,,"radius of cylinder representation, if null 1/12th of average diameter will be used"))
+		((bool, lighting, true,,"lighting of cylinders"))
+		((bool, wire, false,,"display as solid cylinders or lines"))
+		,/*ctor*/
+		alpha=0; shrinkedAlpha=0; fixedAlpha=false; reset=bool(tesselationWrapper);
+		, /*py*/
+		.add_property("alpha",&GlExtra_AlphaGraph::getAlpha,&GlExtra_AlphaGraph::setAlpha,"alpha value")
+		.add_property("shrinkedAlpha",&GlExtra_AlphaGraph::getShrinkedAlpha,&GlExtra_AlphaGraph::setShrinkedAlpha,"shrinkedAlpha value")
+		.add_property("fixedAlpha",&GlExtra_AlphaGraph::getFixedAlpha,&GlExtra_AlphaGraph::setFixedAlpha,"fixedAlpha option")
+	);
+	// clang-format on
+};
+REGISTER_SERIALIZABLE(GlExtra_AlphaGraph);
+#endif /*OPENGL*/
 
 } // namespace yade
 

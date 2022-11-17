@@ -22,6 +22,14 @@
 #include <lib/pyutil/numpy_boost.hpp>
 #pragma GCC diagnostic pop
 
+#ifdef YADE_OPENGL
+#include <lib/opengl/GLUtils.hpp>
+#include <lib/opengl/OpenGLWrapper.hpp>
+#include <pkg/common/GLDrawFunctors.hpp>
+#include <chrono>
+#include <thread>
+#endif
+
 namespace yade { // Cannot have #include directive inside.
 
 using math::max;
@@ -170,11 +178,11 @@ void TesselationWrapper::clear2(void) //for testing purpose
 void TesselationWrapper::insertSceneSpheres(bool reset)
 {
 	// declaration of ‘scene’ shadows a member of ‘yade::TesselationWrapper’ [-Werror=shadow]
-	Scene* scene2 = Omega::instance().getScene().get();
+// 	Scene* scene2 = Omega::instance().getScene().get();
 	// 	Real_timer clock;
 	//         clock.start();
-	const shared_ptr<BodyContainer>& bodies = scene2->bodies;
-	build_triangulation_with_ids(bodies, *this, reset);
+// 	const shared_ptr<BodyContainer>& bodies = scene2->bodies;
+	build_triangulation_with_ids(scene->bodies, *this, reset);
 	// 	clock.top("Triangulation");
 }
 
@@ -390,7 +398,7 @@ boost::python::dict TesselationWrapper::calcVolPoroDef(bool deformation)
 	return ret;
 }
 
-boost::python::list TesselationWrapper::getAlphaFaces(Real alpha) const
+boost::python::list TesselationWrapper::getAlphaFaces(Real alpha)
 {
 	vector<AlphaFace> faces;
 	Tes->setAlphaFaces(faces, alpha);
@@ -400,7 +408,7 @@ boost::python::list TesselationWrapper::getAlphaFaces(Real alpha) const
 	return ret;
 }
 
-boost::python::list TesselationWrapper::getAlphaCaps(Real alpha, Real shrinkedAlpha, bool fixedAlpha) const
+boost::python::list TesselationWrapper::getAlphaCaps(Real alpha, Real shrinkedAlpha, bool fixedAlpha)
 {
 	vector<AlphaCap> caps;
 	Tes->setExtendedAlphaCaps(caps, alpha, shrinkedAlpha, fixedAlpha);
@@ -461,16 +469,17 @@ Matrix3r TesselationWrapper::calcAlphaStress(Real alpha, Real shrinkedAlpha, boo
 	return cauchyLWS;
 }
 
-boost::python::list TesselationWrapper::getAlphaGraph(Real alpha, Real shrinkedAlpha, bool fixedAlpha) const
+boost::python::list TesselationWrapper::getAlphaGraph(Real alpha, Real shrinkedAlpha, bool fixedAlpha)
 {
-	vector<Vector3r>    segments = Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
+	insertSceneSpheres(true);
+	segments = Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
 	boost::python::list ret;
 	for (auto f = segments.begin(); f != segments.end(); f++)
 		ret.append(*f);
 	return ret;
 }
 
-boost::python::list TesselationWrapper::getAlphaVertices(Real alpha) const
+boost::python::list TesselationWrapper::getAlphaVertices(Real alpha)
 {
 	vector<int>         vertices = Tes->getAlphaVertices(alpha);
 	boost::python::list ret;
@@ -478,6 +487,81 @@ boost::python::list TesselationWrapper::getAlphaVertices(Real alpha) const
 		ret.append(*f);
 	return ret;
 }
+
+#ifdef YADE_OPENGL
+
+YADE_PLUGIN((GlExtra_AlphaGraph))
+
+GLUquadric* GlExtra_AlphaGraph::gluQuadric = NULL;
+int GlExtra_AlphaGraph::glCylinderList = -1;
+int GlExtra_AlphaGraph::oneCylinder = -1;
+
+void GlExtra_AlphaGraph::render()
+{
+	if (not tesselationWrapper) tesselationWrapper=shared_ptr<TesselationWrapper>(new TesselationWrapper);
+	if (tesselationWrapper->segments.size()==0 or reset) {
+		tesselationWrapper->insertSceneSpheres(true);
+		segments = tesselationWrapper->segments = tesselationWrapper->Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
+		reset = true;
+	} else segments = tesselationWrapper->segments;
+	if (reset and not wire) {
+		rots.clear();
+		lengths.clear();
+	}
+	const vector<Vector3r>& segments_ = segments;
+	unsigned maxI = segments_.size()-1;
+ 	glLineWidth(lineWidth);
+	glColor3v(color);
+	if (lighting) glEnable(GL_LIGHTING);
+	else glDisable(GL_LIGHTING);
+	glDisable(GL_CULL_FACE);
+	if ((rots.size()==0 or reset) and not wire) {
+		Real radiusTemp=0;
+		unsigned i=0;
+		while (i<maxI ) {
+			const Vector3r&        p1        = segments_[i];
+			const Vector3r&        p2        = segments_[i+1];
+			Vector3r relPos = p2 - p1;
+			Real length = relPos.norm();
+			lengths.push_back(length);
+			rots.push_back( Eigen::Transform<Real, 3, Eigen::Affine>(Quaternionr().setFromTwoVectors(Vector3r(0, 0, 1), relPos / length) ) );
+			radiusTemp += length;
+			i+=2;
+		}
+		if (radius==0) radius = radiusTemp/Real(i*3);
+		reset = false;
+	}
+	if (glCylinderList<0) // will always be true unless the glGenLists() below is commented in (not sure it helps, should be tested)
+	{
+		unsigned i = 0, jj=0;
+		if (!gluQuadric) {
+		gluQuadric = gluNewQuadric();
+		if (!gluQuadric) throw runtime_error("Gl1_NormPhys::go unable to allocate new GLUquadric object (out of memory?).");
+		}
+// 		glCylinderList = glGenLists(1);
+// 		glNewList(glCylinderList, GL_COMPILE); // create the list here, call it after the "if{}".
+		while (i<maxI ) {
+			const Vector3r&        p1        = segments_[i];
+			const Vector3r&        p2        = segments_[i+1];
+			if (wire) {
+				glBegin(GL_LINES);
+				glVertex3v(p1);
+				glVertex3v(p2);
+				glEnd();
+			} else {
+				glPushMatrix();
+				glTranslatev(p1);
+				glMultMatrix(rots[jj].data());
+				gluCylinder(gluQuadric, radius, radius, lengths[jj], 4, 1);
+				glPopMatrix();
+			}
+			i+=2;
+			++jj;
+		}
+	}	
+// 	glCallList(glCylinderList);
+}
+#endif /*OPENGL*/
 
 } // namespace yade
 
