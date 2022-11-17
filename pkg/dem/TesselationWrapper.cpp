@@ -529,7 +529,7 @@ int GlExtra_AlphaGraph::oneCylinder = -1;
 void GlExtra_AlphaGraph::render()
 {
 	if (not tesselationWrapper) tesselationWrapper=shared_ptr<TesselationWrapper>(new TesselationWrapper);
-	cerr<<"vertices in render "<<Tes->Triangulation().number_of_vertices()<<endl;
+	cerr<<"vertices in render "<<tesselationWrapper->Tes->Triangulation().number_of_vertices()<<endl;
 	if (tesselationWrapper->Tes->Triangulation().number_of_vertices()==0) tesselationWrapper->insertSceneSpheres(true);
 	if (tesselationWrapper->segments.size()==0 or reset) {
 		segments = tesselationWrapper->segments = tesselationWrapper->Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
