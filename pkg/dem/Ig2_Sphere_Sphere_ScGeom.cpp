@@ -51,8 +51,10 @@ bool Ig2_Sphere_Sphere_ScGeom::go(
 	Real penetrationDepth = s1->radius + s2->radius - norm;
 	scm->contactPoint     = se31.position + (s1->radius - 0.5 * penetrationDepth) * normal; //0.5*(pt1+pt2);
 	scm->penetrationDepth = penetrationDepth;
-	scm->radius1          = s1->radius;
-	scm->radius2          = s2->radius;
+	if (updateRadius) {
+		scm->radius1          = s1->radius;
+		scm->radius2          = s2->radius;
+	}
 	scm->precompute(state1, state2, scene, c, normal, isNew, shift2, avoidGranularRatcheting);
 	TIMING_DELTAS_CHECKPOINT("Ig2_Sphere_Sphere_ScGeom");
 	return true;
