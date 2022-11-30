@@ -100,6 +100,7 @@ Many functions introduced in next sections return list of bodies which can be re
 
 As those functions use :yref:`sphere<yade.utils.sphere>` and :yref:`facet<yade.utils.facet>` internally, they accept additional arguments passed to those functions. In particular, material for each body is selected following the rules above (last one if not specified, by label, by index, etc.).
 
+.. _ClumpSection:
 
 Clumping particles together
 ----------------------------
@@ -687,6 +688,9 @@ Imposing conditions
 ====================
 
 In most simulations, it is not desired that all particles float freely in space. There are several ways of imposing boundary conditions that block movement of all or some particles with regard to global space.
+
+.. note:: When using :yref:`Clump` bodies discussed in above section :ref:`ClumpSection`, the following paragraphs apply to the Clump bodies themselves (not to their members).
+
 
 Motion constraints
 ------------------
@@ -1456,10 +1460,12 @@ While job is running, the batch system presents progress via simple HTTP server 
 
 	Summary page available at port 9080 as batch is processed (updates every 5 seconds automatically). Possible job statuses are pending, running, done, failed.
 
+.. _OARsection:
+
 Batch execution on Job-based clusters (OAR)
 ===========================================
 
-On High Performance Computation clusters with a scheduling system, the following script might be useful. Exactly like yade-batch, it handles assignemnt of parameters value to python variables in simulation script from a parameter table, and job submission. This script is written for `oar-based <http://oar.imag.fr>`_ system , and may be extended to others ones. On those system, usually, a job can't run forever and has a specific duration allocation.
+On High Performance Computation (HPC) clusters with a scheduling system, the following script might be useful. Exactly like yade-batch, it handles assignemnt of parameters value to python variables in simulation script from a parameter table, and job submission. This script is written for `oar-based <http://oar.imag.fr>`_ system , and may be extended to others ones. On those system, usually, a job can't run forever and has a specific duration allocation.
 The whole job submission consists of 3 files:
 
 Simulation script:
@@ -1489,7 +1495,7 @@ and it will generate one launch script and submit one job for each parameter tab
 	You have to specify either --oar-walltime or a !WALLTIME column in params.table. !WALLTIME will override --oar-walltime
 	
 .. warning::
-	yade-oar is not compiled by default. Use -DENABLE_OAR=1 option to cmake to enable it.
+	yade-oar is not compiled by default, use -DENABLE_OAR=1 option to cmake to enable it. Please note also that submitting yade jobs (or yade-batch jobs) through OAR does not actually require to use yade-oar. The point of yade-oar is about making yade submit a batch of OAR jobs, instead of sumbitting a yade batch as one OAR job. Mind that it may be viewed as a hack of the OAR scheduler itself by some HPC admins.
 
 
 ***************

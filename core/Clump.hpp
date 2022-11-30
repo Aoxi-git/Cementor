@@ -105,7 +105,7 @@ public:
 	boost::python::dict members_get();
 
 	// clang-format off
-	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Clump,Shape,"Rigid aggregate of bodies",
+	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Clump,Shape,"Rigid aggregate of bodies whose usage is detailed :ref:`here<ClumpSection>`",
 		((MemberMap,members,,Attr::hidden,"Ids and relative positions+orientations of members of the clump (should not be accessed directly)"))
 		 ((vector<int>,ids,,Attr::readonly,"Ids of constituent particles (only informative; direct modifications will have no effect).")) //FIXME
 		,/*ctor*/ createIndex();

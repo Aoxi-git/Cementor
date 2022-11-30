@@ -279,7 +279,7 @@ In the above, note the ``cmake -DOPTION1=VALUE1 -DOPTION2=VALUE2`` syntax which 
 	* DISABLE_PKGS: comma-separated list of disabled packages i.e. names of source subdirectories under `pkg`, `preprocessing` or `postprocessing`, e.g. ``cmake -DDISABLE_PKGS=fem,pfv,image``. If empty all packages will be built. The packages `common` and `dem` are required to run, but the project can be compiled without them. (EMPTY by default)
 	* ENABLE_ASAN: AddressSanitizer allows detection of memory errors, memory leaks, heap corruption errors and out-of-bounds accesses but it is slow (OFF by default)
 	* ENABLE_FAST_NATIVE: use maximum optimization compiler flags including ``-Ofast`` and ``-mtune=native``. Note: ``native`` means that code will **only** run on the same processor type on which it was compiled. Observed speedup was 2% (below standard deviation measurement error) and above 5% if clang compiler was used. (OFF by default)
-	* ENABLE_OAR: generate a script for oar-based task scheduler (OFF by default)
+	* ENABLE_OAR: generate a script for oar-based task scheduler, as discussed :ref:`here<OARsection>` (OFF by default)
 	* ENABLE_USEFUL_ERRORS: enable useful compiler errors which help a lot in error-free development (ON by default)
 	* LIBRARY_OUTPUT_PATH: path to install libraries (lib by default)
 	* MAX_LOG_LEVEL: :ref:`set maximum level <maximum-log-level>` for LOG_* macros compiled with below ``ENABLE_LOGGER``, (default is 5)
