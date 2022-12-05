@@ -12,15 +12,6 @@
 #include <pkg/levelSet/LevelSet.hpp>
 
 namespace yade {
-class Bo1_LevelSet_Aabb : public BoundFunctor {
-public:
-	void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*) override;
-	FUNCTOR1D(LevelSet);
-	YADE_CLASS_BASE_DOC(Bo1_LevelSet_Aabb, BoundFunctor, "Creates/updates an :yref:`Aabb` of a :yref:`LevelSet`");
-	DECLARE_LOGGER;
-};
-REGISTER_SERIALIZABLE(Bo1_LevelSet_Aabb);
-
 class Ig2_LevelSet_LevelSet_ScGeom : public IGeomFunctor {
 public:
 	bool go(const shared_ptr<Shape>&,
