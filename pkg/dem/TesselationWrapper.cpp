@@ -532,9 +532,15 @@ void GlExtra_AlphaGraph::render()
 	if (not tesselationWrapper) tesselationWrapper=shared_ptr<TesselationWrapper>(new TesselationWrapper);
 	if (tesselationWrapper->Tes->Triangulation().number_of_vertices()==0) tesselationWrapper->insertSceneSpheres(true);
 	if (tesselationWrapper->segments.size()==0 or reset) {
-		segments = tesselationWrapper->segments = tesselationWrapper->Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
+#ifdef BREAK_OPENGL
+		segments = 
+#endif
+		tesselationWrapper->segments = tesselationWrapper->Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
 		reset = true;
-	} else segments = tesselationWrapper->segments;
+	}
+#ifdef BREAK_OPENGL
+	else segments = tesselationWrapper->segments;
+#endif
 	if ((reset or refreshDisplay) and not wire) {
 		rots.clear();
 		lengths.clear();

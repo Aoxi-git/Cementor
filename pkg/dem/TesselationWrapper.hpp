@@ -202,16 +202,13 @@ public:
 	vector<Eigen::Transform<Real, 3, Eigen::Affine>> rots;
 	vector<Real> lengths;
 	vector<Vector3r> pos;
-// #define BREAK_OPENGL
-#ifndef BREAK_OPENGL // This declaration is fine, see the #ifdef  below
-	vector<Vector3r> segments;
-#endif
-
 	Real getAlpha() const {return  alpha;}; void setAlpha(Real a) {reset=true; alpha=a;};
 	Real getShrinkedAlpha() const {return  shrinkedAlpha;}; void setShrinkedAlpha(Real a) {reset=true; shrinkedAlpha=a;};
 	bool getFixedAlpha() const {return  fixedAlpha;}; void setFixedAlpha(bool a) {reset=true; fixedAlpha=a;};
 	void render() override;
 	void refresh() {refreshDisplay=true;};
+
+// #define BREAK_OPENGL
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(GlExtra_AlphaGraph,GlExtraDrawer,"Display the outer surface defined by alpha contour. Add it to qt.Renderer().extraDrawers. If no instance of TesselationWrapper is provided, the functor will create its own. See :ysrc:`scripts/examples/alphaShapes/GlDrawAlpha.py`.",
