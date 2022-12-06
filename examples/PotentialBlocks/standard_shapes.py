@@ -1,7 +1,7 @@
 # -*- encoding=utf-8 -*-
 # 2022 © Vasileios Angelidakis <vasileios.angelidakis@ncl.ac.uk>
 
-# Gravity deposition of regular polyhedra (Platonic solids) in a cylindrical packing, using the Potential Blocks
+# Showcase of shapes that can be generated using the potential_utils module
 
 from yade import pack, utils
 from potential_utils import * 
