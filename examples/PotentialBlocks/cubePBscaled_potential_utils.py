@@ -1,7 +1,7 @@
 # -*- encoding=utf-8 -*-
 # 2022 © Vasileios Angelidakis <vasileios.angelidakis@ncl.ac.uk>
 
-# Duplicate script of cubePBscaled.py, simplified using the "PB_utils" module.
+# Duplicate script of cubePBscaled.py, simplified using the "potential_utils" module.
 
 from yade import pack
 from potential_utils import * 
