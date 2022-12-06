@@ -30,13 +30,6 @@ O.engines=[
 ]
 
 # ------------------------------------------------------------------------------------------------------------------------------------------ #
-## PB_utils module
-#import sys
-##sys.path.append('/home/b7063391/myYade/Triaxial_Ballast/') #for yadedaily to import the PB_utils_SourceScript
-#sys.path.append(os.getcwd()) # FIXME: Remove this once I integrate the utils module in YADE! FIXME
-#from PB_utils_SourceScript import *
-
-# ------------------------------------------------------------------------------------------------------------------------------------------ #
 # Create cuboidal packing of non-intersecting platonic solids with the same circumradius
 rc=0.05
 length=20.0*rc

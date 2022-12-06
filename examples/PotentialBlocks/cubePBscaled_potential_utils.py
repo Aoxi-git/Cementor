@@ -3,18 +3,9 @@
 
 # Duplicate script of cubePBscaled.py, simplified using the "PB_utils" module.
 
-# ----------------------------------------------------------------------------------------------------------------------------
-# PB_utils module
-#import sys
-#sys.path.append(os.getcwd()) # FIXME: Remove this once I integrate the utils module in YADE! FIXME
-##sys.path.append('/nishome/vas/myYade/YADE_potential_utils/EXAMPLES_PB_utils/valid_scripts_after_simplifying_platonic_solids') #for yadedaily to import the PB_utils_SourceScript
-#from PB_utils_SourceScript import *
-# ----------------------------------------------------------------------------------------------------------------------------
-
 from yade import pack
 from potential_utils import * 
 import math
-
 
 recordVTK=False
 # ----------------------------------------------------------------------------------------------------------------------------

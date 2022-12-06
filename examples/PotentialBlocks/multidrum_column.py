@@ -55,13 +55,6 @@ O.engines=[
 	NewtonIntegrator(damping=0.0,exactAsphericalRot=True,gravity=[0,0,-9.81], label='newton'),
 ]
 
-
-# -----------------------------------------------------------------------------
-## PB_utils module
-#import sys
-#sys.path.append(os.getcwd()) # FIXME: Remove this once I integrate the utils module in YADE! FIXME
-#from PB_utils_SourceScript import *
-
 # -----------------------------------------------------------------------------
 # Create drum column with variable cross-sections
 
