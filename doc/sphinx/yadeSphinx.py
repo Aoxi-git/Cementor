@@ -65,6 +65,7 @@ mods={
         , 'timing'          : []
         , 'utils'           : ['_utils']
         , 'polyhedra_utils' : ['_polyhedra_utils']
+        , 'potential_utils' : []
         , 'ymport'          : []
         , 'geom'            : []
         , 'bodiesHandling'  : []
