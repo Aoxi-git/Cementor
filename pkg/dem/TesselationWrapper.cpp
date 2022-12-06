@@ -182,7 +182,6 @@ void TesselationWrapper::insertSceneSpheres(bool reset)
 	// 	Real_timer clock;
 	//         clock.start();
 // 	const shared_ptr<BodyContainer>& bodies = scene2->bodies;
-	cerr<<"BUILDING!"<<endl;
 	build_triangulation_with_ids(scene->bodies, *this, reset);
 	// 	clock.top("Triangulation");
 }
@@ -503,7 +502,6 @@ Matrix3r TesselationWrapper::calcAlphaStress(Real alpha, Real shrinkedAlpha, boo
 
 boost::python::list TesselationWrapper::getAlphaGraph(Real alpha, Real shrinkedAlpha, bool fixedAlpha)
 {
-	cerr<<"vertices in getAlphaGraph "<<Tes->Triangulation().number_of_vertices()<<endl;
 	if (Tes->Triangulation().number_of_vertices()==0) insertSceneSpheres(true);
 	segments = Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
 	boost::python::list ret;
