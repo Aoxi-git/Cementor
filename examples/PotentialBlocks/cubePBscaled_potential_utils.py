@@ -30,11 +30,7 @@ O.engines=[
 		[Law2_SCG_KnKsPBPhys_KnKsPBLaw(label='law',neverErase=False, allowViscousAttraction=True, traceEnergy=False)]
 	),
 	NewtonIntegrator(damping=0.0,exactAsphericalRot=True,gravity=[0,-9.81,0]),
-#	PotentialBlockVTKRecorder(fileName='./vtk/cubePBscaled',iterPeriod=10000,twoDimension=False,sampleX=50,sampleY=50,sampleZ=50,maxDimension=0.2,label='vtkRecorder')
 ]
-
-# FIXME: Add a VTKExporter instead of the costly PotentialBlockVTKRecorder
-
 
 powderDensity = 2000
 meanSize = 1.0
@@ -137,7 +133,7 @@ def removeLid():
 O.dt = 0.2*sqrt(0.3*O.bodies[0].state.mass/1.0e8)
 
 
-# ────────────────────────────────────────────────────────────────────────────────────────────────────────── #
+# ----------------------------------------------------------------------------------------------------------------------------
 if recordVTK:
 	# Take snapshots
 #	O.engines=O.engines+[SnapshotEngine(iterPeriod=100,fileBase='vtk/jenga-',firstIterRun=10,label='snapshooter')]

@@ -9,35 +9,7 @@ import math, os, errno
 from numpy import array
 
 # -----------------------------------------------------------------------------
-# Clear the directory where the VTK results will be written of all files (but not subdirectories).
-# The directory is cleared, so files from previous runs do not interfere with files from new runs.
-# If the directory does not exist, it is created.
-
-#import os, shutil
-#folder = './vtk_Cylinder_PB_utils'
-#try:
-#	os.mkdir(folder[2:])
-#except:
-#	for the_file in os.listdir(folder):
-#		file_path = os.path.join(folder, the_file)
-#		try:
-#			if os.path.isfile(file_path):
-#				os.unlink(file_path)
-##			elif os.path.isdir(file_path): shutil.rmtree(file_path) #uncomment this to also delete the subdirectories
-#		except Exception as e:
-#			print(e)
-
-
-# -----------------------------------------------------------------------------
-# Material Parameters
-m = FrictMat()
-m.density = 2000 #kg/m^3 
-m.young = -1 #Pa
-m.poisson = -1
-m.frictionAngle = atan(0.4) #rad
-O.materials.append(m)
-
-#O.materials.append(FrictMat(young=-1,poisson=-1,frictionAngle=radians(30.0),density=2000,label='frictionless'))
+m=O.materials.append(FrictMat(young=-1,poisson=-1,frictionAngle=atan(0.4),density=2000,label='frictionless'))
 
 Kn = 1e8 #Pa/m
 Ks = Kn*2/3 #Pa/m
