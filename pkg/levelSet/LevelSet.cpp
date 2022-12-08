@@ -155,7 +155,7 @@ bool LevelSet::rayTraceInCell(const Vector3r& ray, const Vector3r& pointP, const
 	LOG_INFO(
 	        "We think finding surface-ray intersection is like finding the roots of this polynom (coeffs of increasing order):\n"
 	        << coeffs[0] << " " << coeffs[1] << " " << coeffs[2] << " " << coeffs[3]);
-	// Then, solving for the 1st root given by Boost root finding algorithm boost::math::tools::newton_raphson_iterate, in a -2 line syntax thanks to this C++11 lambda notation, that replaces going through e.g. an operator() of some struct (whose instance may depend on coeffs)
+	// Then, solving for the 1st root given by Boost root finding algorithm boost::math::tools::newton_raphson_iterate, in a concise syntax thanks to C++11 lambda notation, that replaces going through e.g. an operator() of some struct (whose instance may depend on coeffs)
 	Real root(boost::math::tools::newton_raphson_iterate(
 	        [coeffs](Real k) {
 		        return std::make_tuple( // (only ?) problematic part for High Precision (HP) compatibility and REAL_* cmake options different than 64
@@ -189,14 +189,16 @@ bool LevelSet::rayTraceInCell(const Vector3r& ray, const Vector3r& pointP, const
 	                / spac << " ; while nodesTol*epsilon = " << nodesTol * Mathr::EPSILON);
 	if (surfNodes.size() > 0)
 		LOG_INFO(
-		        "And previous node is " << surfNodes.back() << " whose comparison with gives (in absolute norm)"
+		        "And previous node is " << surfNodes.back() << " whose comparison with gives (relative difference through norms)"
 		                                << (trialNode - surfNodes.back()).norm() / (surfNodes.back()).norm());
 	if ((math::abs(distance(trialNode)) / lengthChar < nodesTol * Mathr::EPSILON)
-	    && // looks like we found a node. Root finding algorithm normally had a Mathr::EPSILON precision wrt to spac but distance() computation is not the same, hence a different precision. Which is finally estimated here from lengthChar (which matters more than spac)
-	    (surfNodes.size() == 0
-	     || ((trialNode - surfNodes.back()).norm() / surfNodes.back().norm() > lengthChar * nodesTol
-	                 * Mathr::
-	                         EPSILON)) // but we still do not want a duplicate of last node, that would come from an adjacent cell, with phi=0 on the cell surface(s)
+		// looks like we found a node. Root finding algorithm normally had a Mathr::EPSILON precision wrt to spac but distance() computation is not the same, hence a different precision. Which is finally estimated here from lengthChar (which matters more than spac)
+	    && (surfNodes.size() == 0
+	     || ((trialNode - surfNodes.back()).norm() / lengthChar > nodesTol * Mathr::EPSILON)
+		// but we still do not want a duplicate of last node, that would come from an adjacent cell, with phi=0 on the cell surface(s)
+		// NB: the 2 above tests are somewhat contradictory in terms of nodesTol (whose value should not be neither too small (phi = 0 could not be checked and more duplicate) nor too big (phi = 0 could be false positive and false positive in duplicate test). What about a 1e-7 hardcoded ?..
+		// NB2: maybe we do not need lChar.. (and just divide with trialNode.norm())
+		)
 	) {
 		LOG_INFO(
 		        "ONE NODE FOUND ! (" << trialNode << "): it would be in cell " << indicesPt << " whereas we considered cell " << indX << " " << indY
@@ -381,12 +383,12 @@ void LevelSet::init() // computes stuff (nVoxInside, center, volume, inertia, bo
 		        << Ixx << " ; Iyy = " << Iyy << " ; Izz = " << Izz << " ; Ixy = " << Ixy << " ; Ixz = " << Ixz << " ; Iyz = " << Iyz
 		        << " for inertia matrix I, making for a " << ratio << " non-diagonality ratio.");
 	inertia = Vector3r(Ixx, Iyy, Izz);
+	lengthChar = twoD ? sqrt(volume / lsGrid->spacing) : cbrt(volume); // measuring lengthChar here (even if surfNodes already exist and won't be recomputed below) to allow a user to satisfactory call for a rayTrace even after a O.save / O.load
 	if (!surfNodes
 	             .size()) { // 0 boundary nodes as of now. Condition could be false after save/load, where we do not need to duplicate the nodes. Other choice to avoid this test would be to save everything else that's computed by init(), eg center, ..
-		lengthChar = twoD ? sqrt(volume / lsGrid->spacing) : cbrt(volume); // for the node location tolerance
 		initSurfNodes();
 		sphericity = maxRad / minRad;
-	} // note that sphericity is always saved (but maxRad, minRad not)
+	} // note that sphericity is always saved (but maxRad, minRad are not and are meaningfull only after initSurfNodes())
 	initDone = true;
 }
 
