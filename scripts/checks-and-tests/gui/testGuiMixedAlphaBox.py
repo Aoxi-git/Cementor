@@ -2,7 +2,12 @@ import random
 from testGuiHelper import TestGUIHelper
 # Must match the filename without starting "testGui" otherwise test fails because an indiation of a passed test is
 # the existence of file called testGui_MixedAlphaBox_OK_or_Skipped.txt, where "MixedAlphaBox" comes from this line.
-scr = TestGUIHelper("MixedAlphaBox", True, True)
+scr = TestGUIHelper("MixedAlphaBox", False,
+(Vector3(-11.07264127532486775,5.479858836462248917,17.15917135537100791),     # v.lookAt
+ Vector3(0.7730344906758657153,-0.1667015862924478564,-0.6120688338357758163), # v.viewDir
+ Vector3(-11.84567576600073302,5.646560422754697051,17.77124018920678239),     # v.eyePosition
+ Vector3(0.1305986416697474672,0.9860073822144534983,-0.1036023021588683424))  # v.upVector
+)
 
 N=10
 guiIterPeriod = 1000

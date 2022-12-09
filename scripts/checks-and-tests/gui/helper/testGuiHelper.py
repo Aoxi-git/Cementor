@@ -17,9 +17,14 @@ class TestGUIHelper:
 	This simple class makes screenshots.
 	"""
 
-	def __init__(self, name=None, recenter=False, keepOriginalCameraPosition=False):
+	def __init__(self, name=None, recenter=False, cameraParams=None):
 		self.recenter = recenter  # recenter after adjusting camera
-		self.keepOriginalCameraPosition = keepOriginalCameraPosition # don't change camera
+		# cameraParams allows to use custom values of (v.lookAt, v.viewDir, v.eyePosition, v.upVector) # ←← in that order.
+		# Obtained with:
+		#   v=yade.qt.views()[0];
+		#   v.lookAt, v.viewDir, v.eyePosition, v.upVector
+		# see scripts/checks-and-tests/gui/testGuiMixedAlphaBox.py for example.
+		self.cameraParams = cameraParams
 		self.viewWaitTimeSeconds = 30.0  # sometimes the build servers are oveloaded. Let's try 30 seconds and see if it works. When testing locally put here 1 second.
 		self.scrNum = 0
 		# FIXME : this number 14 is hardcoded in scripts/checks-and-tests/gui/testGui.sh when testing if screenshots are present.
@@ -80,11 +85,13 @@ class TestGUIHelper:
 			# OK, now we have a view to work with.
 			vv = yade.qt.views()[0]
 			vv.axes = True
-			if (not self.keepOriginalCameraPosition):
+			if (self.cameraParams == None):
 				vv.lookAt = (7.978, -4.635, 8.221)
 				vv.viewDir = (-0.647, 0.441, -0.620)
 				vv.eyePosition = (8.626, -5.076, 8.842)
 				vv.upVector = (-0.691, 0.000, 0.721)
+			else:
+				vv.lookAt, vv.viewDir, vv.eyePosition, vv.upVector = self.cameraParams
 			if (self.recenter):
 				yade.qt.center()
 		if (self.scrNum == 3):
