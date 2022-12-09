@@ -1,5 +1,6 @@
 import random
 from testGuiHelper import TestGUIHelper
+yade.log.setLevel("Default", yade.log.ERROR)
 # Must match the filename without starting "testGui" otherwise test fails because an indiation of a passed test is
 # the existence of file called testGui_MixedAlphaBox_OK_or_Skipped.txt, where "MixedAlphaBox" comes from this line.
 scr = TestGUIHelper("MixedAlphaBox", False,
