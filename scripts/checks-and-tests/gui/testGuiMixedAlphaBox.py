@@ -61,7 +61,7 @@ def displayMembrane():
                 b.shape.color = (0.4,0.7,0.4)
         else :  b.shape.color = (1,0,0)
 
-v = qt.View()
+# v = qt.View() # TestGUIHelper takes care of opening the view.
 
 O.engines=[
 	ForceResetter(),
