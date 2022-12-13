@@ -10,6 +10,12 @@ scr = TestGUIHelper("MixedAlphaBox", False,
  Vector3(0.1305986416697474672,0.9860073822144534983,-0.1036023021588683424))  # v.upVector
 )
 
+
+if not 'CGAL' in yade.config.features:
+	print("Skipping testGuiMixedAlphaBox, CGAL not available in features")
+	scr.createEmptyFile("screenshots/testGui_MixedAlphaBox_OK_or_Skipped.txt")  # creating verification file so there is no error thrown
+	os._exit(0)
+
 N=10
 guiIterPeriod = 1000
 
