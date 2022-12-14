@@ -59,9 +59,6 @@ bool Ig2_PB_PB_ScGeom::go(
 	if ((s1->erase == true) && (s2->isLining == true)) { return false; }    //2D cases only
 	if ((s1->isLining == true) && (s2->erase == true)) { return false; }    //2D cases only
 
-	/* Short circuit if both particles are fixed */
-	if ((state1.blockedDOFs == State::DOF_ALL) && (state2.blockedDOFs == State::DOF_ALL)) { return false; }
-
 	TIMING_DELTAS_START();
 
 	//TODO: The parameters: jointLength, calJointLength, isLining are only used if phys->twoDimension=true. We should nest them inside "if" statements, to reduce unecessary overhead for 3D contacts
