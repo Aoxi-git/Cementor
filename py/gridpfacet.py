@@ -208,7 +208,7 @@ def pfacet(id1,id2,id3,wire=True,color=None,highlight=False,material=-1,mask=1,c
 	"""
 	b=Body()
 	GridN1=O.bodies[id1]; GridN2=O.bodies[id2]; GridN3=O.bodies[id3] 
-	b.shape=PFacet(color=color if color else randomColor(),wire=wire,highlight=highlight,node1=GridN1,node2=GridN2,node3=GridN3)
+	b.shape=PFacet(color=color if color else utils.randomColor(),wire=wire,highlight=highlight,node1=GridN1,node2=GridN2,node3=GridN3)
 	GridN1.bounded=False; GridN2.bounded=False; GridN3.bounded=False
 	GridC1=O.bodies[O.interactions[id1,id2].geom.connectionBody.id]
 	GridC2=O.bodies[O.interactions[id2,id3].geom.connectionBody.id]
