@@ -126,7 +126,7 @@ void Law2_ScGeom_CapillaryPhys_Capillarity::action()
 
 			/// intergranular distance
 			Real D = -alpha * currentContactGeometry->penetrationDepth;
-			if (D < 0 || createDistantMeniscii) { //||(scene->iter < 1) ) // a simplified way to define meniscii everywhere
+			if (D <= 0 || createDistantMeniscii) { //||(scene->iter < 1) ) // a simplified way to define meniscii everywhere
 				D = max(0.,
 				        D); // defines fCap when spheres interpenetrate. D<0 leads to wrong interpolation as D<0 has no solution in the interpolation : this is not physically interpretable!! even if, interpenetration << grain radius.
 				if (!hertzOn) {
