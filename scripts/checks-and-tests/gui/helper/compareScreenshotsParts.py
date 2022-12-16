@@ -33,7 +33,7 @@ def getAllowedError(viewName, scrNumber, testName):
 
 	if ('AlphaBox' in testName):
 		if (viewName == 'view'):
-			return (34, '')
+			return (36, '')
 		if (viewName == 'term'):
 			return (28, '')
 	# The testGuiHopper.py and testGuiVideo.py are more random than other tests. Especially in different precisions.
