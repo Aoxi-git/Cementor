@@ -31,6 +31,11 @@ def getAllowedError(viewName, scrNumber, testName):
 	if ((viewName == 'view') and (scrNumber == 3)):
 		return (skipCheck, 'Start View ')
 
+	if ('AlphaBox' in testName):
+		if (viewName == 'view'):
+			return (23, '')
+		if (viewName == 'term'):
+			return (27, '')
 	# The testGuiHopper.py and testGuiVideo.py are more random than other tests. Especially in different precisions.
 	# Their goal is to test for crashes and when drawing and erasing, not for reproducibility of screenshots.
 	if ('Hopper' in testName):
