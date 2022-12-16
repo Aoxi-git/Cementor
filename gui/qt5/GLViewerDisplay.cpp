@@ -244,10 +244,10 @@ void GLViewer::postDraw()
 
 	auto nHalfSegments = ((int)(wholeDiameter / gridStep)) + 1;
 	auto nSegments     = static_cast<int>(2 * nHalfSegments);
-	if (nSegments > 500) {
+	if (nSegments > 650) {
 		LOG_TIMED_WARN(
 		        10s,
-		        "More than 500 grid segments (currently: "
+		        "More than 650 grid segments (currently: "
 		                << nSegments << ") take too long to draw, using previous value: " << prevSegments
 		                << ". If you need denser grid try calling: yade.qt.center(suggestedRadius,gridOrigin,suggestedCenter,gridDecimalPlaces); (each "
 		                   "parameter is optional) to reduce scene grid radius. Current values are: yade.qt.center(suggestedRadius="
