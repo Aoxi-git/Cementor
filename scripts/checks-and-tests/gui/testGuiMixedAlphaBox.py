@@ -11,6 +11,9 @@ scr = TestGUIHelper("MixedAlphaBox", False,
 )
 
 
+# FIXME - test skipped because of (1) random crash (2) explosions in high precision. This needs a fix.
+#         see https://gitlab.com/yade-dev/trunk/-/merge_requests/906#note_1213149258
+# Remove ↓ this True condition to re-enable the test.
 # if True - temporarily skip this test.
 if ((True) or (not 'CGAL' in yade.config.features)):
 	print("Skipping testGuiMixedAlphaBox, CGAL not available in features")
