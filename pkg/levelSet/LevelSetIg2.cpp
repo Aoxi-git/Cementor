@@ -248,7 +248,7 @@ bool Ig2_LevelSet_LevelSet_ScGeom::go(
 	if (!c->isReal() && !force && maxOverlap < 0)
 		return false; // we won't create the interaction in this case (but it is not our job here to delete it -- outside returning false unless force, see Ig2_Sphere_Sphere_ScGeom -- in case it already exists)
 	c->geom = ShopLS::geomPtr(
-	        contactNode - maxOverlap / 2. * normal, // middle of overlapping volumes, as usual
+	        contactNode - (id1isBigger ? -1 : 1) * maxOverlap / 2. * normal, // middle of overlapping volumes, as usual
 	        maxOverlap,                             // does not work for very big/huge overlap, eg when one sphere's center gets into another.
 	        (contactNode - state1.pos - maxOverlap * (id1isBigger ? normal : Vector3r::Zero()) ).norm(), // radius1 value: taking center to surface distance for id1, expressed from contactNode and possible offset (depending on which particle contactNode came from)
 	        (contactNode - state2.pos - shift2 - maxOverlap * (id1isBigger ? Vector3r::Zero() : normal) ).norm(), // radius2: same thing for id2. Reminder: contactNode does belong to id2 if id1 is bigger
