@@ -225,7 +225,7 @@ py::tuple Shop::normalShearStressTensors(bool compressionPositive, bool splitNor
 	// *** Normal stress tensor split into two parts according to subnetworks of strong and weak forces (or other distinction if a threshold value for the force is assigned) ***/
 	Real     Fmean(0);
 	Matrix3r f, fs, fw;
-	fabricTensor(Fmean, f, fs, fw); // 0,false,NaN for cutoff, split and thresholdForce as default arguments
+	fabricTensor(Fmean, f, fs, fw); // 0,false,NaN,empty vector for cutoff, split, thresholdForce and extrema as default arguments
 	Matrix3r sigNStrong(Matrix3r::Zero()), sigNWeak(Matrix3r::Zero());
 	FOREACH(const shared_ptr<Interaction>& I, *scene->interactions)
 	{
@@ -268,15 +268,23 @@ py::tuple Shop::normalShearStressTensors(bool compressionPositive, bool splitNor
 
 /* Return the fabric tensor as according to [Satake1982]. */
 /* as side-effect, set Gl1_NormShear::strongWeakThresholdForce */
-void Shop::fabricTensor(Real& Fmean, Matrix3r& fabric, Matrix3r& fabricStrong, Matrix3r& fabricWeak, Real cutoff, bool splitTensor, Real thresholdForce)
+void Shop::fabricTensor(Real& Fmean, Matrix3r& fabric, Matrix3r& fabricStrong, Matrix3r& fabricWeak, Real cutoff, bool splitTensor, Real thresholdForce, vector<Vector3r> extrema)
 {
 	Scene* scene = Omega::instance().getScene().get();
 
 	// *** Fabric tensor ***/
 	fabric           = Matrix3r::Zero();
 	int        count = 0; // number of interactions
-	const auto aabb  = Shop::aabbExtrema(cutoff);
-	Vector3r   bbMin = aabb.first, bbMax = aabb.second;
+	Vector3r bbMin, bbMax;
+	if (!extrema.size()){
+		const auto aabb = Shop::aabbExtrema(cutoff);
+		bbMin = aabb.first;
+		bbMax = aabb.second;
+	}
+	else{
+		bbMin = extrema[0];
+		bbMax = extrema[1];
+	}
 	Vector3r   cp;
 
 	Fmean = 0; // initialize average contact force for split = 1 fabric measurements
@@ -364,11 +372,11 @@ void Shop::fabricTensor(Real& Fmean, Matrix3r& fabric, Matrix3r& fabricStrong, M
 	}
 }
 
-py::tuple Shop::fabricTensor(Real cutoff, bool splitTensor, Real thresholdForce)
+py::tuple Shop::fabricTensor(Real cutoff, bool splitTensor, Real thresholdForce, vector<Vector3r> extrema)
 {
 	Real     Fmean;
 	Matrix3r fabric, fabricStrong, fabricWeak;
-	fabricTensor(Fmean, fabric, fabricStrong, fabricWeak, cutoff, splitTensor, thresholdForce);
+	fabricTensor(Fmean, fabric, fabricStrong, fabricWeak, cutoff, splitTensor, thresholdForce, extrema);
 	// returns fabric tensor or alternatively the two distinct contributions according to strong and weak subnetworks (or, if thresholdForce is specified, the distinction is made according to that value and not the mean one)
 	if (!splitTensor) {
 		return py::make_tuple(fabric);

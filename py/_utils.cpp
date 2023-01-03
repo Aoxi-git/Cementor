@@ -439,7 +439,10 @@ Real Shop__getVoxelPorosity(int resolution, Vector3r start, Vector3r end)
 }
 
 //Matrix3r Shop__stressTensorOfPeriodicCell(bool smallStrains=false){return Shop::stressTensorOfPeriodicCell(smallStrains);}
-py::tuple Shop__fabricTensor(Real cutoff, bool splitTensor, Real thresholdForce) { return Shop::fabricTensor(cutoff, splitTensor, thresholdForce); }
+py::tuple Shop__fabricTensor(Real cutoff, bool splitTensor, Real thresholdForce, vector<Vector3r> extrema)
+{
+	return Shop::fabricTensor(cutoff, splitTensor, thresholdForce, extrema);
+}
 py::tuple Shop__normalShearStressTensors(bool compressionPositive, bool splitNormalTensor, Real thresholdForce)
 {
 	return Shop::normalShearStressTensors(compressionPositive, splitNormalTensor, thresholdForce);
@@ -740,13 +743,15 @@ try {
 	        "stress tensor can be split (e.g. a zero value would make distinction between tensile and compressive forces).");
 	py::def("fabricTensor",
 	        Shop__fabricTensor,
-	        (py::args("cutoff") = 0.0, py::args("splitTensor") = false, py::args("thresholdForce") = NaN),
+	        (py::args("cutoff") = 0.0, py::args("splitTensor") = false, py::args("thresholdForce") = NaN, py::args("extrema") = py::list()),
 	        "Computes the fabric tensor $F_{ij}=\\frac{1}{n_c}\\sum_c n_i n_j$ [Satake1982]_, for all interactions $c$.\n\n:param Real cutoff: intended to "
 	        "disregard boundary effects: to define in [0;1] to focus on the interactions located in the centered inner (1-cutoff)^3*$V$ part of the "
 	        "spherical packing $V$.\n\n:param bool splitTensor: split the fabric tensor into two parts related to the strong (greatest compressive normal "
 	        "forces) and weak contact forces respectively.\n\n:param Real thresholdForce: if the fabric tensor is split into two parts, a threshold value "
 	        "can be specified otherwise the mean contact force is considered by default. Use negative signed values for compressive states. To note that "
-	        "this value could be set to zero if one wanted to make distinction between compressive and tensile forces.");
+	        "this value could be set to zero if one wanted to make distinction between compressive and tensile forces.\n\n:param list extrema: defines "
+	        "through a two-Vector3-list (min,max) an axis aligned box that restricts the interactions to consider. A value has to be given for the "
+	        "function to be effective with non-spherical particles.");
 	py::def("bodyStressTensors",
 	        Shop__getStressLWForEachBody,
 	        // FIXME: use R"""(raw text)""" here, like exaplained in https://yade-dem.org/doc/prog.html#sphinx-documentation and used in py/_libVersions.cpp

@@ -154,8 +154,9 @@ public:
 	        Matrix3r& fabricWeak,
 	        Real      cutoff         = 0.0,
 	        bool      splitTensor    = false,
-	        Real      thresholdForce = NaN);
-	static py::tuple fabricTensor(Real cutoff = 0.0, bool splitTensor = false, Real thresholdForce = NaN);
+	        Real      thresholdForce = NaN,
+	        vector<Vector3r> extrema = vector<Vector3r>());
+	static py::tuple fabricTensor(Real cutoff = 0.0, bool splitTensor = false, Real thresholdForce = NaN, vector<Vector3r> extrema= vector<Vector3r>());
 
 	//! Function to set translational and rotational velocities of all bodies to zero
 	static void calm(const shared_ptr<Scene>& rb = shared_ptr<Scene>(), int mask = -1);
