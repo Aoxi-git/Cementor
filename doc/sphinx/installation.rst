@@ -6,7 +6,7 @@ Installation
   Yade can be installed from :ref:`packages <provided-packages>` (pre-compiled binaries) or :ref:`source code <install-from-source-code>`. The choice depends on what you need: if you don't plan to modify Yade itself, package installation is easier. In the contrary case, you must download and install the source code.
 
 * Other Operating Systems:
-  Emulating Linux systems including Yade is proposed in this case, through :ref:`docker images <docker-install>` as well as `flash-drive or virtual machines <https://yade-dem.org/doc/installation.html#yubuntu>`_ images.
+  Emulating Linux systems including Yade is proposed in this case, through :ref:`docker images <docker-install>` as well `flash-drive or virtual machines <https://yade-dem.org/doc/installation.html#yubuntu>`_ images.
 
 * 64 bit Operating Systems required; no support for 32 bit (i386).
 
@@ -536,8 +536,8 @@ If you add a new check script, it is being run automatically through the Address
 Yubuntu
 -------
 
-If you are not running a Linux system there is a way to create an Ubuntu `live-usb <http://en.wikipedia.org/wiki/Live_USB>`_ on any usb mass-storage device (minimum size 10GB). It is a way to boot the computer on a linux system with Yadedaily pre-installed without affecting the original system. More informations about this alternative are available `here <http://people.3sr-grenoble.fr/users/bchareyre/pubs/yubuntu/>`_ (see the README file first).
+If you are not running a Linux system there is a way to create an Ubuntu `live-usb <http://en.wikipedia.org/wiki/Live_USB>`_ on any usb mass-storage device (minimum size 10GB). It is a way to boot the computer on a linux system with Yadedaily pre-installed without affecting the original system. More informations about this alternative are available `here <http://people.3sr-grenoble.fr/users/bchareyre/pubs/yubuntu/>`_ (see the README file first). Note that the images there date back from 2018 and use ubuntu16.04, for newer versions of yade see below.
 
-Alternatively, images of a linux virtual machine can be downloaded, `here again <http://people.3sr-grenoble.fr/users/bchareyre/pubs/yubuntu/>`_, and they should run on any system with a virtualization software (tested with VirtualBox and VMWare).
+Alternatively, images of a linux virtual machine can be downloaded `here (ubuntu20.04) <https://yade-dem.org/publi/virtual/>`_ , or for older (ubuntu16.04) versions `here <http://people.3sr-grenoble.fr/users/bchareyre/pubs/yubuntu/>`_. They should run on any system with a virtualization software (tested with VirtualBox and VMWare).
 
 
