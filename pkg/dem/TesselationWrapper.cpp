@@ -259,6 +259,34 @@ bool TesselationWrapper::nextFacet(std::pair<unsigned int, unsigned int>& facet)
 	return true;
 }
 
+int TesselationWrapper::addBoundingPlane(short axis, bool positive)
+{
+	Vector3r cornerMin = Vector3r(Pmin.x(), Pmin.y(), Pmin.z());
+	Vector3r cornerMax = Vector3r(Pmax.x(), Pmax.y(), Pmax.z());
+	Vector3r halfSize = 0.5*(cornerMax-cornerMin);
+	Vector3r centerPoint = 0.5*(cornerMin+cornerMax);
+	// shift by half-size + a large radius
+	Vector3r shift = Vector3r::Zero();
+	shift[axis] = positive ? 1 : -1;
+	shift *= far*(cornerMax - cornerMin).norm();
+	shift[axis]+= positive ? halfSize[axis] : -halfSize[axis];
+	centerPoint += shift;
+	
+	//find a free id
+	int freeId = 0;
+	while (Tes->vertexHandles[freeId] != NULL) ++freeId;
+	
+	// we don't want to count this virtual sphere's radius in the average, so compute it before inserting
+	if (!rad_divided) {
+		mean_radius /= n_spheres;
+		rad_divided = true;
+	}	
+	// now insert
+	Tes->vertexHandles[freeId] = Tes->insert(
+		        centerPoint[0], centerPoint[1], centerPoint[2], far*(cornerMax - cornerMin).norm(), freeId, false);
+	return freeId;
+}
+
 void TesselationWrapper::addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, Real pmaxy, Real pminz, Real pmaxz)
 {
 	if (!bounded) {
@@ -277,13 +305,13 @@ void TesselationWrapper::addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, R
 		}
 		// now insert
 		Tes->vertexHandles[freeIds[0]] = Tes->insert(
-		        0.5 * (pminx + pmaxx), pminy - far * (pmaxx - pminx), 0.5 * (pmaxz + pminz), far * (pmaxx - pminx) + thickness, freeIds[0], true);
+		        pminx - far * (pmaxy - pminy), 0.5 * (pmaxy + pminy), 0.5 * (pmaxz + pminz), far * (pmaxy - pminy) + thickness, freeIds[0], true);
 		Tes->vertexHandles[freeIds[1]] = Tes->insert(
-		        0.5 * (pminx + pmaxx), pmaxy + far * (pmaxx - pminx), 0.5 * (pmaxz + pminz), far * (pmaxx - pminx) + thickness, freeIds[1], true);
+		        pmaxx + far * (pmaxy - pminy), 0.5 * (pmaxy + pminy), 0.5 * (pmaxz + pminz), far * (pmaxy - pminy) + thickness, freeIds[1], true);
 		Tes->vertexHandles[freeIds[2]] = Tes->insert(
-		        pminx - far * (pmaxy - pminy), 0.5 * (pmaxy + pminy), 0.5 * (pmaxz + pminz), far * (pmaxy - pminy) + thickness, freeIds[2], true);
+		        0.5 * (pminx + pmaxx), pminy - far * (pmaxx - pminx), 0.5 * (pmaxz + pminz), far * (pmaxx - pminx) + thickness, freeIds[2], true);
 		Tes->vertexHandles[freeIds[3]] = Tes->insert(
-		        pmaxx + far * (pmaxy - pminy), 0.5 * (pmaxy + pminy), 0.5 * (pmaxz + pminz), far * (pmaxy - pminy) + thickness, freeIds[3], true);
+		        0.5 * (pminx + pmaxx), pmaxy + far * (pmaxx - pminx), 0.5 * (pmaxz + pminz), far * (pmaxx - pminx) + thickness, freeIds[3], true);
 		Tes->vertexHandles[freeIds[4]] = Tes->insert(
 		        0.5 * (pminx + pmaxx), 0.5 * (pmaxy + pminy), pminz - far * (pmaxy - pminy), far * (pmaxy - pminy) + thickness, freeIds[4], true);
 		Tes->vertexHandles[freeIds[5]] = Tes->insert(
@@ -419,16 +447,19 @@ boost::python::list TesselationWrapper::getAlphaCaps(Real alpha, Real shrinkedAl
 	return ret;
 }
 
-void TesselationWrapper::applyAlphaForces(Matrix3r stress, Real alpha, Real shrinkedAlpha, bool fixedAlpha)
+void TesselationWrapper::applyAlphaForces(Matrix3r stress, Real alpha, Real shrinkedAlpha, bool fixedAlpha, bool reset)
 {
 	// Scene* scene = Omega::instance().getScene().get();
-	build_triangulation_with_ids(scene->bodies, *this, true); //triangulation needed
+	if ((Tes->Triangulation().number_of_vertices()==0) or reset) insertSceneSpheres(true);
+// 	build_triangulation_with_ids(scene->bodies, *this, true); //triangulation needed
 	vector<AlphaCap> caps;
 	Tes->setExtendedAlphaCaps(caps, alpha, shrinkedAlpha, fixedAlpha);
 	for (const auto& b : *scene->bodies)
 		scene->forces.setPermForce(b->id, Vector3r::Zero());
-	for (auto f = caps.begin(); f != caps.end(); f++)
+	for (auto f = caps.begin(); f != caps.end(); f++) {
+		if (not scene->bodies->exists(f->id)) continue; // FIXME: probably not needed
 		scene->forces.setPermForce(f->id, stress * makeVector3r(f->normal));
+	}
 }
 
 void TesselationWrapper::applyAlphaVel(Matrix3r velGrad, Real alpha, Real shrinkedAlpha, bool fixedAlpha)
@@ -471,7 +502,7 @@ Matrix3r TesselationWrapper::calcAlphaStress(Real alpha, Real shrinkedAlpha, boo
 
 boost::python::list TesselationWrapper::getAlphaGraph(Real alpha, Real shrinkedAlpha, bool fixedAlpha)
 {
-	insertSceneSpheres(true);
+	if (Tes->Triangulation().number_of_vertices()==0) insertSceneSpheres(true);
 	segments = Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
 	boost::python::list ret;
 	for (auto f = segments.begin(); f != segments.end(); f++)
@@ -499,23 +530,30 @@ int GlExtra_AlphaGraph::oneCylinder = -1;
 void GlExtra_AlphaGraph::render()
 {
 	if (not tesselationWrapper) tesselationWrapper=shared_ptr<TesselationWrapper>(new TesselationWrapper);
+	if (tesselationWrapper->Tes->Triangulation().number_of_vertices()==0) tesselationWrapper->insertSceneSpheres(true);
 	if (tesselationWrapper->segments.size()==0 or reset) {
-		tesselationWrapper->insertSceneSpheres(true);
-		segments = tesselationWrapper->segments = tesselationWrapper->Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
+#ifdef BREAK_OPENGL
+		segments = 
+#endif
+		tesselationWrapper->segments = tesselationWrapper->Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
 		reset = true;
-	} else segments = tesselationWrapper->segments;
-	if (reset and not wire) {
+	}
+#ifdef BREAK_OPENGL
+	else segments = tesselationWrapper->segments;
+#endif
+	if ((reset or refreshDisplay) and not wire) {
 		rots.clear();
 		lengths.clear();
 	}
-	const vector<Vector3r>& segments_ = segments;
+// 	const vector<Vector3r>& segments_ = segments;
+	const vector<Vector3r>& segments_ = tesselationWrapper->segments;
 	unsigned maxI = segments_.size()-1;
  	glLineWidth(lineWidth);
 	glColor3v(color);
 	if (lighting) glEnable(GL_LIGHTING);
 	else glDisable(GL_LIGHTING);
 	glDisable(GL_CULL_FACE);
-	if ((rots.size()==0 or reset) and not wire) {
+	if ((rots.size()==0 or reset or refreshDisplay) and not wire) {
 		Real radiusTemp=0;
 		unsigned i=0;
 		while (i<maxI ) {

@@ -72,10 +72,13 @@ public:
 	void clear(void);
 	void clear2(void);
 
-	/// Add axis aligned bounding planes (modelised as spheres with (almost) infinite radius)
+	/// Add 6 axis-aligned bounding planes (modelised as spheres with (almost) infinite radius)
 	void addBoundingPlanes(void);
 	/// Force boudaries at positions not equal to precomputed ones
 	void addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, Real pmaxy, Real pminz, Real pmaxz);
+	/// Insert one single axis-aligned bounding plane
+	int addBoundingPlane(short axis, bool positive);
+	
 	///compute voronoi centers then stop (don't compute anything else)
 	void computeTesselation(void);
 	void computeTesselation(Real pminx, Real pmaxx, Real pminy, Real pmaxy, Real pminz, Real pmaxz);
@@ -85,7 +88,7 @@ public:
 	boost::python::list getAlphaCaps(Real alpha, Real shrinkedAlpha, bool fixedAlpha);
 	boost::python::list getAlphaVertices(Real alpha);
 	boost::python::list getAlphaGraph(Real alpha, Real shrinkedAlpha, bool fixedAlpha);
-	void                applyAlphaForces(Matrix3r stress, Real alpha, Real shrinkedAlpha, bool fixedAlpha);
+	void                applyAlphaForces(Matrix3r stress, Real alpha, Real shrinkedAlpha, bool fixedAlpha, bool reset = true);
 	void                applyAlphaVel(Matrix3r velGrad, Real alpha, Real shrinkedAlpha, bool fixedAlpha);
 	Matrix3r            calcAlphaStress(Real alpha, Real shrinkedAlpha, bool fixedAlpha);
 
@@ -157,6 +160,7 @@ public:
 	mma.analyser->SetConsecutive(false);
 	,/*py*/
 	.def("triangulate",&TesselationWrapper::insertSceneSpheres,(boost::python::arg("reset")=true),"triangulate spheres of the packing")
+	.def("addBoundingPlane",&TesselationWrapper::addBoundingPlane,((boost::python::arg("axis")),(boost::python::arg("positive"))),"add a bounding plane (in fact a sphere with very large radius) bounding the spheres along the direction 'axis' (0,1,2), on the 'positive' or negative side.")
  	.def("setState",&TesselationWrapper::setState,(boost::python::arg("state")=0),"Make the current state of the simulation the initial (0) or final (1) configuration for the definition of displacement increments, use only state=0 if you just want to get  volmumes and porosity.")
  	.def("loadState",&TesselationWrapper::loadState,(boost::python::arg("inputFile")="state",boost::python::arg("state")=0,boost::python::arg("bz2")=true),"Load a file with positions to define state 0 or 1.")
  	.def("saveState",&TesselationWrapper::saveState,(boost::python::arg("outputFile")="state",boost::python::arg("state")=0,boost::python::arg("bz2")=true),"Save a file with positions, can be later reloaded in order to define state 0 or 1.")
@@ -171,7 +175,7 @@ public:
 	.def("testAlphaShape",&TesselationWrapper::testAlphaShape,(boost::python::arg("alpha")=0),"transitory function, testing AlphaShape feature")
 	.def("getAlphaFaces",&TesselationWrapper::getAlphaFaces,(boost::python::arg("alpha")=0),"Get the list of alpha faces for a given alpha. If alpha is not specified or null the minimum alpha resulting in a unique connected domain is used")
 	.def("getAlphaCaps",&TesselationWrapper::getAlphaCaps,(boost::python::arg("alpha")=0,boost::python::arg("shrinkedAlpha")=0,boost::python::arg("fixedAlpha")=false),"Get the list of area vectors for the polyhedral caps associated to boundary particles ('extended' alpha-contour). If alpha is not specified or null the minimum alpha resulting in a unique connected domain is used. Taking a smaller 'shrinked' alpha for placing the virtual spheres moves the enveloppe outside the packing, It should be ~(alpha-refRad) typically.")
-	.def("applyAlphaForces",&TesselationWrapper::applyAlphaForces,(boost::python::arg("stress"),boost::python::arg("alpha")=0,boost::python::arg("shrinkedAlpha")=0,boost::python::arg("fixedAlpha")=false),"set permanent forces based on stress using an alpha shape")
+	.def("applyAlphaForces",&TesselationWrapper::applyAlphaForces,(boost::python::arg("stress"),boost::python::arg("alpha")=0,boost::python::arg("shrinkedAlpha")=0,boost::python::arg("fixedAlpha")=false, boost::python::arg("reset")=true),"set permanent forces based on stress using an alpha shape")
 	.def("applyAlphaVel",&TesselationWrapper::applyAlphaVel,(boost::python::arg("velGrad"),boost::python::arg("alpha")=0,boost::python::arg("shrinkedAlpha")=0,boost::python::arg("fixedAlpha")=false),"set velocities based on a velocity gradient tensor using an alpha shape")
 	.def("calcAlphaStress",&TesselationWrapper::calcAlphaStress,(boost::python::arg("alpha")=0,boost::python::arg("shrinkedAlpha")=0,boost::python::arg("fixedAlpha")=false),"get the Love-Weber average of the Cauchy stress on the polyhedral caps associated to boundary particles")
 	.def("getAlphaGraph",&TesselationWrapper::getAlphaGraph,(boost::python::arg("alpha")=0,boost::python::arg("shrinkedAlpha")=0,boost::python::arg("fixedAlpha")=false),"Get the list of area vectors for the polyhedral caps associated to boundary particles ('extended' alpha-contour). If alpha is not specified or null the minimum alpha resulting in a unique connected domain is used")
@@ -189,6 +193,7 @@ REGISTER_SERIALIZABLE(TesselationWrapper);
 class GlExtra_AlphaGraph : public GlExtraDrawer {
 public:
 	bool reset;
+	bool refreshDisplay;
 	Real alpha;
 	Real shrinkedAlpha;
 	bool fixedAlpha;
@@ -197,15 +202,13 @@ public:
 	vector<Eigen::Transform<Real, 3, Eigen::Affine>> rots;
 	vector<Real> lengths;
 	vector<Vector3r> pos;
-// #define BREAK_OPENGL
-#ifndef BREAK_OPENGL // This declaration is fine, see the #ifdef  below
-	vector<Vector3r> segments;
-#endif
-
 	Real getAlpha() const {return  alpha;}; void setAlpha(Real a) {reset=true; alpha=a;};
 	Real getShrinkedAlpha() const {return  shrinkedAlpha;}; void setShrinkedAlpha(Real a) {reset=true; shrinkedAlpha=a;};
 	bool getFixedAlpha() const {return  fixedAlpha;}; void setFixedAlpha(bool a) {reset=true; fixedAlpha=a;};
 	void render() override;
+	void refresh() {refreshDisplay=true;};
+
+// #define BREAK_OPENGL
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(GlExtra_AlphaGraph,GlExtraDrawer,"Display the outer surface defined by alpha contour. Add it to qt.Renderer().extraDrawers. If no instance of TesselationWrapper is provided, the functor will create its own. See :ysrc:`scripts/examples/alphaShapes/GlDrawAlpha.py`.",
@@ -219,8 +222,9 @@ public:
 		((bool, lighting, true,,"lighting of cylinders"))
 		((bool, wire, false,,"display as solid cylinders or lines"))
 		,/*ctor*/
-		alpha=0; shrinkedAlpha=0; fixedAlpha=false; reset=bool(tesselationWrapper);
+		alpha=0; shrinkedAlpha=0; fixedAlpha=false; reset=bool(tesselationWrapper); refreshDisplay=false;
 		, /*py*/
+		.def("refresh",&GlExtra_AlphaGraph::refresh,"Refresh internals. Particularly usefull for correct display after the TesselationWrapper is modified externally, not needed if 'wire'=True")
 		.add_property("alpha",&GlExtra_AlphaGraph::getAlpha,&GlExtra_AlphaGraph::setAlpha,"alpha value")
 		.add_property("shrinkedAlpha",&GlExtra_AlphaGraph::getShrinkedAlpha,&GlExtra_AlphaGraph::setShrinkedAlpha,"shrinkedAlpha value")
 		.add_property("fixedAlpha",&GlExtra_AlphaGraph::getFixedAlpha,&GlExtra_AlphaGraph::setFixedAlpha,"fixedAlpha option")

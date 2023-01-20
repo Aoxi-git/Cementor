@@ -31,6 +31,11 @@ def getAllowedError(viewName, scrNumber, testName):
 	if ((viewName == 'view') and (scrNumber == 3)):
 		return (skipCheck, 'Start View ')
 
+	if ('AlphaBox' in testName):
+		if (viewName == 'view'):
+			return (36, '')
+		if (viewName == 'term'):
+			return (28, '')
 	# The testGuiHopper.py and testGuiVideo.py are more random than other tests. Especially in different precisions.
 	# Their goal is to test for crashes and when drawing and erasing, not for reproducibility of screenshots.
 	if ('Hopper' in testName):
@@ -71,13 +76,13 @@ def getPngNames(path):
 
 screenshotNames = getPngNames(path=refDir)
 
-print('                      ---------- MAX allowed mean error --------')
+print('                            ---------- MAX allowed mean error --------')
 print(
-        '                      ' + str(thresholdDict['view']).ljust(11) + str(thresholdDict['term']).ljust(11) + str(thresholdDict['cont']).ljust(11) +
+        '                            ' + str(thresholdDict['view']).ljust(11) + str(thresholdDict['term']).ljust(11) + str(thresholdDict['cont']).ljust(11) +
         str(thresholdDict['insp']).ljust(11)
 )
-print('                      ------------------------------------------')
-print('Screenshot            View       Terminal   Controller Inspector')
+print('                            ------------------------------------------')
+print('Screenshot                  View       Terminal   Controller Inspector')
 hadError = False
 
 try:
@@ -95,7 +100,7 @@ try:
 		# Both screenshots have the same filenames
 		scr = cv2.imread(scrDir + "/" + refScr, cv2.IMREAD_COLOR)
 		ref = cv2.imread(refDir + "/" + refScr, cv2.IMREAD_COLOR)
-		print(refScr.ljust(22), end='')
+		print(refScr.ljust(28), end='')
 		if ref.shape == scr.shape:
 			#             View                        Terminal                       Controller                       Inspector
 			scrParts = [
