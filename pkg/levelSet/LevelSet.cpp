@@ -27,8 +27,8 @@ Vector3r LevelSet::getCenter()
 // // }
 Real LevelSet::smearedHeaviside(Real x)
 {
-  // Passing smoothly (increasing sine-sort) from y = 0 to 1 when x goes from -1 to 1.
-  return 0.5 * (1.0 + x + sin( M_PI * x) / M_PI);
+  // Passing smoothly (increasing sine-sort) from y = 0 to 1 when x goes from -1 to 1, see Eq. (3) of Kawamoto2016.
+  return 0.5 * (1.0 + x + sin( Mathr::PI * x) / Mathr::PI);
 }
 
 void LevelSet::rayTrace(const Vector3r& ray)
