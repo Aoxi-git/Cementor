@@ -213,6 +213,11 @@ The tests for a new function are to be added in :ysrc:`py/tests/testMath.py` in 
 
 .. _extraStringDigits:
 
+Using higher precisions in C++
+----------------------------------------------
+
+As mentioned above ``RealHP<1>`` is the ``Real`` type and every higher number is a multiplier of the ``Real`` precision. ``RealHP<2>`` is twice the precision of ``RealHP<1>``, ``RealHP<4>`` is quadruple precision and so on. In C++ you have access to these higher precision typedefs at all time, so it is possible to write some critical part of an algorithm in higher precision by declaring the respective variables to be of type ``RealHP<2>`` or ``RealHP<4>`` or higher.
+
 String conversions
 ----------------------------------------------
 
