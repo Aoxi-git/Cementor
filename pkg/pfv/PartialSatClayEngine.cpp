@@ -2326,13 +2326,13 @@ void Ip2_PartialSatMat_PartialSatMat_MindlinPhys::go(const shared_ptr<Material>&
 	/* calculate stiffness coefficients */
 	const Real Ga            = Ea / (2 * (1 + Va));
 	const Real Gb            = Eb / (2 * (1 + Vb));
-	const Real G             = (Ga + Gb) / 2;                                                           // average of shear modulus
-	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
+	const Real G             = 1.0 / ((2 - Va) / Ga + (2 - Vb) / Gb); //(Ga + Gb) / 2;                  // effective shear modulus
+//	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
 	const Real E             = Ea * Eb / ((1. - math::pow(Va, 2)) * Eb + (1. - math::pow(Vb, 2)) * Ea); // Young modulus
 	const Real R             = Da * Db / (Da + Db);                                                     // equivalent radius
 	const Real Rmean         = (Da + Db) / 2.;                                                          // mean radius
 	const Real Kno           = 4. / 3. * E * sqrt(R);                                                   // coefficient for normal stiffness
-	const Real Kso           = 2 * sqrt(4 * R) * G / (2 - V);                                           // coefficient for shear stiffness
+	const Real Kso           = 8 * sqrt(R) * G;                                                         // coefficient for shear stiffness
 	const Real frictionAngle = (!frictAngle) ? math::min(fa, fb) : (*frictAngle)(mat1->id, mat2->id, mat1->frictionAngle, mat2->frictionAngle);
 
 	const Real Adhesion = 4. * Mathr::PI * R * gamma; // calculate adhesion force as predicted by DMT theory
@@ -2352,15 +2352,34 @@ void Ip2_PartialSatMat_PartialSatMat_MindlinPhys::go(const shared_ptr<Material>&
 	if (en && betan) throw std::invalid_argument("Ip2_PartialSatMat_PartialSatMat_MindlinPhys: only one of en, betan can be specified.");
 	if (es && betas) throw std::invalid_argument("Ip2_PartialSatMat_PartialSatMat_MindlinPhys: only one of es, betas can be specified.");
 
-	// en or es specified, just compute alpha, otherwise alpha remains 0
+	// en or es specified
 	if (en || es) {
-		const Real logE       = log((*en)(mat1->id, mat2->id));
-		contactPhysics->alpha = -sqrt(5 / 6.) * 2 * logE / sqrt(pow(logE, 2) + pow(Mathr::PI, 2))
-		        * sqrt(2 * E * sqrt(R)); // (see Tsuji, 1992), also [Antypov2011] eq. 17
-	}
+		const Real h1  = -6.918798; // Fitting coefficients h_i from  Table 2 - Thornton et al. (2013).
+		const Real h2  = -16.41105;
+		const Real h3  = 146.8049;
+		const Real h4  = -796.4559;
+		const Real h5  = 2928.711;
+		const Real h6  = -7206.864;
+		const Real h7  = 11494.29;
+		const Real h8  = -11342.18;
+		const Real h9  = 6276.757;
+		const Real h10 = -1489.915;
+		
+		// Consider same coefficient of restitution if only one is given (en or es)
+		if (!en) {en=es;}
+		if (!es) {es=en;}
+		
+		const Real En = (*en)(mat1->id, mat2->id);
+		const Real Es = (*es)(mat1->id, mat2->id);
+		const Real alphan = En*(h1 + En*(h2 + En*(h3 + En*(h4 + En*(h5 + En*(h6 + En*(h7 + En*(h8 + En*(h9 + En*h10))))))))); // Eq. (B7) from Thornton et al. (2013)
+		contactPhysics->betan = (En==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + En, 2))*exp(alphan)) - 1.0); // Eq. (B6) from Thornton et al. (2013) - This is noted as 'gamma' in their paper
 
-	// betan specified, use that value directly; otherwise give zero
-	else {
+		// although Thornton (2015) considered betan=betas, here we use his formulae (B6) and (B7) allowing for betas to take a different value, based on the input es
+		const Real alphas = Es*(h1 + Es*(h2 + Es*(h3 + Es*(h4 + Es*(h5 + Es*(h6 + Es*(h7 + Es*(h8 + Es*(h9 + Es*h10))))))))); 
+		contactPhysics->betas = (Es==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + Es, 2))*exp(alphas)) - 1.0);
+
+		// betan/betas specified, use that value directly
+	} else {
 		contactPhysics->betan = betan ? (*betan)(mat1->id, mat2->id) : 0;
 		contactPhysics->betas = betas ? (*betas)(mat1->id, mat2->id) : contactPhysics->betan;
 	}
