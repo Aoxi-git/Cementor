@@ -95,7 +95,6 @@ void Ip2_FrictMatCDM_FrictMatCDM_MindlinPhysCDM::go(const shared_ptr<Material>& 
 	if (contactPhysics->c2 < 0) throw std::invalid_argument("Ip2_FrictMat_FrictMatCDM_MindlinPhysCDM: c2 must be >=0!");
 
 	//damping currently cot used-----------------------------------------------------
-	contactPhysics->alpha = 0.0;
 	contactPhysics->betan = 0.0;
 	contactPhysics->betas = 0.0;
 	//adhesion, bending currently cot used-----------------------------------------------------
@@ -180,7 +179,6 @@ void Ip2_FrictMat_FrictMatCDM_MindlinPhysCDM::go(const shared_ptr<Material>& b1,
 	if (contactPhysics->sigmaMax <= 0) throw std::invalid_argument("Ip2_FrictMat_FrictMatCDM_MindlinPhysCDM: sigmaMax must be > 0");
 	if (contactPhysics->sigmaMax >= E) throw std::invalid_argument("Ip2_FrictMat_FrictMatCDM_MindlinPhysCDM: sigmaMax must be < Young's modulus!");
 	//damping currently cot used-----------------------------------------------------
-	contactPhysics->alpha = 0.0;
 	contactPhysics->betan = 0.0;
 	contactPhysics->betas = 0.0;
 	//adhesion, bending currently cot used-----------------------------------------------------
