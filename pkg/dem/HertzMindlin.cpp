@@ -39,20 +39,20 @@ void Ip2_FrictMat_FrictMat_MindlinPhys::go(const shared_ptr<Material>& b1, const
 	/* from interaction geometry */
 	const auto scg = YADE_CAST<GenericSpheresContact*>(interaction->geom.get());
 	const Real Da  = scg->refR1 > 0 ? scg->refR1 : scg->refR2;
-	const Real Db  = scg->refR2;
+	const Real Db  = scg->refR2 > 0 ? scg->refR2 : scg->refR1;
 	//Vector3r normal=scg->normal;        //The variable set but not used
 
 
 	/* calculate stiffness coefficients */
 	const Real Ga            = Ea / (2 * (1 + Va));
 	const Real Gb            = Eb / (2 * (1 + Vb));
-	const Real G             = (Ga + Gb) / 2;                                                           // average of shear modulus
-	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
-	const Real E             = Ea * Eb / ((1. - math::pow(Va, 2)) * Eb + (1. - math::pow(Vb, 2)) * Ea); // Young modulus
+	const Real G             = 1.0 / ((2 - Va) / Ga + (2 - Vb) / Gb);                                   // effective shear modulus
+//	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
+	const Real E             = Ea * Eb / ((1. - math::pow(Va, 2)) * Eb + (1. - math::pow(Vb, 2)) * Ea); // effective Young modulus
 	const Real R             = Da * Db / (Da + Db);                                                     // equivalent radius
 	const Real Rmean         = (Da + Db) / 2.;                                                          // mean radius
 	const Real Kno           = 4. / 3. * E * sqrt(R);                                                   // coefficient for normal stiffness
-	const Real Kso           = 2 * sqrt(4 * R) * G / (2 - V);                                           // coefficient for shear stiffness
+	const Real Kso           = 8 * sqrt(R) * G;                                                         // coefficient for shear stiffness
 	const Real frictionAngle = (!frictAngle) ? math::min(fa, fb) : (*frictAngle)(mat1->id, mat2->id, mat1->frictionAngle, mat2->frictionAngle);
 
 	const Real Adhesion = 4. * Mathr::PI * R * gamma; // calculate adhesion force as predicted by DMT theory
@@ -72,15 +72,34 @@ void Ip2_FrictMat_FrictMat_MindlinPhys::go(const shared_ptr<Material>& b1, const
 	if (en && betan) throw std::invalid_argument("Ip2_FrictMat_FrictMat_MindlinPhys: only one of en, betan can be specified.");
 	if (es && betas) throw std::invalid_argument("Ip2_FrictMat_FrictMat_MindlinPhys: only one of es, betas can be specified.");
 
-	// en or es specified, just compute alpha, otherwise alpha remains 0
+	// en or es specified
 	if (en || es) {
-		const Real logE       = log((*en)(mat1->id, mat2->id));
-		contactPhysics->alpha = -sqrt(5 / 6.) * 2 * logE / sqrt(pow(logE, 2) + pow(Mathr::PI, 2))
-		        * sqrt(2 * E * sqrt(R)); // (see Tsuji, 1992), also [Antypov2011] eq. 17
-	}
+		const Real h1  = -6.918798; // Fitting coefficients h_i from  Table 2 - Thornton et al. (2013).
+		const Real h2  = -16.41105;
+		const Real h3  = 146.8049;
+		const Real h4  = -796.4559;
+		const Real h5  = 2928.711;
+		const Real h6  = -7206.864;
+		const Real h7  = 11494.29;
+		const Real h8  = -11342.18;
+		const Real h9  = 6276.757;
+		const Real h10 = -1489.915;
+		
+		// Consider same coefficient of restitution if only one is given (en or es)
+		if (!en) {en=es;}
+		if (!es) {es=en;}
+		
+		const Real En = (*en)(mat1->id, mat2->id);
+		const Real Es = (*es)(mat1->id, mat2->id);
+		const Real alphan = En*(h1 + En*(h2 + En*(h3 + En*(h4 + En*(h5 + En*(h6 + En*(h7 + En*(h8 + En*(h9 + En*h10))))))))); // Eq. (B7) from Thornton et al. (2013)
+		contactPhysics->betan = (En==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + En, 2))*exp(alphan)) - 1.0); // Eq. (B6) from Thornton et al. (2013) - This is noted as 'gamma' in their paper
 
-	// betan specified, use that value directly; otherwise give zero
-	else {
+		// although Thornton (2015) considered betan=betas, here we use his formulae (B6) and (B7) allowing for betas to take a different value, based on the input es
+		const Real alphas = Es*(h1 + Es*(h2 + Es*(h3 + Es*(h4 + Es*(h5 + Es*(h6 + Es*(h7 + Es*(h8 + Es*(h9 + Es*h10))))))))); 
+		contactPhysics->betas = (Es==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + Es, 2))*exp(alphas)) - 1.0);
+
+		// betan/betas specified, use that value directly
+	} else {
 		contactPhysics->betan = betan ? (*betan)(mat1->id, mat2->id) : 0;
 		contactPhysics->betas = betas ? (*betas)(mat1->id, mat2->id) : contactPhysics->betan;
 	}
@@ -260,9 +279,7 @@ bool Law2_ScGeom_MindlinPhys_Mindlin::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys
 	const shared_ptr<Body>& b1 = Body::byId(id1, scene);
 	const shared_ptr<Body>& b2 = Body::byId(id2, scene);
 
-	bool useDamping = (phys->betan != 0. || phys->betas != 0. || phys->alpha != 0.);
-	bool LinDamp    = true;
-	if (phys->alpha != 0.) { LinDamp = false; } // use non linear damping
+	bool useDamping = (phys->betan != 0. || phys->betas != 0.);
 
 #ifdef PARTIALSAT
 	if (contact->isFresh(scene)) {
@@ -320,34 +337,17 @@ bool Law2_ScGeom_MindlinPhys_Mindlin::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys
 
 	// Inclusion of local damping if requested
 	// viscous damping is defined for both linear and non-linear elastic case
-	if (useDamping && LinDamp) {
-		Real mbar = (!b1->isDynamic() && b2->isDynamic())
-		        ? de2->mass
-		        : ((!b2->isDynamic() && b1->isDynamic())
-		                   ? de1->mass
-		                   : (de1->mass * de2->mass
-		                      / (de1->mass
-		                         + de2->mass))); // get equivalent mass if both bodies are dynamic, if not set it equal to the one of the dynamic body
-		//Real mbar = de1->mass*de2->mass / (de1->mass + de2->mass); // equivalent mass
+	if (useDamping) { // see Thornton (2015)
+		Real mbar = (!b1->isDynamic() && b2->isDynamic()) ? de2->mass : ((!b2->isDynamic() && b1->isDynamic()) ? de1->mass : (de1->mass * de2->mass / (de1->mass + de2->mass))); // get equivalent mass if both bodies are dynamic, if not set it equal to the one of the dynamic body
 		Real Cn_crit = 2. * sqrt(mbar * phys->kn); // Critical damping coefficient (normal direction)
 		Real Cs_crit = 2. * sqrt(mbar * phys->ks); // Critical damping coefficient (shear direction)
-		// Note: to compare with the analytical solution you provide cn and cs directly (since here we used a different method to define c_crit)
+		
 		cn = Cn_crit * phys->betan; // Damping normal coefficient
 		cs = Cs_crit * phys->betas; // Damping tangential coefficient
 		if (phys->kn < 0 || phys->ks < 0) {
 			cerr << "Negative stiffness kn=" << phys->kn << " ks=" << phys->ks << " for ##" << b1->getId() << "+" << b2->getId() << ", step "
 			     << scene->iter << endl;
-		}
-	} else if (useDamping) { // (see Tsuji, 1992)
-		Real mbar = (!b1->isDynamic() && b2->isDynamic())
-		        ? de2->mass
-		        : ((!b2->isDynamic() && b1->isDynamic())
-		                   ? de1->mass
-		                   : (de1->mass * de2->mass
-		                      / (de1->mass
-		                         + de2->mass))); // get equivalent mass if both bodies are dynamic, if not set it equal to the one of the dynamic body
-		cn        = phys->alpha * sqrt(mbar) * pow(uN, 0.25); // normal viscous coefficient, see also [Antypov2011] eq. 10
-		cs        = cn;                                       // same value for shear viscous coefficient
+	    }
 	}
 
 	/***************/
@@ -609,19 +609,21 @@ void Ip2_FrictMat_FrictMat_MindlinCapillaryPhys::go(
 	/* from interaction geometry */
 	const auto scg = YADE_CAST<GenericSpheresContact*>(interaction->geom.get());
 	const Real Da  = scg->refR1 > 0 ? scg->refR1 : scg->refR2;
-	const Real Db  = scg->refR2;
+	const Real Db  = scg->refR2 > 0 ? scg->refR2 : scg->refR1;
+
+	
 	//Vector3r normal=scg->normal;  //The variable set but not used
 
 	/* calculate stiffness coefficients */
 	const Real Ga            = Ea / (2 * (1 + Va));
 	const Real Gb            = Eb / (2 * (1 + Vb));
-	const Real G             = (Ga + Gb) / 2;                                                           // average of shear modulus
-	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
+	const Real G             = 1.0 / ((2 - Va) / Ga + (2 - Vb) / Gb); //(Ga + Gb) / 2;                 // effective shear modulus
+//	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
 	const Real E             = Ea * Eb / ((1. - math::pow(Va, 2)) * Eb + (1. - math::pow(Vb, 2)) * Ea); // Young modulus
 	const Real R             = Da * Db / (Da + Db);                                                     // equivalent radius
 	const Real Rmean         = (Da + Db) / 2.;                                                          // mean radius
 	const Real Kno           = 4. / 3. * E * sqrt(R);                                                   // coefficient for normal stiffness
-	const Real Kso           = 2 * sqrt(4 * R) * G / (2 - V);                                           // coefficient for shear stiffness
+	const Real Kso           = 8 * sqrt(R) * G;                                                         // coefficient for shear stiffness
 	const Real frictionAngle = math::min(fa, fb);
 
 	const Real Adhesion = 4. * Mathr::PI * R * gamma; // calculate adhesion force as predicted by DMT theory
@@ -641,14 +643,34 @@ void Ip2_FrictMat_FrictMat_MindlinCapillaryPhys::go(
 	if (en && betan) throw std::invalid_argument("Ip2_FrictMat_FrictMat_MindlinCapillaryPhys: only one of en, betan can be specified.");
 	if (es && betas) throw std::invalid_argument("Ip2_FrictMat_FrictMat_MindlinCapillaryPhys: only one of es, betas can be specified.");
 
-	// en or es specified, just compute alpha, otherwise alpha remains 0
+	// en or es specified
 	if (en || es) {
-		const Real logE       = log((*en)(mat1->id, mat2->id));
-		contactPhysics->alpha = -sqrt(5 / 6.) * 2 * logE / sqrt(pow(logE, 2) + pow(Mathr::PI, 2)) * sqrt(2 * E * sqrt(R)); // (see Tsuji, 1992)
-	}
+		const Real h1  = -6.918798; // Fitting coefficients h_i from  Table 2 - Thornton et al. (2013).
+		const Real h2  = -16.41105;
+		const Real h3  = 146.8049;
+		const Real h4  = -796.4559;
+		const Real h5  = 2928.711;
+		const Real h6  = -7206.864;
+		const Real h7  = 11494.29;
+		const Real h8  = -11342.18;
+		const Real h9  = 6276.757;
+		const Real h10 = -1489.915;
+		
+		// Consider same coefficient of restitution if only one is given (en or es)
+		if (!en) {en=es;}
+		if (!es) {es=en;}
+		
+		const Real En = (*en)(mat1->id, mat2->id);
+		const Real Es = (*es)(mat1->id, mat2->id);
+		const Real alphan = En*(h1 + En*(h2 + En*(h3 + En*(h4 + En*(h5 + En*(h6 + En*(h7 + En*(h8 + En*(h9 + En*h10))))))))); // Eq. (B7) from Thornton et al. (2013)
+		contactPhysics->betan = (En==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + En, 2))*exp(alphan)) - 1.0); // Eq. (B6) from Thornton et al. (2013) - This is noted as 'gamma' in their paper
 
-	// betan specified, use that value directly; otherwise give zero
-	else {
+		// although Thornton (2015) considered betan=betas, here we use his formulae (B6) and (B7) allowing for betas to take a different value, based on the input es
+		const Real alphas = Es*(h1 + Es*(h2 + Es*(h3 + Es*(h4 + Es*(h5 + Es*(h6 + Es*(h7 + Es*(h8 + Es*(h9 + Es*h10))))))))); 
+		contactPhysics->betas = (Es==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + Es, 2))*exp(alphas)) - 1.0);
+
+		// betan/betas specified, use that value directly
+	} else {
 		contactPhysics->betan = betan ? (*betan)(mat1->id, mat2->id) : 0;
 		contactPhysics->betas = betas ? (*betas)(mat1->id, mat2->id) : contactPhysics->betan;
 	}
