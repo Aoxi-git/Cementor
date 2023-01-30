@@ -94,12 +94,7 @@ def addPlotData():
 	plot.addData(fc1=f1[2], sc1=-s1, fc2=f2[2], sc2=-s2, fc3=f3[2], sc3=-s3, fc4=f4[2], sc4=-s4)
 
 
-plot.plots = {
-        'sc1': ('fc1'),
-        'sc2': ('fc2'),
-        'sc3': ('fc3'),
-        'sc4': ('fc4')
-}
+plot.plots = {'sc1': ('fc1'), 'sc2': ('fc2'), 'sc3': ('fc3'), 'sc4': ('fc4')}
 plot.plot()
 
 from yade import qt

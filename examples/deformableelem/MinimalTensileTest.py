@@ -149,6 +149,7 @@ def addplot():
 	vecpos = (O.bodies[nodebodies1[0].id].state.pos - initpos0)
 	plot.addData(displacement=abs(vecpos[2]), time=O.time)
 
+
 ##integratoreng=RungeKuttaCashKarp54Integrator([
 ##	    ForceResetter(),
 
