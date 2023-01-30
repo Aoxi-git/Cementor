@@ -8,10 +8,10 @@ Yade Technical Archive. DOI: 10.5281/zenodo.1202039 */
 #pragma once
 
 #include <core/Dispatching.hpp>
+#include <core/State.hpp>
 #include <pkg/common/ElastMat.hpp>
 #include <pkg/common/NormShearPhys.hpp>
 #include <pkg/dem/ScGeom.hpp>
-#include <core/State.hpp>
 #include <random>
 
 namespace yade { // Cannot have #include directive inside.

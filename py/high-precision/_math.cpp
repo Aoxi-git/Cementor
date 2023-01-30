@@ -531,7 +531,7 @@ template <int N, bool registerConverters> struct RegisterRealHPMath {
 		        (py::arg("x")),
 		        R"""(:return: the ``Complex``  (base `10`) logarithm of a complex value z with a branch cut along the negative real axis. Depending on compilation options wraps ``::boost::multiprecision::log10(…)`` or `std::log10(…) <https://en.cppreference.com/w/cpp/numeric/complex/log10>`__ function.)""");
 		py::def("pow",
-		        static_cast<ComplexHP<N> (*)(const ComplexHP<N>&,const ComplexHP<N>&)>(&::yade::math::pow),
+		        static_cast<ComplexHP<N> (*)(const ComplexHP<N>&, const ComplexHP<N>&)>(&::yade::math::pow),
 		        (py::arg("x"), "pow"),
 		        R"""(:return: the ``Complex`` complex arg1 raised to the ``Complex`` power arg2. Depending on compilation options wraps ``::boost::multiprecision::pow(…)`` or `std::pow(…) <https://en.cppreference.com/w/cpp/numeric/complex/pow>`__ function.)""");
 		py::def("sqrt",
@@ -1046,7 +1046,7 @@ template <int N1> struct TestRealHP2 {
 			auto       c2 = a - b;
 			auto       c3 = a * b;
 			auto       c4 = a / b;
-			if (c1 != RealHP<N>(1.25))    // NOTE: might want later to replace these if with BOOST_ASSERT
+			if (c1 != RealHP<N>(1.25)) // NOTE: might want later to replace these if with BOOST_ASSERT
 				throw std::runtime_error(("TestRealHP error: Fatal r1" + info).c_str());
 			if (c2 != RealHP<N>(-3.75)) throw std::runtime_error(("TestRealHP error: Fatal r2" + info).c_str());
 			if (c3 != RealHP<N>(-3.125)) throw std::runtime_error(("TestRealHP error: Fatal r3" + info).c_str());
@@ -1060,7 +1060,7 @@ template <int N1> struct TestRealHP2 {
 		}
 
 #ifndef YADE_COMPLEX_MP
-// see comment in lib/high-precision/RealHP.hpp line 94 about MakeComplexStd, MakeComplexMpc and problems of MPFR mpc_complex with UpconversionOfBasicOperatorsHP.hpp
+		// see comment in lib/high-precision/RealHP.hpp line 94 about MakeComplexStd, MakeComplexMpc and problems of MPFR mpc_complex with UpconversionOfBasicOperatorsHP.hpp
 		{
 			ComplexHP<N1> a  = ComplexHP<N1>(-1.25, 0.5);
 			ComplexHP<N2> b  = ComplexHP<N2>(1.0, 1.0);

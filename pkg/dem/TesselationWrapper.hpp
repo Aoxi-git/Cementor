@@ -15,9 +15,9 @@
 #include <pkg/common/Sphere.hpp>
 #include <pkg/dem/MicroMacroAnalyser.hpp>
 #ifdef YADE_OPENGL
-#include <pkg/common/OpenGLRenderer.hpp>
 #include <lib/opengl/GLUtils.hpp>
 #include <lib/opengl/OpenGLWrapper.hpp>
+#include <pkg/common/OpenGLRenderer.hpp>
 #endif
 
 namespace yade { // Cannot have #include directive inside.
@@ -50,13 +50,13 @@ public:
 	typedef Tesselation::AlphaFace                           AlphaFace;
 	typedef Tesselation::AlphaCap                            AlphaCap;
 
-	/*mutable */Tesselation* Tes; // Modifying internal state of Tesselation in read-only functions is allowed.
-	Real                 mean_radius, inf;
-	bool                 rad_divided;
-	bool                 bounded;
-	CGT::Point           Pmin;
-	CGT::Point           Pmax;
-	vector<Vector3r> 	 segments;
+	/*mutable */ Tesselation* Tes; // Modifying internal state of Tesselation in read-only functions is allowed.
+	Real                      mean_radius, inf;
+	bool                      rad_divided;
+	bool                      bounded;
+	CGT::Point                Pmin;
+	CGT::Point                Pmax;
+	vector<Vector3r>          segments;
 
 	~TesselationWrapper();
 
@@ -78,7 +78,7 @@ public:
 	void addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, Real pmaxy, Real pminz, Real pmaxz);
 	/// Insert one single axis-aligned bounding plane
 	int addBoundingPlane(short axis, bool positive);
-	
+
 	///compute voronoi centers then stop (don't compute anything else)
 	void computeTesselation(void);
 	void computeTesselation(Real pminx, Real pmaxx, Real pminy, Real pmaxy, Real pminz, Real pmaxz);
@@ -192,23 +192,38 @@ REGISTER_SERIALIZABLE(TesselationWrapper);
 
 class GlExtra_AlphaGraph : public GlExtraDrawer {
 public:
-	bool reset;
-	bool refreshDisplay;
-	Real alpha;
-	Real shrinkedAlpha;
-	bool fixedAlpha;
-	static GLUquadric* gluQuadric;
-	static int glCylinderList, oneCylinder;
+	bool                                             reset;
+	bool                                             refreshDisplay;
+	Real                                             alpha;
+	Real                                             shrinkedAlpha;
+	bool                                             fixedAlpha;
+	static GLUquadric*                               gluQuadric;
+	static int                                       glCylinderList, oneCylinder;
 	vector<Eigen::Transform<Real, 3, Eigen::Affine>> rots;
-	vector<Real> lengths;
-	vector<Vector3r> pos;
-	Real getAlpha() const {return  alpha;}; void setAlpha(Real a) {reset=true; alpha=a;};
-	Real getShrinkedAlpha() const {return  shrinkedAlpha;}; void setShrinkedAlpha(Real a) {reset=true; shrinkedAlpha=a;};
-	bool getFixedAlpha() const {return  fixedAlpha;}; void setFixedAlpha(bool a) {reset=true; fixedAlpha=a;};
+	vector<Real>                                     lengths;
+	vector<Vector3r>                                 pos;
+	Real                                             getAlpha() const { return alpha; };
+	void                                             setAlpha(Real a)
+	{
+		reset = true;
+		alpha = a;
+	};
+	Real getShrinkedAlpha() const { return shrinkedAlpha; };
+	void setShrinkedAlpha(Real a)
+	{
+		reset         = true;
+		shrinkedAlpha = a;
+	};
+	bool getFixedAlpha() const { return fixedAlpha; };
+	void setFixedAlpha(bool a)
+	{
+		reset      = true;
+		fixedAlpha = a;
+	};
 	void render() override;
-	void refresh() {refreshDisplay=true;};
+	void refresh() { refreshDisplay = true; };
 
-// #define BREAK_OPENGL
+	// #define BREAK_OPENGL
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(GlExtra_AlphaGraph,GlExtraDrawer,"Display the outer surface defined by alpha contour. Add it to qt.Renderer().extraDrawers. If no instance of TesselationWrapper is provided, the functor will create its own. See :ysrc:`scripts/examples/alphaShapes/GlDrawAlpha.py`.",

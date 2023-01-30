@@ -14,8 +14,6 @@
 #ifdef LINSOLV
 #ifdef PARTIALSAT
 #include "FlowEngine_PartialSatClayEngineT.hpp"
-#include <pkg/pfv/FlowBoundingSphere.hpp>
-#include <pkg/pfv/Network.hpp>
 #include <lib/triangulation/Tesselation.h>
 #include <core/Body.hpp>
 #include <core/Dispatching.hpp>
@@ -26,6 +24,8 @@
 #include <pkg/common/MatchMaker.hpp>
 #include <pkg/dem/ScGeom.hpp>
 #include <pkg/dem/TesselationWrapper.hpp>
+#include <pkg/pfv/FlowBoundingSphere.hpp>
+#include <pkg/pfv/Network.hpp>
 #include <Eigen/SparseLU>
 #include <cholmod.h>
 

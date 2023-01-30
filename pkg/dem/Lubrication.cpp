@@ -53,9 +53,9 @@ void Ip2_FrictMat_FrictMat_LubricationPhys::go(
 	Real Kn = 2. * Ea * Da * Eb * Db / (Ea * Da + Eb * Db);
 	Real Ks = 2. * Ea * Da * Va * Eb * Db * Vb / (Ea * Da * Va + Eb * Db * Vb);
 
-	phys->kn = Kn;
-        phys->keps = Kn*keps;
-	phys->ks = Ks;
+	phys->kn   = Kn;
+	phys->keps = Kn * keps;
+	phys->ks   = Ks;
 
 	/* Friction */
 	phys->mum = math::tan(math::min(fa, fb));
@@ -368,18 +368,18 @@ Real Law2_ScGeom_ImplicitLubricationPhys::trapz_integrate_u(
 		c = -w * u_prev; /*implicit backward Euler 1st order*/
 	}
 	Real rr[2] = { 0, 0 };
-        Real delta = b * b - 4 * c; //note: a=1
+	Real delta = b * b - 4 * c; //note: a=1
 	if (delta >= 0) {
-                // there is an accuracy issue when computing (-b+√(b²-4ac))/2a, use 1st order approx when needed (first case): r=-c/b
-                if ((-c) < (1e-12*delta)) { 
-                    rr[0] = -c/b;
-                    rr[1] = c/b;
-                } else {
-                    rr[0] = 0.5 * (-b + sqrt(delta));
-                    rr[1] = 0.5 * (-b - sqrt(delta));
-                }
-	}  
-		
+		// there is an accuracy issue when computing (-b+√(b²-4ac))/2a, use 1st order approx when needed (first case): r=-c/b
+		if ((-c) < (1e-12 * delta)) {
+			rr[0] = -c / b;
+			rr[1] = c / b;
+		} else {
+			rr[0] = 0.5 * (-b + sqrt(delta));
+			rr[1] = 0.5 * (-b - sqrt(delta));
+		}
+	}
+
 	if (delta < 0 or rr[0] < 0) { // recursive calls after halving the time increment if no positive solution found (no need to check r[1], always smaller)
 		if (depth < maxSubSteps) { //sub-stepping
 			                   //LOG_WARN("delta<0 or negative roots, sub-stepping with dt="<<dt/2.);
@@ -387,24 +387,30 @@ Real Law2_ScGeom_ImplicitLubricationPhys::trapz_integrate_u(
 			trapz_integrate_u(prevDotU, un_prev, u_prev, un_mid, nu, k, keps, eps, dt / 2., withContact, depth + 1);
 			return trapz_integrate_u(prevDotU, un_prev, u_prev, un_curr, nu, k, keps, eps, dt / 2., withContact, depth + 1);
 		} else { // switch to backward Euler (theta = 1) by increasing depth again (see above)
-			LOG_WARN("minimal sub-step reached (depth=" << maxSubSteps << ")"<<rr[0]<<" "<<rr[1]<<" "<<b<<" "<<c<<" "<<delta<<" "<<w);
+			LOG_WARN(
+			        "minimal sub-step reached (depth=" << maxSubSteps << ")" << rr[0] << " " << rr[1] << " " << b << " " << c << " " << delta << " "
+			                                           << w);
 			return trapz_integrate_u(prevDotU, un_prev, u_prev, un_curr, nu, k, keps, eps, dt, withContact, depth + 1);
 		}
 	} else { // normal case, keep the positive solution closest to the previous one, and check contact status
 		// select the nearest strictly positive solution, keep 0 only if there is no positive solution
-		if (rr[0]==0) LOG_WARN("nul gap found "<<delta<<" "<<b<<" "<<c<<" "<<keff<<" "<<un_eff<<" "<<w<<" "<<dt<<" "<<depth<<" "<<u_prev<<" "<<un_curr)
+		if (rr[0] == 0)
+			LOG_WARN(
+			        "nul gap found " << delta << " " << b << " " << c << " " << keff << " " << un_eff << " " << w << " " << dt << " " << depth
+			                         << " " << u_prev << " " << un_curr)
 		if ((math::abs(rr[0] - u_prev) < math::abs(rr[1] - u_prev) and rr[0] > 0) or rr[1] <= 0) u = rr[0];
 		else {
-                        LOG_WARN("root 1 was used")
+			LOG_WARN("root 1 was used")
 			u = rr[1];
-                }
+		}
 		bool hasContact = u < eps;
 		// if contact appeared/disappeared recalculate with different coefficients (another recursion)
-        // the argument "force=true" is used here to avoid entering a (rare) infinite recursion when "u" (the gap) and "eps" are nearly equal;
-        // in such case roundoff errors make it possible that the no-contact integration predicts a contact, whereas the with-contact intergation predicts no contact.
-        // with force=true the status is switched only once
-		if (withContact != hasContact and not force) return trapz_integrate_u(prevDotU, un_prev, u_prev, un_curr, nu, k, keps, eps, dt, hasContact, depth, /*force?*/ true);
-		
+		// the argument "force=true" is used here to avoid entering a (rare) infinite recursion when "u" (the gap) and "eps" are nearly equal;
+		// in such case roundoff errors make it possible that the no-contact integration predicts a contact, whereas the with-contact intergation predicts no contact.
+		// with force=true the status is switched only once
+		if (withContact != hasContact and not force)
+			return trapz_integrate_u(prevDotU, un_prev, u_prev, un_curr, nu, k, keps, eps, dt, hasContact, depth, /*force?*/ true);
+
 		// The normal non-recursive case, finally.
 		// After a successful integration update the variables and return total force
 		prevDotU = keff * u * (un_eff - u); //set for next iteration
@@ -422,7 +428,7 @@ void Law2_ScGeom_VirtualLubricationPhys::shearForce_firstOrder(LubricationPhys* 
 	Real            a((geom->radius1 + geom->radius2) / 2.);
 	const Vector3r& dus = geom->shearIncrement();
 	Real            kt  = phys->ks;
-	Real            nut = (phys->eta > 0.) ? M_PI * phys->eta / 2. * (-2. * a + (2. * a + phys->u) * (math::log(2. * a + phys->u) -  math::log(phys->u))) : 0.;
+	Real nut = (phys->eta > 0.) ? M_PI * phys->eta / 2. * (-2. * a + (2. * a + phys->u) * (math::log(2. * a + phys->u) - math::log(phys->u))) : 0.;
 
 	phys->shearForce            = Vector3r::Zero();
 	phys->shearLubricationForce = Vector3r::Zero();
@@ -440,7 +446,7 @@ void Law2_ScGeom_VirtualLubricationPhys::shearForce_firstOrder(LubricationPhys* 
 			//LOG_INFO("SLIP");
 			Ft *= phys->normalContactForce.norm() * math::max(0., phys->mum) / Ft.norm();
 			phys->shearContactForce     = Ft;
-			Ft                          = (kt*(Ft*scene->dt + dus*nut) + Ft_ * nut ) / (kt * scene->dt + nut);
+			Ft                          = (kt * (Ft * scene->dt + dus * nut) + Ft_ * nut) / (kt * scene->dt + nut);
 			phys->slip                  = true;
 			phys->shearLubricationForce = nut * dus / scene->dt;
 		}
@@ -524,8 +530,8 @@ bool Law2_ScGeom_ImplicitLubricationPhys::go(shared_ptr<IGeom>& iGeom, shared_pt
 	//    Vector3r relVT = relV - relVN; // Tangeancial velocity
 	Real undot = relV.dot(geom->normal); // Normal velocity norm
 
-        // the second condition below is to keep alive soft sticking contacts (large elastic forces between distant particles)
-	if (-geom->penetrationDepth > MaxDist * a and (phys->u > (-0.99*geom->penetrationDepth) )) return false;
+	// the second condition below is to keep alive soft sticking contacts (large elastic forces between distant particles)
+	if (-geom->penetrationDepth > MaxDist * a and (phys->u > (-0.99 * geom->penetrationDepth))) return false;
 
 	// inititalization
 	if (phys->u == -1.) {
@@ -539,7 +545,7 @@ bool Law2_ScGeom_ImplicitLubricationPhys::go(shared_ptr<IGeom>& iGeom, shared_pt
 	phys->normalLubricationForce = Vector3r::Zero();
 	phys->normalPotentialForce   = Vector3r::Zero();
 
-	if (phys->keps!=phys->kn and resolution>0) LOG_WARN("keps!=1 not implemented for resolution>0");
+	if (phys->keps != phys->kn and resolution > 0) LOG_WARN("keps!=1 not implemented for resolution>0");
 	switch (resolution) {
 		case 0: normalForce_trapezoidal(phys, geom, undot, isNew); break;
 		case 1: normalForce_AdimExp(phys, geom, undot, isNew, false); break;
@@ -551,8 +557,8 @@ bool Law2_ScGeom_ImplicitLubricationPhys::go(shared_ptr<IGeom>& iGeom, shared_pt
 			resolution = 0;
 			break;
 	}
-	if (phys->u==0) LOG_WARN("NULL GAP ON "<<id1<<" "<<id2)
-	
+	if (phys->u == 0) LOG_WARN("NULL GAP ON " << id1 << " " << id2)
+
 	Vector3r C1 = Vector3r::Zero();
 	Vector3r C2 = Vector3r::Zero();
 

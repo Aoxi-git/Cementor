@@ -50,11 +50,11 @@ class NewtonIntegrator : public FieldApplier {
 	Matrix3r dVelGrad;
 	Vector3r dSpin;
 
-        Vector3r computeAccelWithoutGravity(const Vector3r& force, const Real& mass, int blockedDOFs);
-        Vector3r addGravity(int blockedDOFs);
+	Vector3r computeAccelWithoutGravity(const Vector3r& force, const Real& mass, int blockedDOFs);
+	Vector3r addGravity(int blockedDOFs);
 
 
-public:   
+public:
 	bool densityScaling;     // internal for density scaling
 	Real updatingDispFactor; //(experimental) Displacement factor used to trigger bound update: the bound is updated only if updatingDispFactor*disp>sweepDist when >0, else all bounds are updated.
 	// function to save maximum velocity, for the verlet-distance optimization

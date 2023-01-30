@@ -283,8 +283,8 @@ void OpenGLRenderer::renderAllInteractionsWire()
 
 void OpenGLRenderer::renderDOF_ID()
 {
-	const GLfloat ambientColorSelected[4]   = { 10.0, 0.0, 0.0, 1.0 };
-	const GLfloat ambientColorUnselected[4] = { 0.5, 0.5, 0.5, 1.0 };
+	const GLfloat                     ambientColorSelected[4]   = { 10.0, 0.0, 0.0, 1.0 };
+	const GLfloat                     ambientColorUnselected[4] = { 0.5, 0.5, 0.5, 1.0 };
 	const std::lock_guard<std::mutex> lock(scene->bodies->drawloopmutex);
 	for (const auto& b : *scene->bodies) {
 		if (!b) continue;

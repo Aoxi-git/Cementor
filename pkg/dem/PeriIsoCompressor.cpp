@@ -129,15 +129,15 @@ void PeriTriaxController::strainStressStiffUpdate()
 	stressTensor = Matrix3r::Zero();
 	Vector3r sumStiff(Vector3r::Zero());
 	int      n = 0;
-    if (not dynCell) FOREACH(const shared_ptr<Interaction>& I, *scene->interactions)
-	{
-		if (!I->isReal()) continue;
-		NormShearPhys*         nsi = YADE_CAST<NormShearPhys*>(I->phys.get());
-		GenericSpheresContact* gsc = YADE_CAST<GenericSpheresContact*>(I->geom.get());
-		for (int i = 0; i < 3; i++)
-			sumStiff[i] += math::abs(gsc->normal[i]) * nsi->kn + (1 - math::abs(gsc->normal[i])) * nsi->ks;
-		n++;
-	}
+	if (not dynCell) FOREACH(const shared_ptr<Interaction>& I, *scene->interactions)
+		{
+			if (!I->isReal()) continue;
+			NormShearPhys*         nsi = YADE_CAST<NormShearPhys*>(I->phys.get());
+			GenericSpheresContact* gsc = YADE_CAST<GenericSpheresContact*>(I->geom.get());
+			for (int i = 0; i < 3; i++)
+				sumStiff[i] += math::abs(gsc->normal[i]) * nsi->kn + (1 - math::abs(gsc->normal[i])) * nsi->ks;
+			n++;
+		}
 	// Update stress
 	stressTensor = Shop::getStress();
 	for (int axis = 0; axis < 3; axis++)

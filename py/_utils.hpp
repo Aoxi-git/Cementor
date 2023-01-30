@@ -10,9 +10,9 @@
 #include <pkg/common/Sphere.hpp>
 #include <pkg/dem/DemXDofGeom.hpp>
 #include <pkg/dem/ScGeom.hpp>
-#include <preprocessing/dem/Shop.hpp>
 #include <pkg/dem/Tetra.hpp>
 #include <pkg/dem/ViscoelasticPM.hpp>
+#include <preprocessing/dem/Shop.hpp>
 #ifdef YADE_MPI
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"

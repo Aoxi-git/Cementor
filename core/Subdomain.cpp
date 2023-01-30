@@ -11,11 +11,11 @@
 #include <core/MPIBodyContainer.hpp>
 #include <core/State.hpp>
 #include <pkg/common/Sphere.hpp>
-#include <preprocessing/dem/Shop.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
+#include <preprocessing/dem/Shop.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 

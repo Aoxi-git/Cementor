@@ -44,10 +44,10 @@ void Ip2_FrictMat_FrictMat_MindlinPhys::go(const shared_ptr<Material>& b1, const
 
 
 	/* calculate stiffness coefficients */
-	const Real Ga            = Ea / (2 * (1 + Va));
-	const Real Gb            = Eb / (2 * (1 + Vb));
-	const Real G             = 1.0 / ((2 - Va) / Ga + (2 - Vb) / Gb);                                   // effective shear modulus
-//	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
+	const Real Ga = Ea / (2 * (1 + Va));
+	const Real Gb = Eb / (2 * (1 + Vb));
+	const Real G  = 1.0 / ((2 - Va) / Ga + (2 - Vb) / Gb); // effective shear modulus
+	//	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
 	const Real E             = Ea * Eb / ((1. - math::pow(Va, 2)) * Eb + (1. - math::pow(Vb, 2)) * Ea); // effective Young modulus
 	const Real R             = Da * Db / (Da + Db);                                                     // equivalent radius
 	const Real Rmean         = (Da + Db) / 2.;                                                          // mean radius
@@ -84,19 +84,23 @@ void Ip2_FrictMat_FrictMat_MindlinPhys::go(const shared_ptr<Material>& b1, const
 		const Real h8  = -11342.18;
 		const Real h9  = 6276.757;
 		const Real h10 = -1489.915;
-		
+
 		// Consider same coefficient of restitution if only one is given (en or es)
-		if (!en) {en=es;}
-		if (!es) {es=en;}
-		
-		const Real En = (*en)(mat1->id, mat2->id);
-		const Real Es = (*es)(mat1->id, mat2->id);
-		const Real alphan = En*(h1 + En*(h2 + En*(h3 + En*(h4 + En*(h5 + En*(h6 + En*(h7 + En*(h8 + En*(h9 + En*h10))))))))); // Eq. (B7) from Thornton et al. (2013)
-		contactPhysics->betan = (En==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + En, 2))*exp(alphan)) - 1.0); // Eq. (B6) from Thornton et al. (2013) - This is noted as 'gamma' in their paper
+		if (!en) { en = es; }
+		if (!es) { es = en; }
+
+		const Real En     = (*en)(mat1->id, mat2->id);
+		const Real Es     = (*es)(mat1->id, mat2->id);
+		const Real alphan = En
+		        * (h1
+		           + En * (h2 + En * (h3 + En * (h4 + En * (h5 + En * (h6 + En * (h7 + En * (h8 + En * (h9 + En * h10))))))))); // Eq. (B7) from Thornton et al. (2013)
+		contactPhysics->betan = (En == 1.0) ? 0
+		                                    : sqrt(1.0 / (1.0 - (math::pow(1.0 + En, 2)) * exp(alphan))
+		                                           - 1.0); // Eq. (B6) from Thornton et al. (2013) - This is noted as 'gamma' in their paper
 
 		// although Thornton (2015) considered betan=betas, here we use his formulae (B6) and (B7) allowing for betas to take a different value, based on the input es
-		const Real alphas = Es*(h1 + Es*(h2 + Es*(h3 + Es*(h4 + Es*(h5 + Es*(h6 + Es*(h7 + Es*(h8 + Es*(h9 + Es*h10))))))))); 
-		contactPhysics->betas = (Es==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + Es, 2))*exp(alphas)) - 1.0);
+		const Real alphas     = Es * (h1 + Es * (h2 + Es * (h3 + Es * (h4 + Es * (h5 + Es * (h6 + Es * (h7 + Es * (h8 + Es * (h9 + Es * h10)))))))));
+		contactPhysics->betas = (Es == 1.0) ? 0 : sqrt(1.0 / (1.0 - (math::pow(1.0 + Es, 2)) * exp(alphas)) - 1.0);
 
 		// betan/betas specified, use that value directly
 	} else {
@@ -241,8 +245,8 @@ bool Law2_ScGeom_MindlinPhys_HertzWithLinearShear::go(shared_ptr<IGeom>& ig, sha
 	//phys->kn=3./2.*phys->kno*math::pow(uN,0.5); // update stiffness, not needed
 
 	// shear force
-	Vector3r& Fs = geom->rotate(phys->shearForce);
-	Real      ks = nonLin > 0 ? phys->kso * math::pow(uN, 0.5) : phys->kso;
+	Vector3r&       Fs             = geom->rotate(phys->shearForce);
+	Real            ks             = nonLin > 0 ? phys->kso * math::pow(uN, 0.5) : phys->kso;
 	const Vector3r& shearIncrement = geom->shearIncrement();
 	Fs -= ks * shearIncrement;
 	// Mohr-Coulomb slip
@@ -338,16 +342,22 @@ bool Law2_ScGeom_MindlinPhys_Mindlin::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys
 	// Inclusion of local damping if requested
 	// viscous damping is defined for both linear and non-linear elastic case
 	if (useDamping) { // see Thornton (2015)
-		Real mbar = (!b1->isDynamic() && b2->isDynamic()) ? de2->mass : ((!b2->isDynamic() && b1->isDynamic()) ? de1->mass : (de1->mass * de2->mass / (de1->mass + de2->mass))); // get equivalent mass if both bodies are dynamic, if not set it equal to the one of the dynamic body
-		Real Cn_crit = 2. * sqrt(mbar * phys->kn); // Critical damping coefficient (normal direction)
-		Real Cs_crit = 2. * sqrt(mbar * phys->ks); // Critical damping coefficient (shear direction)
-		
+		Real mbar    = (!b1->isDynamic() && b2->isDynamic())
+		           ? de2->mass
+		           : ((!b2->isDynamic() && b1->isDynamic())
+		                      ? de1->mass
+		                      : (de1->mass * de2->mass
+                                      / (de1->mass
+                                         + de2->mass))); // get equivalent mass if both bodies are dynamic, if not set it equal to the one of the dynamic body
+		Real Cn_crit = 2. * sqrt(mbar * phys->kn);  // Critical damping coefficient (normal direction)
+		Real Cs_crit = 2. * sqrt(mbar * phys->ks);  // Critical damping coefficient (shear direction)
+
 		cn = Cn_crit * phys->betan; // Damping normal coefficient
 		cs = Cs_crit * phys->betas; // Damping tangential coefficient
 		if (phys->kn < 0 || phys->ks < 0) {
 			cerr << "Negative stiffness kn=" << phys->kn << " ks=" << phys->ks << " for ##" << b1->getId() << "+" << b2->getId() << ", step "
 			     << scene->iter << endl;
-	    }
+		}
 	}
 
 	/***************/
@@ -361,13 +371,13 @@ bool Law2_ScGeom_MindlinPhys_Mindlin::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys
 	// 1. Rotate shear force
 	shearElastic            = scg->rotate(shearElastic);
 	Vector3r prev_FsElastic = shearElastic; // save shear force at previous time step
-	// 2. Get incident velocity, get shear and normal components
+	                                        // 2. Get incident velocity, get shear and normal components
 	// NOTE: below, the normal component is obtained from getIncidentVel(), OTOH, the shear component computed at next line would be wrong for sphere-facet
 	// and possibly other Ig types incompatible with preventGranularRatcheting=true. We thus use the precomputed shearIncrement from the Ig2, which should be always correct.
-    Vector3r incidentV  = scg->getIncidentVel(de1, de2, dt, shift2, shiftVel, false);
-//     Vector3r incidentV  = geom->shearIncrement()/dt;
+	Vector3r incidentV = scg->getIncidentVel(de1, de2, dt, shift2, shiftVel, false);
+	//     Vector3r incidentV  = geom->shearIncrement()/dt;
 	Vector3r incidentVn = scg->normal.dot(incidentV) * scg->normal; // contact normal velocity
-	Vector3r incidentVs = scg->shearIncrement()/dt;               // contact shear velocity  
+	Vector3r incidentVs = scg->shearIncrement() / dt;               // contact shear velocity
 	// 3. Get shear force (incrementally)
 	shearElastic = shearElastic - phys->ks * (incidentVs * dt);
 
@@ -611,14 +621,14 @@ void Ip2_FrictMat_FrictMat_MindlinCapillaryPhys::go(
 	const Real Da  = scg->refR1 > 0 ? scg->refR1 : scg->refR2;
 	const Real Db  = scg->refR2 > 0 ? scg->refR2 : scg->refR1;
 
-	
+
 	//Vector3r normal=scg->normal;  //The variable set but not used
 
 	/* calculate stiffness coefficients */
-	const Real Ga            = Ea / (2 * (1 + Va));
-	const Real Gb            = Eb / (2 * (1 + Vb));
-	const Real G             = 1.0 / ((2 - Va) / Ga + (2 - Vb) / Gb); //(Ga + Gb) / 2;                 // effective shear modulus
-//	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
+	const Real Ga = Ea / (2 * (1 + Va));
+	const Real Gb = Eb / (2 * (1 + Vb));
+	const Real G  = 1.0 / ((2 - Va) / Ga + (2 - Vb) / Gb); //(Ga + Gb) / 2;                 // effective shear modulus
+	//	const Real V             = (Va + Vb) / 2;                                                           // average of poisson's ratio
 	const Real E             = Ea * Eb / ((1. - math::pow(Va, 2)) * Eb + (1. - math::pow(Vb, 2)) * Ea); // Young modulus
 	const Real R             = Da * Db / (Da + Db);                                                     // equivalent radius
 	const Real Rmean         = (Da + Db) / 2.;                                                          // mean radius
@@ -655,19 +665,23 @@ void Ip2_FrictMat_FrictMat_MindlinCapillaryPhys::go(
 		const Real h8  = -11342.18;
 		const Real h9  = 6276.757;
 		const Real h10 = -1489.915;
-		
+
 		// Consider same coefficient of restitution if only one is given (en or es)
-		if (!en) {en=es;}
-		if (!es) {es=en;}
-		
-		const Real En = (*en)(mat1->id, mat2->id);
-		const Real Es = (*es)(mat1->id, mat2->id);
-		const Real alphan = En*(h1 + En*(h2 + En*(h3 + En*(h4 + En*(h5 + En*(h6 + En*(h7 + En*(h8 + En*(h9 + En*h10))))))))); // Eq. (B7) from Thornton et al. (2013)
-		contactPhysics->betan = (En==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + En, 2))*exp(alphan)) - 1.0); // Eq. (B6) from Thornton et al. (2013) - This is noted as 'gamma' in their paper
+		if (!en) { en = es; }
+		if (!es) { es = en; }
+
+		const Real En     = (*en)(mat1->id, mat2->id);
+		const Real Es     = (*es)(mat1->id, mat2->id);
+		const Real alphan = En
+		        * (h1
+		           + En * (h2 + En * (h3 + En * (h4 + En * (h5 + En * (h6 + En * (h7 + En * (h8 + En * (h9 + En * h10))))))))); // Eq. (B7) from Thornton et al. (2013)
+		contactPhysics->betan = (En == 1.0) ? 0
+		                                    : sqrt(1.0 / (1.0 - (math::pow(1.0 + En, 2)) * exp(alphan))
+		                                           - 1.0); // Eq. (B6) from Thornton et al. (2013) - This is noted as 'gamma' in their paper
 
 		// although Thornton (2015) considered betan=betas, here we use his formulae (B6) and (B7) allowing for betas to take a different value, based on the input es
-		const Real alphas = Es*(h1 + Es*(h2 + Es*(h3 + Es*(h4 + Es*(h5 + Es*(h6 + Es*(h7 + Es*(h8 + Es*(h9 + Es*h10))))))))); 
-		contactPhysics->betas = (Es==1.0) ? 0 : sqrt(1.0/(1.0-(math::pow(1.0 + Es, 2))*exp(alphas)) - 1.0);
+		const Real alphas     = Es * (h1 + Es * (h2 + Es * (h3 + Es * (h4 + Es * (h5 + Es * (h6 + Es * (h7 + Es * (h8 + Es * (h9 + Es * h10)))))))));
+		contactPhysics->betas = (Es == 1.0) ? 0 : sqrt(1.0 / (1.0 - (math::pow(1.0 + Es, 2)) * exp(alphas)) - 1.0);
 
 		// betan/betas specified, use that value directly
 	} else {

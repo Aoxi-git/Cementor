@@ -1,7 +1,7 @@
 // 2007 © Václav Šmilauer <eudoxos@arcig.cz>
 #include "Shop.hpp"
-#include <lib/high-precision/Constants.hpp>
 #include <lib/base/LoggingUtils.hpp>
+#include <lib/high-precision/Constants.hpp>
 
 #include <core/Body.hpp>
 #include <core/Interaction.hpp>
@@ -268,24 +268,31 @@ py::tuple Shop::normalShearStressTensors(bool compressionPositive, bool splitNor
 
 /* Return the fabric tensor as according to [Satake1982]. */
 /* as side-effect, set Gl1_NormShear::strongWeakThresholdForce */
-void Shop::fabricTensor(Real& Fmean, Matrix3r& fabric, Matrix3r& fabricStrong, Matrix3r& fabricWeak, Real cutoff, bool splitTensor, Real thresholdForce, vector<Vector3r> extrema)
+void Shop::fabricTensor(
+        Real&            Fmean,
+        Matrix3r&        fabric,
+        Matrix3r&        fabricStrong,
+        Matrix3r&        fabricWeak,
+        Real             cutoff,
+        bool             splitTensor,
+        Real             thresholdForce,
+        vector<Vector3r> extrema)
 {
 	Scene* scene = Omega::instance().getScene().get();
 
 	// *** Fabric tensor ***/
-	fabric           = Matrix3r::Zero();
-	int        count = 0; // number of interactions
+	fabric         = Matrix3r::Zero();
+	int      count = 0; // number of interactions
 	Vector3r bbMin, bbMax;
-	if (!extrema.size()){
+	if (!extrema.size()) {
 		const auto aabb = Shop::aabbExtrema(cutoff);
-		bbMin = aabb.first;
-		bbMax = aabb.second;
-	}
-	else{
+		bbMin           = aabb.first;
+		bbMax           = aabb.second;
+	} else {
 		bbMin = extrema[0];
 		bbMax = extrema[1];
 	}
-	Vector3r   cp;
+	Vector3r cp;
 
 	Fmean = 0; // initialize average contact force for split = 1 fabric measurements
 	// interactions loop to compute the fabric tensor returned when split = 0, and also measures average force for subsequent computations for split = 1:
@@ -391,8 +398,9 @@ Matrix3r Shop::getStress(Real volume)
 	Real   volumeNonPeri = 0;
 	if (volume == 0 && !scene->isPeriodic) {
 		const auto extrema = Shop::aabbExtrema();
-		LOG_ONCE_WARN("getStress used with default volume tend to underestimate the stress due to overlaps on the boundaries, passing actual volume could be more safe.")
-		volumeNonPeri      = (extrema.second[0] - extrema.first[0]) * (extrema.second[1] - extrema.first[1]) * (extrema.second[2] - extrema.first[2]);
+		LOG_ONCE_WARN("getStress used with default volume tend to underestimate the stress due to overlaps on the boundaries, passing actual volume "
+		              "could be more safe.")
+		volumeNonPeri = (extrema.second[0] - extrema.first[0]) * (extrema.second[1] - extrema.first[1]) * (extrema.second[2] - extrema.first[2]);
 	}
 	if (volume == 0) volume = scene->isPeriodic ? scene->cell->hSize.determinant() : volumeNonPeri;
 	Matrix3r   stressTensor = Matrix3r::Zero();
@@ -404,7 +412,7 @@ Matrix3r Shop::getStress(Real volume)
 		shared_ptr<Body> b2 = Body::byId(I->getId2(), scene);
 		if (b1->isClumpMember()) b1 = Body::byId(b1->clumpId, scene);
 		if (b2->isClumpMember()) b2 = Body::byId(b2->clumpId, scene);
-		
+
 		if (b1->shape->getClassIndex() == GridNode::getClassIndexStatic())
 			continue; //no need to check b2 because a GridNode can only be in interaction with an oher GridNode.
 		NormShearPhys* nsi    = YADE_CAST<NormShearPhys*>(I->phys.get());

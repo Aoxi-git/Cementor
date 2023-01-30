@@ -58,7 +58,7 @@ CREATE_LOGGER(Shop);
 Matrix3r Shop::flipCell()
 {
 	LOG_WARN("flipCell from utils module is deprecated, use O.cell.flipCell() or O.cell.flipFlippable=True instead")
-	return Omega::instance().getScene()->cell->flipCell(); 
+	return Omega::instance().getScene()->cell->flipCell();
 }
 
 /* Apply force on contact point to 2 bodies; the force is oriented as it applies on the first body and is reversed on the second.

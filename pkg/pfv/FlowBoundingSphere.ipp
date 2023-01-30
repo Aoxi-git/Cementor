@@ -238,14 +238,14 @@ namespace CGT {
 	template <class Tesselation> Real FlowBoundingSphere<Tesselation>::getPorePressure(Real X, Real Y, Real Z)
 	{
 		const RTriangulation& Tri = lastSolution().Triangulation();
-		CellHandle      cell = Tri.locate(CGT::Sphere(X, Y, Z));
+		CellHandle            cell = Tri.locate(CGT::Sphere(X, Y, Z));
 		return cell->info().p();
 	}
 
 	template <class Tesselation> Real FlowBoundingSphere<Tesselation>::getPoreTemperature(Real X, Real Y, Real Z)
 	{
 		const RTriangulation& Tri = lastSolution().Triangulation();
-		CellHandle      cell = Tri.locate(CGT::Sphere(X, Y, Z));
+		CellHandle            cell = Tri.locate(CGT::Sphere(X, Y, Z));
 		return cell->info().temp();
 	}
 
@@ -397,11 +397,13 @@ namespace CGT {
 			noCache = false; //cache should always be defined after execution of this function
 			if (onlyCache) return;
 		}
-		
+
 #ifndef parallel_forces
-		else {//use cached values
-                    for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++)
-                            for (int yy = 0; yy < 4; yy++) cell->vertex(yy)->info().forces = cell->vertex(yy)->info().forces + cell->info().unitForceVectors[yy] * cell->info().p();
+		else { //use cached values
+			for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++)
+				for (int yy = 0; yy < 4; yy++)
+					cell->vertex(yy)->info().forces
+					        = cell->vertex(yy)->info().forces + cell->info().unitForceVectors[yy] * cell->info().p();
 		}
 
 #else

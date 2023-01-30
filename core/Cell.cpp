@@ -1,6 +1,6 @@
 #include "core/Cell.hpp"
-#include <pkg/common/InsertionSortCollider.hpp>
 #include "core/Scene.hpp"
+#include <pkg/common/InsertionSortCollider.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -47,25 +47,25 @@ void Cell::integrateAndUpdate(Real dt)
 /*! Flip periodic cell for shearing indefinitely.*/
 Matrix3r Cell::flipCell()
 {
-	Scene*                  scene = Omega::instance().getScene().get();
-	Matrix3r                hSizeTemp = hSize;
-	Matrix3i                flipTemp = Matrix3i::Zero();
-	Matrix3i                flip = Matrix3i::Identity();
-	
+	Scene*   scene     = Omega::instance().getScene().get();
+	Matrix3r hSizeTemp = hSize;
+	Matrix3i flipTemp  = Matrix3i::Zero();
+	Matrix3i flip      = Matrix3i::Identity();
+
 	for (int i = 0; i < 3; i++) {
-		int j = (i+1)%3;
-		int k = (i+2)%3;
+		int j = (i + 1) % 3;
+		int k = (i + 2) % 3;
 
 		// We define a reference frame formed by Hj,Hk and an orthogonal vector
 		// Then we find the coordinates of Hi in that reference frame, finally we define slidings
 		// to keep the coordinates of Hi in (Hj,Hk) in the range [-0.5, 0.5]
-		Vector3r normal = hSizeTemp.col(j).cross(hSizeTemp.col(k)); // unit normal of plane (j,k)
-		Matrix3r normalBase = hSizeTemp;
-		normalBase.col(i)=normal;
-		Vector3r coordinates = normalBase.inverse() * hSizeTemp.col(i);	
-		flipTemp = Matrix3i::Zero();
-		flipTemp(j, i) = -int(math::floor(coordinates[j]+0.5));
-		flipTemp(k, i) = -int(math::floor(coordinates[k]+0.5));
+		Vector3r normal      = hSizeTemp.col(j).cross(hSizeTemp.col(k)); // unit normal of plane (j,k)
+		Matrix3r normalBase  = hSizeTemp;
+		normalBase.col(i)    = normal;
+		Vector3r coordinates = normalBase.inverse() * hSizeTemp.col(i);
+		flipTemp             = Matrix3i::Zero();
+		flipTemp(j, i)       = -int(math::floor(coordinates[j] + 0.5));
+		flipTemp(k, i)       = -int(math::floor(coordinates[k] + 0.5));
 		hSizeTemp += hSizeTemp * flipTemp.cast<Real>();
 		flip += flip * flipTemp;
 	}
@@ -78,9 +78,11 @@ Matrix3r Cell::flipCell()
 	// adjunct matrix of (Id + flip) is the inverse since det=1, below is the transposed co-factor matrix of (Id+flip).
 	// note that Matrix3::adjoint is not the adjunct, hence the in-place adjunct below
 	Matrix3i invFlip;
-	invFlip << flip(1, 1)* flip(2, 2) - flip(2, 1) * flip(1, 2), flip(2, 1) * flip(0, 2) - flip(2,2) * flip(0, 1), flip(0, 1) * flip(1, 2) - flip(0, 2) * flip(1, 1),
-	        flip(1, 2) * flip(2, 0) - flip(1, 0) * flip(2, 2), flip(0, 0) * flip(2, 2) - flip(0, 2) * flip(2, 0), flip(0, 2) * flip(1, 0) - flip(1, 2) * flip(0, 0),
-	        flip(1, 0) * flip(2, 1) - flip(2, 0) * flip(1, 1), flip(2, 0) * flip(0, 1) - flip(2, 1) * flip(0, 0), flip(0, 0) * flip(1, 1) - flip(1, 0) * flip(0, 1);
+	invFlip << flip(1, 1) * flip(2, 2) - flip(2, 1) * flip(1, 2), flip(2, 1) * flip(0, 2) - flip(2, 2) * flip(0, 1),
+	        flip(0, 1) * flip(1, 2) - flip(0, 2) * flip(1, 1), flip(1, 2) * flip(2, 0) - flip(1, 0) * flip(2, 2),
+	        flip(0, 0) * flip(2, 2) - flip(0, 2) * flip(2, 0), flip(0, 2) * flip(1, 0) - flip(1, 2) * flip(0, 0),
+	        flip(1, 0) * flip(2, 1) - flip(2, 0) * flip(1, 1), flip(2, 0) * flip(0, 1) - flip(2, 1) * flip(0, 0),
+	        flip(0, 0) * flip(1, 1) - flip(1, 0) * flip(0, 1);
 	for (const auto& i : *scene->interactions)
 		i->cellDist = invFlip * i->cellDist;
 

@@ -47,10 +47,10 @@ class CapillarityEngine : public GlobalEngine {
 public:
 	void checkFusion();
 
-	static DelaunayInterpolator::Dt   dtVbased;
-	static DelaunayInterpolator::Dt   dtPbased;
+	static DelaunayInterpolator::Dt          dtVbased;
+	static DelaunayInterpolator::Dt          dtPbased;
 	static std::vector<MeniscusPhysicalData> solutions;
-	int                               pressureBased; //to detect switches between P-based and V-based data
+	int                                      pressureBased; //to detect switches between P-based and V-based data
 
 
 	BodiesMenisciiList1 bodiesMenisciiList;

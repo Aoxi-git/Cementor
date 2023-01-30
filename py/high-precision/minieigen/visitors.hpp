@@ -1115,8 +1115,8 @@ private:
 	}
 	static std::string __str__(const py::object& obj)
 	{
-		const QuaternionT  self = py::extract<QuaternionT>(obj)();
-		AngleAxisT         aa(self);
+		const QuaternionT self = py::extract<QuaternionT>(obj)();
+		AngleAxisT        aa(self);
 		return std::string(object_class_name(obj) + "((") + ::yade::minieigenHP::numToStringHP(aa.axis()[0]) + ","
 		        + ::yade::minieigenHP::numToStringHP(aa.axis()[1]) + "," + ::yade::minieigenHP::numToStringHP(aa.axis()[2]) + "),"
 		        + ::yade::minieigenHP::numToStringHP(aa.angle()) + ")";

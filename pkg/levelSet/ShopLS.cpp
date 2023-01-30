@@ -177,14 +177,15 @@ vector<vector<vector<Real>>> ShopLS::distIniSE(const Vector3r& radii, const Vect
 	return phiIni(1, radii, epsilons, clump, grid);
 }
 
-shared_ptr<LevelSet> ShopLS::lsSimpleShape(int shape, const AlignedBox3r& aabb, const Real& step, const Real& smearCoeff, const Vector2r& epsilons, shared_ptr<Clump> clump)
+shared_ptr<LevelSet>
+ShopLS::lsSimpleShape(int shape, const AlignedBox3r& aabb, const Real& step, const Real& smearCoeff, const Vector2r& epsilons, shared_ptr<Clump> clump)
 {
 	Vector3r minBod(aabb.min()), maxBod(aabb.max()), dimAabb(maxBod - minBod);
 	if ((dimAabb[0] < 0) || (dimAabb[1] < 0) || (dimAabb[2] < 0)) LOG_ERROR("You specified negative extents for aabb, this is not expected.");
 
 	shared_ptr<LevelSet> lsShape(new LevelSet);
 	lsShape->smearCoeff = smearCoeff;
-	Vector3r             maxGrid,
+	Vector3r maxGrid,
 	        minGrid; // [minGrid,maxGrid] will be LevelSet->lsGrid. It may be different (bigger) than [minBod,maxBod] for the grid to go a little beyond the surface
 	                 // clang-format off
 	// ***** 1. We first define the grid (and twoD) depending upon the shape chosen *******
@@ -194,9 +195,9 @@ shared_ptr<LevelSet> ShopLS::lsSimpleShape(int shape, const AlignedBox3r& aabb, 
 		minGrid       = -maxGrid;
 		lsShape->twoD = true;
 	} else if (shape <= 4) { // sphere, box, superellipsoid, clump of spherical particles, all combined
-//		NB: pay attention to the following line, it has to enable the origin to belong to the grid (on all 3 axes)
-		int nIntX(int(ceil(maxBod[0]/step)) + 1 ), nIntY( int(ceil(maxBod[1]/step)) + 1), nIntZ( int(ceil(maxBod[2]/step)) + 1);
-		maxGrid       = Vector3r(nIntX*step,nIntY*step,nIntZ*step);
+		                 //		NB: pay attention to the following line, it has to enable the origin to belong to the grid (on all 3 axes)
+		int nIntX(int(ceil(maxBod[0] / step)) + 1), nIntY(int(ceil(maxBod[1] / step)) + 1), nIntZ(int(ceil(maxBod[2] / step)) + 1);
+		maxGrid       = Vector3r(nIntX * step, nIntY * step, nIntZ * step);
 		minGrid       = -maxGrid;
 		lsShape->twoD = false;
 	} else
@@ -329,7 +330,15 @@ shared_ptr<ScGeom> ShopLS::geomPtrForLaterRemoval(const State& rbp1, const State
 }
 
 shared_ptr<ScGeom> ShopLS::geomPtr(
-        Vector3r ctctPt, Real un, Real rad1, Real rad2, const State& rbp1, const State& rbp2, const shared_ptr<Interaction>& c, const Vector3r& currentNormal, const Vector3r& shift2)
+        Vector3r                       ctctPt,
+        Real                           un,
+        Real                           rad1,
+        Real                           rad2,
+        const State&                   rbp1,
+        const State&                   rbp2,
+        const shared_ptr<Interaction>& c,
+        const Vector3r&                currentNormal,
+        const Vector3r&                shift2)
 {
 	shared_ptr<ScGeom> geomPtr;
 	bool               isNew = !c->geom;

@@ -95,6 +95,7 @@ public:
 
 	// mutual exclusion to avoid crashes in the rendering loop
 	std::mutex drawloopmutex;
+
 private:
 	bool eraseAlreadyLocked(Body::id_t id, bool eraseClumpMembers);
 };

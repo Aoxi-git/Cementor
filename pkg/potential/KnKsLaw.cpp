@@ -251,7 +251,7 @@ bool Law2_SCG_KnKsPhys_KnKsLaw::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip,
 		}
 #endif
 		if (phys->normalForce.dot(geom->normal) < 0) { // if the total normal force is attractive
-			phys->normalForce = Vector3r::Zero();// set normal force to 0
+			phys->normalForce = Vector3r::Zero();  // set normal force to 0
 		}
 
 		//FIXME: The same must be done for the shearForce, if viscous damping is to be considered in the shear direction as well in the future
