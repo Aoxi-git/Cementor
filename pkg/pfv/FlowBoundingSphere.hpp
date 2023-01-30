@@ -292,7 +292,7 @@ namespace CGT {
 
 #include <pkg/pfv/FlowBoundingSphere.ipp>
 #ifdef LINSOLV
-#include <pkg/pfv //FlowBoundingSphereLinSolv.hpp>
+#include <pkg/pfv/FlowBoundingSphereLinSolv.hpp>
 #endif
 
 #endif //FLOW_ENGINE
