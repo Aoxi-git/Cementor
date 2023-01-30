@@ -17,24 +17,30 @@
 #       scripts/python-formatter.sh ./SingleFile  optionally-yapf3-executable
 
 FORMATTER=yapf3
-
-git diff-index --quiet HEAD --
-CLEAN=$?
-if [ ${CLEAN} -ne 0 ]; then
-	echo "There are uncommitted changes in git directory. Do 'git stash' or 'git commit'."
-	echo "Reformatting on top of uncommited files will only cause trouble."
-	exit 1
-fi
+SKIP="NO"
 
 if [ "$#" -ne 1 ]; then
 	if [ "$#" -eq 2 ]; then
-		echo "Assuming that the yapf3 executable is ${2}"
-		FORMATTER=${2}
+		if [ ${2} = "--allow-dirty" ]; then
+			SKIP="YES"
+		else
+			echo "Assuming that the yapf3 executable is ${2}"
+			FORMATTER=${2}
+		fi
 	else
 		echo "Please invoke this script with either one file or one directory as argument."
 		echo "Optionally as second argument pass the yapf3 executable to use."
+		echo "Or use second argument --allow-dirty to allow uncommitted changes while formatting."
 		exit 1
 	fi
+fi
+
+git diff-index --quiet HEAD --
+CLEAN=$?
+if [ ${CLEAN} -ne 0 ] && [ ${SKIP} = "NO" ]; then
+	echo "There are uncommitted changes in git directory. Do 'git stash' or 'git commit'."
+	echo "Reformatting on top of uncommited files will only cause trouble."
+	exit 1
 fi
 
 function finish-print-stats {

@@ -104,7 +104,7 @@ variables:
           if [[ ${CHECK_FORMAT} == "CHECK_FORMAT" && ${CLANG_VERSION} -ge "10" ]] ; then
                   echo -e "\n\e[92m===\nclang-format version is $CLANG_VERSION \n===\e[0m\n" ;
                   scripts/clang-formatter.sh ./ ;
-                  scripts/python-formatter.sh ./ ;
+                  scripts/python-formatter.sh ./ --allow-dirty ;
                   export CHANGED_LINES=`git diff -w --shortstat | sed -e 's/^.*,\s\([0-9]\+\)\sdeletion.*$/\1/g'` ;
                   echo "CHANGED_LINES = "$CHANGED_LINES ;
                   if [[ ${CHANGED_LINES} -ge "100" ]] ; then
