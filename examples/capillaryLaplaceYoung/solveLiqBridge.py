@@ -14,28 +14,28 @@ from scipy import optimize
 
 
 def solveLiqBridge(rRatio, theta, uStar, delta1, deltaZ, plot, plot3D, speak):
-    '''Computes one single liquid (capillary) bridge
-    Using Lian's method: iterative determination using Taylor expansion with finite difference (FD) increment = deltaZ (a function attribute)
+	'''Computes one single liquid (capillary) bridge
+	Using Lian's method: iterative determination using Taylor expansion with finite difference (FD) increment = deltaZ (a function attribute)
 
-    :param rRatio: the radius ratio, R2/R1 >=1
-    :param theta: contact angle (deg)
-    :param uStar: dimensionless cap. pressure (uc*R2/gamma)
-    :param delta1: filling angle on smallest particle (deg)
-    :param deltaZ: increment of FD scheme (e.g. 2e-6)
-    :param bool plot: whether to plot the profile in 2D
-    :param bool plot3D: whether to plot the liq bridge in 3D
-    :param bool speak: whether to output debug messages
+	:param rRatio: the radius ratio, R2/R1 >=1
+	:param theta: contact angle (deg)
+	:param uStar: dimensionless cap. pressure (uc*R2/gamma)
+	:param delta1: filling angle on smallest particle (deg)
+	:param deltaZ: increment of FD scheme (e.g. 2e-6)
+	:param bool plot: whether to plot the profile in 2D
+	:param bool plot3D: whether to plot the liq bridge in 3D
+	:param bool speak: whether to output debug messages
 
-    :returns: a tuple with
-    \tinterparticle distance,
-    \tdimensionless volume (= vol /R2^3),
-    \tdimensionless force = force/(2*pi*gamma*R2),
-    \tdelta1/2 = filling angles on the 2 particles (degrees),
-    \tdimensionless free energy of the configuration = free energy/(gamma* R2^2),
-    \t11-term of integral(ni nj dS) / R2^2 = 22-term,
-    \t33-term, with 3 axis = the meniscus orientation (NB: surface / R2^2 = 2*nn11 + nn33),
-    \t1 or 0 depending whether things went fine: 1 if yes
-    '''
+	:returns: a tuple with
+	\tinterparticle distance,
+	\tdimensionless volume (= vol /R2^3),
+	\tdimensionless force = force/(2*pi*gamma*R2),
+	\tdelta1/2 = filling angles on the 2 particles (degrees),
+	\tdimensionless free energy of the configuration = free energy/(gamma* R2^2),
+	\t11-term of integral(ni nj dS) / R2^2 = 22-term,
+	\t33-term, with 3 axis = the meniscus orientation (NB: surface / R2^2 = 2*nn11 + nn33),
+	\t1 or 0 depending whether things went fine: 1 if yes
+	'''
 
 	# cstC is the dimensionless capillary force: constant all along the profile
 	# see [9] Lian1993, (6) Duriez2017, or (2.51) Soulie2005 ~ (10) Soulie2006..
