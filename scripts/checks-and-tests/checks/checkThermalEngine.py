@@ -126,7 +126,7 @@ if ('THERMAL' in features):
 
 	print('ftemp', ftemp, 'btemp', btemp)
 	ftolerance = 0.02
-	btolerance = 0.02  
+	btolerance = 0.02
 	ftarget = 45
 	btarget = 25
 	if abs(ftemp - ftarget) / ftarget > ftolerance:

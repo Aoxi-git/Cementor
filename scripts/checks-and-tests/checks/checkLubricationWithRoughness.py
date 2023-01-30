@@ -38,8 +38,7 @@ def check():
 mat = O.materials.append(CohFrictMat(density=m_density, young=1e9, poisson=0.3, frictionAngle=radians(60)))
 
 # add two spheres
-O.bodies.append([sphere(center=(0, 0, 0), radius=m_radius, material=mat, fixed=True),
-                 sphere(center=(0.0, 3 * m_radius, 0), radius=m_radius, material=mat)])
+O.bodies.append([sphere(center=(0, 0, 0), radius=m_radius, material=mat, fixed=True), sphere(center=(0.0, 3 * m_radius, 0), radius=m_radius, material=mat)])
 
 law = Law2_ScGeom_ImplicitLubricationPhys(
         activateTangencialLubrication=True,
