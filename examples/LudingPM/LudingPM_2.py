@@ -64,9 +64,7 @@ def addPlotData():
 	plot.addData(fc1=f1[2], sc1=-s1)
 
 
-plot.plots = {
-        'sc1': ('fc1')
-}
+plot.plots = {'sc1': ('fc1')}
 plot.plot()
 
 from yade import qt

@@ -109,12 +109,7 @@ O.dt = 1.e-7
 #O.bodies[1].state.vel = (0,-1e-2,0);
 #O.bodies[1].state.blockedDOFs = 'xyzXYZ';
 
-plot.plots = {
-        't': ('Fn', 'Fnc', 'Fnl'),
-        't3': ('Fsc_x', 'Fsc_y', 'Fsl_x', 'Fsl_y'),
-        't2': ('u', 'ue'),
-        't4': ('nc_yy', 'nl_yy')
-}
+plot.plots = {'t': ('Fn', 'Fnc', 'Fnl'), 't3': ('Fsc_x', 'Fsc_y', 'Fsl_x', 'Fsl_y'), 't2': ('u', 'ue'), 't4': ('nc_yy', 'nl_yy')}
 plot.plot(subPlots=True)
 O.saveTmp()
 

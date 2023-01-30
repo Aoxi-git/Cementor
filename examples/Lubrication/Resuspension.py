@@ -133,9 +133,7 @@ collider.avoidSelfInteractionMask = 1
 O.dt = 1e-5
 
 # Plot will show height isovalues
-plot.plots = {
-        'time': ('y0', 'y50', 'y80', 'y95', 'ym')
-}
+plot.plots = {'time': ('y0', 'y50', 'y80', 'y95', 'ym')}
 plot.plot()
 
 

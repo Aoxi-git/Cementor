@@ -26,94 +26,89 @@ from yade import pack
 ############################################
 
 # The following 5 lines will be used later for batch execution
-nRead=readParamsFromTable(
-	num_spheres=1000,# number of spheres
-	compFricDegree = 30, # contact friction during the confining phase
-	key='_triax_base_', # put you simulation's name here
-	unknownOk=True
+nRead = readParamsFromTable(
+        num_spheres=1000,  # number of spheres
+        compFricDegree=30,  # contact friction during the confining phase
+        key='_triax_base_',  # put you simulation's name here
+        unknownOk=True
 )
 from yade.params import table
 
-num_spheres=table.num_spheres# number of spheres
-key=table.key
-targetPorosity = 0.43 #the porosity we want for the packing
-compFricDegree = table.compFricDegree # initial contact friction during the confining phase (will be decreased during the REFD compaction process)
-finalFricDegree = 30 # contact friction during the deviatoric loading
-rate=-0.02 # loading rate (strain rate)
-damp=0.2 # damping coefficient
-stabilityThreshold=0.01 # we test unbalancedForce against this value in different loops (see below)
-young=5e6 # contact stiffness
-mn,mx=Vector3(0,0,0),Vector3(1,1,1) # corners of the initial packing
-
+num_spheres = table.num_spheres  # number of spheres
+key = table.key
+targetPorosity = 0.43  #the porosity we want for the packing
+compFricDegree = table.compFricDegree  # initial contact friction during the confining phase (will be decreased during the REFD compaction process)
+finalFricDegree = 30  # contact friction during the deviatoric loading
+rate = -0.02  # loading rate (strain rate)
+damp = 0.2  # damping coefficient
+stabilityThreshold = 0.01  # we test unbalancedForce against this value in different loops (see below)
+young = 5e6  # contact stiffness
+mn, mx = Vector3(0, 0, 0), Vector3(1, 1, 1)  # corners of the initial packing
 
 ## create materials for spheres and plates
-O.materials.append(FrictMat(young=young,poisson=0.5,frictionAngle=radians(compFricDegree),density=2600,label='spheres'))
-O.materials.append(FrictMat(young=young,poisson=0.5,frictionAngle=0,density=0,label='walls'))
+O.materials.append(FrictMat(young=young, poisson=0.5, frictionAngle=radians(compFricDegree), density=2600, label='spheres'))
+O.materials.append(FrictMat(young=young, poisson=0.5, frictionAngle=0, density=0, label='walls'))
 
 ## create walls around the packing
-walls=aabbWalls([mn,mx],thickness=0,material='walls')
-wallIds=O.bodies.append(walls)
+walls = aabbWalls([mn, mx], thickness=0, material='walls')
+wallIds = O.bodies.append(walls)
 
 ## use a SpherePack object to generate a random loose particles packing
-sp=pack.SpherePack()
+sp = pack.SpherePack()
 
-
-clumps=False #turn this true for the same example with clumps
+clumps = False  #turn this true for the same example with clumps
 if clumps:
- ## approximate mean rad of the futur dense packing for latter use
- volume = (mx[0]-mn[0])*(mx[1]-mn[1])*(mx[2]-mn[2])
- mean_rad = pow(0.09*volume/num_spheres,0.3333)
- ## define a unique clump type (we could have many, see clumpCloud documentation)
- c1=pack.SpherePack([((-0.2*mean_rad,0,0),0.5*mean_rad),((0.2*mean_rad,0,0),0.5*mean_rad)])
- ## generate positions and input them in the simulation
- sp.makeClumpCloud(mn,mx,[c1],periodic=False)
- sp.toSimulation(material='spheres')
- O.bodies.updateClumpProperties()#get more accurate clump masses/volumes/inertia
+	## approximate mean rad of the futur dense packing for latter use
+	volume = (mx[0] - mn[0]) * (mx[1] - mn[1]) * (mx[2] - mn[2])
+	mean_rad = pow(0.09 * volume / num_spheres, 0.3333)
+	## define a unique clump type (we could have many, see clumpCloud documentation)
+	c1 = pack.SpherePack([((-0.2 * mean_rad, 0, 0), 0.5 * mean_rad), ((0.2 * mean_rad, 0, 0), 0.5 * mean_rad)])
+	## generate positions and input them in the simulation
+	sp.makeClumpCloud(mn, mx, [c1], periodic=False)
+	sp.toSimulation(material='spheres')
+	O.bodies.updateClumpProperties()  #get more accurate clump masses/volumes/inertia
 else:
- sp.makeCloud(mn,mx,-1,0.3333,num_spheres,False, 0.95,seed=1) #"seed" make the "random" generation always the same
- O.bodies.append([sphere(center,rad,material='spheres') for center,rad in sp])
- #or alternatively (higher level function doing exactly the same):
- #sp.toSimulation(material='spheres')
+	sp.makeCloud(mn, mx, -1, 0.3333, num_spheres, False, 0.95, seed=1)  #"seed" make the "random" generation always the same
+	O.bodies.append([sphere(center, rad, material='spheres') for center, rad in sp])
+	#or alternatively (higher level function doing exactly the same):
+	#sp.toSimulation(material='spheres')
 
 ############################
 ###   DEFINING ENGINES   ###
 ############################
 
-triax=TriaxialStressController(
-	## TriaxialStressController will be used to control stress and strain. It controls particles size and plates positions.
-	## this control of boundary conditions was used for instance in http://dx.doi.org/10.1016/j.ijengsci.2008.07.002
-	maxMultiplier=1.+2e4/young, # spheres growing factor (fast growth)
-	finalMaxMultiplier=1.+2e3/young, # spheres growing factor (slow growth)
-	thickness = 0,
-	## switch stress/strain control using a bitmask. What is a bitmask, huh?!
-	## Say x=1 if stess is controlled on x, else x=0. Same for for y and z, which are 1 or 0.
-	## Then an integer uniquely defining the combination of all these tests is: mask = x*1 + y*2 + z*4
-	## to put it differently, the mask is the integer whose binary representation is xyz, i.e.
-	## "100" (1) means "x", "110" (3) means "x and y", "111" (7) means "x and y and z", etc.
-	stressMask = 7,
-	internalCompaction=True, # If true the confining pressure is generated by growing particles
+triax = TriaxialStressController(
+        ## TriaxialStressController will be used to control stress and strain. It controls particles size and plates positions.
+        ## this control of boundary conditions was used for instance in http://dx.doi.org/10.1016/j.ijengsci.2008.07.002
+        maxMultiplier=1. + 2e4 / young,  # spheres growing factor (fast growth)
+        finalMaxMultiplier=1. + 2e3 / young,  # spheres growing factor (slow growth)
+        thickness=0,
+        ## switch stress/strain control using a bitmask. What is a bitmask, huh?!
+        ## Say x=1 if stess is controlled on x, else x=0. Same for for y and z, which are 1 or 0.
+        ## Then an integer uniquely defining the combination of all these tests is: mask = x*1 + y*2 + z*4
+        ## to put it differently, the mask is the integer whose binary representation is xyz, i.e.
+        ## "100" (1) means "x", "110" (3) means "x and y", "111" (7) means "x and y and z", etc.
+        stressMask=7,
+        internalCompaction=True,  # If true the confining pressure is generated by growing particles
 )
 
-newton=NewtonIntegrator(damping=damp)
+newton = NewtonIntegrator(damping=damp)
 
-O.engines=[
-	ForceResetter(),
-	InsertionSortCollider([Bo1_Sphere_Aabb(),Bo1_Box_Aabb()]),
-	InteractionLoop(
-		[Ig2_Sphere_Sphere_ScGeom(),Ig2_Box_Sphere_ScGeom()],
-		[Ip2_FrictMat_FrictMat_FrictPhys()],
-		[Law2_ScGeom_FrictPhys_CundallStrack()]
-	),
-	## We will use the global stiffness of each body to determine an optimal timestep (see https://yade-dem.org/w/images/1/1b/Chareyre&Villard2005_licensed.pdf)
-	GlobalStiffnessTimeStepper(active=1,timeStepUpdateInterval=100,timestepSafetyCoefficient=0.8),
-	triax,
-	TriaxialStateRecorder(iterPeriod=100,file='WallStresses'+table.key),
-	newton
+O.engines = [
+        ForceResetter(),
+        InsertionSortCollider([Bo1_Sphere_Aabb(), Bo1_Box_Aabb()]),
+        InteractionLoop([Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()], [Ip2_FrictMat_FrictMat_FrictPhys()], [Law2_ScGeom_FrictPhys_CundallStrack()]),
+        ## We will use the global stiffness of each body to determine an optimal timestep (see https://yade-dem.org/w/images/1/1b/Chareyre&Villard2005_licensed.pdf)
+        GlobalStiffnessTimeStepper(active=1, timeStepUpdateInterval=100, timestepSafetyCoefficient=0.8),
+        triax,
+        TriaxialStateRecorder(iterPeriod=100, file='WallStresses' + table.key),
+        newton
 ]
 
 #Display spheres with 2 colors for seeing rotations better
-Gl1_Sphere.stripes=0
-if nRead==0: yade.qt.Controller(), yade.qt.View()
+Gl1_Sphere.stripes = 0
+if nRead == 0:
+	yade.qt.Controller(), yade.qt.View()
 
 ## UNCOMMENT THE FOLLOWING SECTIONS ONE BY ONE
 ## DEPENDING ON YOUR EDITOR, IT COULD BE DONE
@@ -125,15 +120,15 @@ if nRead==0: yade.qt.Controller(), yade.qt.View()
 #######################################
 
 #the value of (isotropic) confining stress defines the target stress to be applied in all three directions
-triax.goal1=triax.goal2=triax.goal3=-10000
+triax.goal1 = triax.goal2 = triax.goal3 = -10000
 
 #while 1:
-  #O.run(1000, True)
-  ##the global unbalanced force on dynamic bodies, thus excluding boundaries, which are not at equilibrium
-  #unb=unbalancedForce()
-  #print 'unbalanced force:',unb,' mean stress: ',triax.meanStress
-  #if unb<stabilityThreshold and abs(-10000-triax.meanStress)/10000<0.001:
-    #break
+#O.run(1000, True)
+##the global unbalanced force on dynamic bodies, thus excluding boundaries, which are not at equilibrium
+#unb=unbalancedForce()
+#print 'unbalanced force:',unb,' mean stress: ',triax.meanStress
+#if unb<stabilityThreshold and abs(-10000-triax.meanStress)/10000<0.001:
+#break
 
 #O.save('confinedState'+key+'.yade.gz')
 #print "###      Isotropic state saved      ###"
@@ -148,15 +143,15 @@ triax.goal1=triax.goal2=triax.goal3=-10000
 
 #import sys #this is only for the flush() below
 #while triax.porosity>targetPorosity:
-	## we decrease friction value and apply it to all the bodies and contacts
-	#compFricDegree = 0.95*compFricDegree
-	#setContactFriction(radians(compFricDegree))
-	#print "\r Friction: ",compFricDegree," porosity:",triax.porosity,
-	#sys.stdout.flush()
-	## while we run steps, triax will tend to grow particles as the packing
-	## keeps shrinking as a consequence of decreasing friction. Consequently
-	## porosity will decrease
-	#O.run(500,1)
+## we decrease friction value and apply it to all the bodies and contacts
+#compFricDegree = 0.95*compFricDegree
+#setContactFriction(radians(compFricDegree))
+#print "\r Friction: ",compFricDegree," porosity:",triax.porosity,
+#sys.stdout.flush()
+## while we run steps, triax will tend to grow particles as the packing
+## keeps shrinking as a consequence of decreasing friction. Consequently
+## porosity will decrease
+#O.run(500,1)
 
 #O.save('compactedState'+key+'.yade.gz')
 #print "###    Compacted state saved      ###"
@@ -193,22 +188,22 @@ triax.goal1=triax.goal2=triax.goal3=-10000
 
 ### a function saving variables
 #def history():
-	#plot.addData(e11=-triax.strain[0], e22=-triax.strain[1], e33=-triax.strain[2],
-			#ev=-triax.strain[0]-triax.strain[1]-triax.strain[2],
-			#s11=-triax.stress(triax.wall_right_id)[0],
-			#s22=-triax.stress(triax.wall_top_id)[1],
-			#s33=-triax.stress(triax.wall_front_id)[2],
-			#i=O.iter)
+#plot.addData(e11=-triax.strain[0], e22=-triax.strain[1], e33=-triax.strain[2],
+#ev=-triax.strain[0]-triax.strain[1]-triax.strain[2],
+#s11=-triax.stress(triax.wall_right_id)[0],
+#s22=-triax.stress(triax.wall_top_id)[1],
+#s33=-triax.stress(triax.wall_front_id)[2],
+#i=O.iter)
 
 #if 1:
-  ## include a periodic engine calling that function in the simulation loop
-  #O.engines=O.engines[0:5]+[PyRunner(iterPeriod=20,command='history()',label='recorder')]+O.engines[5:7]
-  ##O.engines.insert(4,PyRunner(iterPeriod=20,command='history()',label='recorder'))
+## include a periodic engine calling that function in the simulation loop
+#O.engines=O.engines[0:5]+[PyRunner(iterPeriod=20,command='history()',label='recorder')]+O.engines[5:7]
+##O.engines.insert(4,PyRunner(iterPeriod=20,command='history()',label='recorder'))
 #else:
-  ## With the line above, we are recording some variables twice. We could in fact replace the previous
-  ## TriaxialRecorder
-  ## by our periodic engine. Uncomment the following line:
-  #O.engines[4]=PyRunner(iterPeriod=20,command='history()',label='recorder')
+## With the line above, we are recording some variables twice. We could in fact replace the previous
+## TriaxialRecorder
+## by our periodic engine. Uncomment the following line:
+#O.engines[4]=PyRunner(iterPeriod=20,command='history()',label='recorder')
 
 #O.run(100,True)
 

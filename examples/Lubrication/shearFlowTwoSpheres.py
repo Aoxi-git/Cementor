@@ -148,11 +148,7 @@ O.engines = [
 #O.bodies[0].state.blockedDOFs = 'xyzXYZ';
 #O.bodies[1].state.blockedDOFs = 'XYZ';
 
-plot.plots = {
-        't': ('Fn', 'Fnc', 'Fnl'),
-        't2': ('u', 'ue'),
-        'pos1_x': ('pos1_y')
-}
+plot.plots = {'t': ('Fn', 'Fnc', 'Fnl'), 't2': ('u', 'ue'), 'pos1_x': ('pos1_y')}
 plot.plot(subPlots=True)
 O.bodies[0].state.angVel = (0, 0., -0.5 * table.shearRate / (2 * math.pi))
 O.bodies[1].state.angVel = (0, 0., -0.5 * table.shearRate / (2 * math.pi))

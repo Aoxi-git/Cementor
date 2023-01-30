@@ -57,7 +57,5 @@ def switchTranslationEngine():
 	combEngine.dead = False
 
 
-plot.plots = {
-        'z': ('pMove', 'pFest')
-}
+plot.plots = {'z': ('pMove', 'pFest')}
 plot.plot()

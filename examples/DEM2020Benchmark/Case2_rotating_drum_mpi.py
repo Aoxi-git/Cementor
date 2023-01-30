@@ -18,7 +18,7 @@ simulatedTime = 5 if len(sys.argv) <= 1 else float(sys.argv[1])
 
 # -------------------------------------------------------------------- #
 # MPI initialization
-numMPIThreads=1
+numMPIThreads = 1
 
 if numMPIThreads > 1:
 	from yade import mpy as mp
@@ -39,12 +39,16 @@ except:
 Steel = O.materials.append(FrictMat(young=210e9, poisson=0.2, density=7200, label='Steel'))
 
 # Coeff of restitution (e) / Coeff of friction (f)
-e_M1_M2=0.45;	f_M1_M2=0.2
-e_M1_M1=0.5;	f_M1_M1=0.3
-e_M1_St=0.4;	f_M1_St=0.2
-e_M2_M2=0.4;	f_M2_M2=0.4
-e_M2_St=0.4;	f_M2_St=0.2
-
+e_M1_M2 = 0.45
+f_M1_M2 = 0.2
+e_M1_M1 = 0.5
+f_M1_M1 = 0.3
+e_M1_St = 0.4
+f_M1_St = 0.2
+e_M2_M2 = 0.4
+f_M2_M2 = 0.4
+e_M2_St = 0.4
+f_M2_St = 0.2
 
 M1 = O.materials.append(FrictMat(young=1.0e9, poisson=0.2, density=2500, label='M1'))
 
@@ -63,56 +67,58 @@ wallFile = 'Case2_Drum_Walls.txt'
 spheres_M1 = 'Case2_Drum_PartCoordinates_M1.txt'
 spheres_M2 = 'Case2_Drum_PartCoordinates_M2.txt'
 
-hasInputSpheres = os.path.exists('inputData/'+spheres_M1)
+hasInputSpheres = os.path.exists('inputData/' + spheres_M1)
 if not hasInputSpheres:
-	print("Downloading sphere file",spheres_M1)
+	print("Downloading sphere file", spheres_M1)
 	try:
-		os.system('wget -nc -O inputData/'+spheres_M1+' http://yade-dem.org/publi/data/DEM8/'+spheres_M1)
-		os.system('wget -nc -O inputData/'+spheres_M2+' http://yade-dem.org/publi/data/DEM8/'+spheres_M2)
+		os.system('wget -nc -O inputData/' + spheres_M1 + ' http://yade-dem.org/publi/data/DEM8/' + spheres_M1)
+		os.system('wget -nc -O inputData/' + spheres_M2 + ' http://yade-dem.org/publi/data/DEM8/' + spheres_M2)
 	except:
-		print("** probably no internet connection, grab",spheres_M1,"by yourself **")
+		print("** probably no internet connection, grab", spheres_M1, "by yourself **")
 
-
-hasInputWall = os.path.exists('inputData/'+wallFile)
+hasInputWall = os.path.exists('inputData/' + wallFile)
 if not hasInputWall:
 	print("Downloading mesh file", wallFile)
 	try:
-		os.system('wget -nc -O inputData/'+wallFile+' http://yade-dem.org/publi/data/DEM8/'+wallFile)
+		os.system('wget -nc -O inputData/' + wallFile + ' http://yade-dem.org/publi/data/DEM8/' + wallFile)
 	except:
-		print("** probably no internet connection, grab",wallFile,"by yourself **")
-
+		print("** probably no internet connection, grab", wallFile, "by yourself **")
 
 #####################   2. YADE PART  #####################
 
-sp_m1=ymport.text('inputData/'+spheres_M1,material=M1,color=(1,0,0))
-sp_m2=ymport.text('inputData/'+spheres_M2,material=M2,color=(0,0,1))
-facets = ymport.textFacets('inputData/'+wallFile,color=(0,1,0),material=Steel)
+sp_m1 = ymport.text('inputData/' + spheres_M1, material=M1, color=(1, 0, 0))
+sp_m2 = ymport.text('inputData/' + spheres_M2, material=M2, color=(0, 0, 1))
+facets = ymport.textFacets('inputData/' + wallFile, color=(0, 1, 0), material=Steel)
 #facets = ymport.stl(fileName+'.stl',color=(0,1,0),material=Steel)
 drum_ids = range(len(facets))
 
 ## Engines
-O.engines=[
-	ForceResetter(),
-	InsertionSortCollider([Bo1_Sphere_Aabb(),Bo1_Facet_Aabb()],label="collider"),
-	InteractionLoop(
-		[Ig2_Sphere_Sphere_ScGeom(), Ig2_Facet_Sphere_ScGeom(hertzian=True)],
-		[Ip2_FrictMat_FrictMat_MindlinPhys(
-			frictAngle = MatchMaker(matches=((M1,M1,F_g1g1),(Steel,M1,F_gs),(Steel,M2,F_gs),(M1,M2,F_g1g2),(M2,M2,F_g2g2))), 
-			en         = MatchMaker(matches=((M1,M1,e_M1_M1),(Steel,M1,e_M1_St),(Steel,M2,e_M2_St),(M1,M2,e_M1_M2),(M2,M2,e_M2_M2)))  
-		)],
-		[Law2_ScGeom_MindlinPhys_Mindlin(preventGranularRatcheting=False)],
-	),
-	NewtonIntegrator(damping=0,gravity=[0,0,-9.81],label="newton"),
-	RotationEngine(dead=1,rotateAroundZero=True,zeroPoint=(0,0,0),rotationAxis=(0,1,0),angularVelocity=angularVelocity,ids=drum_ids,label='rotation'),
-	#GlobalStiffnessTimeStepper(active=1,timestepSafetyCoefficient=0.8, timeStepUpdateInterval=100, parallelMode=False, label = "ts",defaultDt=PWaveTimeStep()) #FIXME Remember to reinstate parallelMode=True above when we use MPI
-	#VTKRecorder(virtPeriod=0.02,fileName='tmp/Case2b_drum-',recorders=['spheres','facets']),
+O.engines = [
+        ForceResetter(),
+        InsertionSortCollider([Bo1_Sphere_Aabb(), Bo1_Facet_Aabb()], label="collider"),
+        InteractionLoop(
+                [Ig2_Sphere_Sphere_ScGeom(), Ig2_Facet_Sphere_ScGeom(hertzian=True)],
+                [
+                        Ip2_FrictMat_FrictMat_MindlinPhys(
+                                frictAngle=MatchMaker(matches=((M1, M1, F_g1g1), (Steel, M1, F_gs), (Steel, M2, F_gs), (M1, M2, F_g1g2), (M2, M2, F_g2g2))),
+                                en=MatchMaker(matches=((M1, M1, e_M1_M1), (Steel, M1, e_M1_St), (Steel, M2, e_M2_St), (M1, M2, e_M1_M2), (M2, M2, e_M2_M2)))
+                        )
+                ],
+                [Law2_ScGeom_MindlinPhys_Mindlin(preventGranularRatcheting=False)],
+        ),
+        NewtonIntegrator(damping=0, gravity=[0, 0, -9.81], label="newton"),
+        RotationEngine(
+                dead=1, rotateAroundZero=True, zeroPoint=(0, 0, 0), rotationAxis=(0, 1, 0), angularVelocity=angularVelocity, ids=drum_ids, label='rotation'
+        ),
+        #GlobalStiffnessTimeStepper(active=1,timestepSafetyCoefficient=0.8, timeStepUpdateInterval=100, parallelMode=False, label = "ts",defaultDt=PWaveTimeStep()) #FIXME Remember to reinstate parallelMode=True above when we use MPI
+        #VTKRecorder(virtPeriod=0.02,fileName='tmp/Case2b_drum-',recorders=['spheres','facets']),
 ]
 
 # -------------------------------------------------------------------- #
 
 NSTEPS = 1000
 
-sp=sp_m1+sp_m2
+sp = sp_m1 + sp_m2
 
 if numMPIThreads > 1:
 	mp.mprint("appending bodies, rank", mp.rank)
@@ -204,6 +210,7 @@ def addPlotData(save=True):
 		plot.saveDataTxt('outputData/Case2_rotating_drum.txt', vars=('time1', 'zone1_M1_count', 'zone1_M2_count', 'zone2_M1_count', 'zone2_M2_count'))
 		plot.plot(noShow=True).savefig('outputData/Case2_rotating_drum.png')
 
+
 print('particles settled and ready to rotate')
 
 O.stopAtTime = simulatedTime
@@ -212,8 +219,8 @@ if (numMPIThreads > 1 and mp.rank == 0) or numMPIThreads <= 1:
 	addPlotData(True)  # I use this to record the initial state for O.time=0.0 FIXME: Since we already run NSTEPS, O.time is not exactly zero.
 
 #substeps = 1000
-substeps = int(0.01/O.dt)  # the required period of 0.01s for the benchmark
-print("substeps=",substeps)
+substeps = int(0.01 / O.dt)  # the required period of 0.01s for the benchmark
+print("substeps=", substeps)
 while O.time < 5:  # 5 sec max
 	t1 = time.time()
 	if numMPIThreads > 1:

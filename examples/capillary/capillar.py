@@ -97,9 +97,7 @@ def addPlotData():
 	plot.addData(Willett_numeric=-f1[2], Willett_analytic=-f2[2], Rabinovich=-f3[2], Lambert=-f4[2], Weigert=-f5[2], Soulie=-f6[2], sc=sc)
 
 
-plot.plots = {
-        'sc': ('Willett_numeric', 'Willett_analytic', 'Rabinovich', 'Lambert', 'Weigert', 'Soulie')
-}
+plot.plots = {'sc': ('Willett_numeric', 'Willett_analytic', 'Rabinovich', 'Lambert', 'Weigert', 'Soulie')}
 plot.plot()
 
 O.step()
