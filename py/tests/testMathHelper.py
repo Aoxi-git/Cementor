@@ -147,6 +147,6 @@ def log10(a):
 def sqrt(a):
 	return (cmath.sqrt(a) if (a.__class__ == mpc) else math.sqrt(a))
 
+
 def factorial(a):
 	return math.factorial(a)
-
