@@ -27,8 +27,8 @@ Vector3r LevelSet::getCenter()
 // // }
 Real LevelSet::smearedHeaviside(Real x)
 {
-  // Passing smoothly (increasing sine-sort) from y = 0 to 1 when x goes from -1 to 1, see Eq. (3) of Kawamoto2016.
-  return 0.5 * (1.0 + x + sin( Mathr::PI * x) / Mathr::PI);
+	// Passing smoothly (increasing sine-sort) from y = 0 to 1 when x goes from -1 to 1, see Eq. (3) of Kawamoto2016.
+	return 0.5 * (1.0 + x + sin(Mathr::PI * x) / Mathr::PI);
 }
 
 void LevelSet::rayTrace(const Vector3r& ray)
@@ -58,7 +58,7 @@ void LevelSet::rayTrace(const Vector3r& ray)
 		diffSign = false;
 		for (unsigned int gp = 0; gp < 8; gp++) { // passing through 8 cell gridpoints to check whether they all have the same distance sign
 			xInd   = (gp % 2 ? indices[0] + 1
-                                       : indices[0]); // better put parenthesis: "=" and ternary have same precedence, let s not look at associativity
+			                 : indices[0]); // better put parenthesis: "=" and ternary have same precedence, let s not look at associativity
 			yInd   = ((gp & 2) / 2 ? indices[1] + 1 : indices[1]);
 			zInd   = ((gp & 4) / 4 ? indices[2] + 1 : indices[2]);
 			gpDist = distField[xInd][yInd][zInd]; // distance value for current gp
@@ -192,14 +192,12 @@ bool LevelSet::rayTraceInCell(const Vector3r& ray, const Vector3r& pointP, const
 		        "And previous node is " << surfNodes.back() << " whose comparison with gives (relative difference through norms)"
 		                                << (trialNode - surfNodes.back()).norm() / (surfNodes.back()).norm());
 	if ((math::abs(distance(trialNode)) / lengthChar < nodesTol * Mathr::EPSILON)
-		// looks like we found a node. Root finding algorithm normally had a Mathr::EPSILON precision wrt to spac but distance() computation is not the same, hence a different precision. Which is finally estimated here from lengthChar (which matters more than spac)
-	    && (surfNodes.size() == 0
-	     || ((trialNode - surfNodes.back()).norm() / lengthChar > nodesTol * Mathr::EPSILON)
-		// but we still do not want a duplicate of last node, that would come from an adjacent cell, with phi=0 on the cell surface(s)
-		// NB: the 2 above tests are somewhat contradictory in terms of nodesTol (whose value should not be neither too small (phi = 0 could not be checked and more duplicate) nor too big (phi = 0 could be false positive and false positive in duplicate test). What about a 1e-7 hardcoded ?..
-		// NB2: maybe we do not need lChar.. (and just divide with trialNode.norm())
-		)
-	) {
+	    // looks like we found a node. Root finding algorithm normally had a Mathr::EPSILON precision wrt to spac but distance() computation is not the same, hence a different precision. Which is finally estimated here from lengthChar (which matters more than spac)
+	    && (surfNodes.size() == 0 || ((trialNode - surfNodes.back()).norm() / lengthChar > nodesTol * Mathr::EPSILON)
+	        // but we still do not want a duplicate of last node, that would come from an adjacent cell, with phi=0 on the cell surface(s)
+	        // NB: the 2 above tests are somewhat contradictory in terms of nodesTol (whose value should not be neither too small (phi = 0 could not be checked and more duplicate) nor too big (phi = 0 could be false positive and false positive in duplicate test). What about a 1e-7 hardcoded ?..
+	        // NB2: maybe we do not need lChar.. (and just divide with trialNode.norm())
+	        )) {
 		LOG_INFO(
 		        "ONE NODE FOUND ! (" << trialNode << "): it would be in cell " << indicesPt << " whereas we considered cell " << indX << " " << indY
 		                             << " " << indZ);
@@ -302,16 +300,18 @@ void LevelSet::init() // computes stuff (nVoxInside, center, volume, inertia, bo
 	if ((int(distField.size()) != nGPx) or (int((distField[0][0]).size()) != nGPz))
 		LOG_ERROR("There is a size-inconsistency between the current level set grid and shape.distField for this body! The level set grid has changed "
 		          "since the creation of this body, this is not supported.");
-	Real spac = lsGrid->spacing;
-	Real Vcell   = pow(spac, 3);
+	Real spac  = lsGrid->spacing;
+	Real Vcell = pow(spac, 3);
 	Real phiRef(0.);
 	if (smearCoeff != 0)
-	  phiRef = sqrt(3.0/4.0)*spac/smearCoeff; // Smearing parameter (reference distance value) for the smeared Heaviside step function. Equals the cell half-diagonal divided by smearCoeff.
-	else LOG_WARN("You passed smearCoeff = 0, was that intended ? (there will be no smearing)");
+		phiRef = sqrt(3.0 / 4.0) * spac
+		        / smearCoeff; // Smearing parameter (reference distance value) for the smeared Heaviside step function. Equals the cell half-diagonal divided by smearCoeff.
+	else
+		LOG_WARN("You passed smearCoeff = 0, was that intended ? (there will be no smearing)");
 	Real xMean(0.), yMean(0.), zMean(0.); // the center of the level set volume, as determined below
 	nVoxInside = 0;
-	volume = 0.0; // Initializing volume to zero
-	Real phi, dV(-1.); // Distance value and considered particle volume for the current cell (the latter can be less than Vcell due to smearing)
+	volume     = 0.0;      // Initializing volume to zero
+	Real     phi, dV(-1.); // Distance value and considered particle volume for the current cell (the latter can be less than Vcell due to smearing)
 	Vector3r gp;
 	// We will base our level set volume description upon the voxellised description using "inside" voxels.
 	// A voxel is said to be inside according to its minimum gridpoint only, boundary effects are thus unavoidable for now.
@@ -321,16 +321,20 @@ void LevelSet::init() // computes stuff (nVoxInside, center, volume, inertia, bo
 		for (int yIndex = 0; yIndex < nGPy - 1; yIndex++) {
 			for (int zIndex = 0; zIndex < nGPz - 1; zIndex++) {
 				phi = distField[xIndex][yIndex][zIndex];
-				if (math::abs(phi) < phiRef) dV = smearedHeaviside( -phi / phiRef) * Vcell; // we are within the smeared boundary (avoiding smearing if smearCoeff < 0)
-				else if (phi < 0) dV = Vcell; // inside, and away from boundary
-				else if (phi > 0) dV = 0.; // outside
-				if (dV > 0.){
+				if (math::abs(phi) < phiRef)
+					dV = smearedHeaviside(-phi / phiRef)
+					        * Vcell; // we are within the smeared boundary (avoiding smearing if smearCoeff < 0)
+				else if (phi < 0)
+					dV = Vcell; // inside, and away from boundary
+				else if (phi > 0)
+					dV = 0.; // outside
+				if (dV > 0.) {
 					nVoxInside++;
-				  	volume += dV;
+					volume += dV;
 					gp = lsGrid->gridPoint(xIndex, yIndex, zIndex);
-					xMean += (gp[0] + spac / 2.)*dV;
-					yMean += (gp[1] + spac / 2.)*dV;
-					zMean += (gp[2] + spac / 2.)*dV;
+					xMean += (gp[0] + spac / 2.) * dV;
+					yMean += (gp[1] + spac / 2.) * dV;
+					zMean += (gp[2] + spac / 2.) * dV;
 				}
 			}
 		}
@@ -355,10 +359,14 @@ void LevelSet::init() // computes stuff (nVoxInside, center, volume, inertia, bo
 		for (int yIndex = 0; yIndex < nGPy - 1; yIndex++) {
 			for (int zIndex = 0; zIndex < nGPz - 1; zIndex++) {
 				phi = distField[xIndex][yIndex][zIndex];
-				if (math::abs(phi) < phiRef) dV = smearedHeaviside( -phi / phiRef) * Vcell; // we are within the smeared boundary (avoiding smearing if smearCoeff < 0)
-				else if (phi < 0) dV = Vcell; // inside, and away from boundary
-				else if (phi > 0) dV = 0.; // outside
-				if (dV > 0.){
+				if (math::abs(phi) < phiRef)
+					dV = smearedHeaviside(-phi / phiRef)
+					        * Vcell; // we are within the smeared boundary (avoiding smearing if smearCoeff < 0)
+				else if (phi < 0)
+					dV = Vcell; // inside, and away from boundary
+				else if (phi > 0)
+					dV = 0.; // outside
+				if (dV > 0.) {
 					gp = lsGrid->gridPoint(xIndex, yIndex, zIndex);
 					xV = gp[0] + spac / 2.; // again, we choose taking the middle of this inside voxel, instead of the gridpoint
 					yV = gp[1] + spac / 2.;
@@ -382,8 +390,10 @@ void LevelSet::init() // computes stuff (nVoxInside, center, volume, inertia, bo
 		        "Incorrect LevelSet input: local frame is non-inertial. Indeed, Ixx = "
 		        << Ixx << " ; Iyy = " << Iyy << " ; Izz = " << Izz << " ; Ixy = " << Ixy << " ; Ixz = " << Ixz << " ; Iyz = " << Iyz
 		        << " for inertia matrix I, making for a " << ratio << " non-diagonality ratio.");
-	inertia = Vector3r(Ixx, Iyy, Izz);
-	lengthChar = twoD ? sqrt(volume / lsGrid->spacing) : cbrt(volume); // measuring lengthChar here (even if surfNodes already exist and won't be recomputed below) to allow a user to satisfactory call for a rayTrace even after a O.save / O.load
+	inertia    = Vector3r(Ixx, Iyy, Izz);
+	lengthChar = twoD
+	        ? sqrt(volume / lsGrid->spacing)
+	        : cbrt(volume); // measuring lengthChar here (even if surfNodes already exist and won't be recomputed below) to allow a user to satisfactory call for a rayTrace even after a O.save / O.load
 	if (!surfNodes
 	             .size()) { // 0 boundary nodes as of now. Condition could be false after save/load, where we do not need to duplicate the nodes. Other choice to avoid this test would be to save everything else that's computed by init(), eg center, ..
 		initSurfNodes();

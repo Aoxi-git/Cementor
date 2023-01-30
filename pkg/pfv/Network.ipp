@@ -751,8 +751,8 @@ namespace CGT {
 				cell->info().solidLine[j][facetF2] = abs(d13);
 			}; break;
 			default:
-                // corner throat with 3 fictious vertices, no relevant solid line 
-				cell->info().solidLine[j][0] =  cell->info().solidLine[j][1] =  cell->info().solidLine[j][2] = 0;
+				// corner throat with 3 fictious vertices, no relevant solid line
+				cell->info().solidLine[j][0] = cell->info().solidLine[j][1] = cell->info().solidLine[j][2] = 0;
 		}
 
 		lSolid = cell->info().solidLine[j][0] + cell->info().solidLine[j][1] + cell->info().solidLine[j][2];

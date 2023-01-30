@@ -5,8 +5,8 @@
 #include <lib/high-precision/Constants.hpp>
 #include <core/Omega.hpp>
 #include <core/Scene.hpp>
-#include <pkg/potential/PotentialBlock.hpp>
 #include <pkg/dem/ScGeom.hpp>
+#include <pkg/potential/PotentialBlock.hpp>
 
 #include "KnKsPBLaw.hpp"
 #include <core/Scene.hpp>
@@ -382,7 +382,7 @@ bool Law2_SCG_KnKsPBPhys_KnKsPBLaw::go(shared_ptr<IGeom>& ig /* contact geometry
 		}
 #endif
 		if (phys->normalForce.dot(geom->normal) < 0) { // if the total normal force is attractive
-			phys->normalForce = Vector3r::Zero();// set normal force to 0
+			phys->normalForce = Vector3r::Zero();  // set normal force to 0
 		}
 		//FIXME: The same must be done for the shearForce, if viscous damping is to be considered in the shear direction as well in the future
 	}

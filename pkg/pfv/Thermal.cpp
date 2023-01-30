@@ -24,8 +24,8 @@ Caulk, R. and Chareyre, B. (2019) An open framework for the simulation of therma
 #include <core/Scene.hpp>
 #include <pkg/common/Sphere.hpp>
 #include <pkg/dem/FrictPhys.hpp>
-#include <preprocessing/dem/Shop.hpp>
 #include <pkg/pfv/Thermal.hpp>
+#include <preprocessing/dem/Shop.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -36,16 +36,17 @@ ThermalEngine::~ThermalEngine() { } // destructor
 
 void ThermalEngine::action()
 {
-    scene = Omega::instance().getScene().get();
-    // NOTE: below, for efficiency, thermal states are re-checked only after an obvious change in scene->bodies size.
-    // This logic may fail if the same number of bodies are deleted/inserted, and maybe in a few other corner cases
-    if ((scene->bodies->size() != lenBodies) and not checkThermal()) makeThermal();
-    if (debug) cout << "set initial values" << endl;
+	scene = Omega::instance().getScene().get();
+	// NOTE: below, for efficiency, thermal states are re-checked only after an obvious change in scene->bodies size.
+	// This logic may fail if the same number of bodies are deleted/inserted, and maybe in a few other corner cases
+	if ((scene->bodies->size() != lenBodies) and not checkThermal()) makeThermal();
+	if (debug) cout << "set initial values" << endl;
 	if (first) setInitialValues();
 	if (debug) cout << "initial values set" << endl;
-	if (not flow) for (const auto& e : Omega::instance().getScene()->engines) {
-		if (e->getClassName() == "FlowEngine") { flow = dynamic_cast<FlowEngineT*>(e.get()); }
-	}
+	if (not flow)
+		for (const auto& e : Omega::instance().getScene()->engines) {
+			if (e->getClassName() == "FlowEngine") { flow = dynamic_cast<FlowEngineT*>(e.get()); }
+		}
 	// some initialization stuff for timestep and efficiency.
 	elapsedTime += scene->dt;
 	if (elapsedIters >= conductionIterPeriod || first) {
@@ -163,12 +164,12 @@ void ThermalEngine::setReynoldsNumbers()
 
 void ThermalEngine::setInitialValues()
 {
-    if (not checkThermal()) makeThermal();
-//     scene = Omega::instance().getScene().get(); //already assigned in checkThermal()
+	if (not checkThermal()) makeThermal();
+	//     scene = Omega::instance().getScene().get(); //already assigned in checkThermal()
 	YADE_PARALLEL_FOREACH_BODY_BEGIN(const shared_ptr<Body>& b, scene->bodies)
 	{
 		if (b->shape->getClassIndex() != Sphere::getClassIndexStatic() || !b) continue;
-        auto* state = static_cast<ThermalState*>(b->state.get());
+		auto* state = static_cast<ThermalState*>(b->state.get());
 		state->temp = particleT0;
 		state->k = particleK;
 		state->Cp = particleCp;
@@ -428,7 +429,8 @@ void ThermalEngine::computeSolidSolidFluxes()
 			if (!Body::byId(I->getId1(), scene) or !Body::byId(I->getId2(), scene)) continue;
 			const shared_ptr<Body>& b1_ = Body::byId(I->getId1(), scene);
 			const shared_ptr<Body>& b2_ = Body::byId(I->getId2(), scene);
-			if (b1_->shape->getClassIndex() != Sphere::getClassIndexStatic() || b2_->shape->getClassIndex() != Sphere::getClassIndexStatic() || !b1_ || !b2_)
+			if (b1_->shape->getClassIndex() != Sphere::getClassIndexStatic() || b2_->shape->getClassIndex() != Sphere::getClassIndexStatic() || !b1_
+			    || !b2_)
 				continue;
 			auto*      thState1 = static_cast<ThermalState*>(b1_->state.get()); //b1_->state.get();
 			auto*      thState2 = static_cast<ThermalState*>(b2_->state.get()); //b2_->state.get();
@@ -517,9 +519,9 @@ void ThermalEngine::computeFluidFluidConduction()
 	/* Parallel version */
 	Tesselation& Tes = flow->solver->T[flow->solver->currentTes];
 	const long   sizeFacets = Tes.facetCells.size();
-//	#ifdef YADE_OPENMP
-//	#pragma omp parallel for  
-//	#endif
+	//	#ifdef YADE_OPENMP
+	//	#pragma omp parallel for
+	//	#endif
 	for (long i = 0; i < sizeFacets; i++) {
 		CVector                    fluidSurfK;
 		CVector                    poreVector;
@@ -531,7 +533,7 @@ void ThermalEngine::computeFluidFluidConduction()
 		const CellHandle&          neighborCell = cell->neighbor(facetPair.second);
 		if (cell->info().isFictious || neighborCell->info().isFictious || cell->info().blocked || neighborCell->info().blocked) continue;
 		const Real deltaT = cell->info().temp() - neighborCell->info().temp();
-		Real fluidToSolidRatio;
+		Real       fluidToSolidRatio;
 		if (cell->info().isCavity && neighborCell->info().isCavity) fluidToSolidRatio = 1.;
 		else
 			fluidToSolidRatio = cell->info().facetFluidSurfacesRatio[facetPair.second];
@@ -550,16 +552,16 @@ void ThermalEngine::computeFluidFluidConduction()
 		cell->info().stabilityCoefficient += thermalResist;
 		//cout << "conduction distance" << distance << endl;
 		if (!cell->info().Tcondition && !math::isnan(conductionEnergy)) {
-//#ifdef YADE_OPENMP
-//#pragma omp atomic
-//#endif
+			//#ifdef YADE_OPENMP
+			//#pragma omp atomic
+			//#endif
 			cell->info().internalEnergy -= conductionEnergy;
 		}
 		if (!neighborCell->info().Tcondition && !math::isnan(conductionEnergy)) {
-//#ifdef YADE_OPENMP
-//#pragma omp atomic
-//#endif
-		neighborCell->info().internalEnergy += conductionEnergy;
+			//#ifdef YADE_OPENMP
+			//#pragma omp atomic
+			//#endif
+			neighborCell->info().internalEnergy += conductionEnergy;
 		}
 	}
 
@@ -805,26 +807,29 @@ void ThermalEngine::resetFlowBoundaryTemps()
 	flowTempBoundarySet = true;
 }
 
-bool ThermalEngine::checkThermal() {
-        scene = Omega::instance().getScene().get();
-        lenBodies = Omega::instance().getScene()->bodies->size(); //remember length of last visit
-        FOREACH(const shared_ptr<Body>& b, *scene->bodies)
-        {
-            if (b and not YADE_PTR_DYN_CAST<ThermalState>(b->state)) {
-                LOG_WARN("new bodies have non-thermal states, make sure ThermalEngine.makeThermal() is called after inserting bodies (id="<<b->getId()<<" )");
-                return false;
-            }
-        }
-        return true;
+bool ThermalEngine::checkThermal()
+{
+	scene = Omega::instance().getScene().get();
+	lenBodies = Omega::instance().getScene()->bodies->size(); //remember length of last visit
+	FOREACH(const shared_ptr<Body>& b, *scene->bodies)
+	{
+		if (b and not YADE_PTR_DYN_CAST<ThermalState>(b->state)) {
+			LOG_WARN(
+			        "new bodies have non-thermal states, make sure ThermalEngine.makeThermal() is called after inserting bodies (id=" << b->getId()
+			                                                                                                                          << " )");
+			return false;
+		}
+	}
+	return true;
 }
 
 void ThermalEngine::makeThermal()
 {
-        scene = Omega::instance().getScene().get();
-        /* turn thermal the states which are not */
-        FOREACH(const shared_ptr<Body>& b, *scene->bodies) // YADE_PARALLEL_FOREACH_BODY is probably slower for such a trivial task 
-                if (b and not YADE_PTR_DYN_CAST<ThermalState>(b->state)) b->state = shared_ptr<ThermalState>(new ThermalState(*b->state));
-        lenBodies = Omega::instance().getScene()->bodies->size(); //remember length of last visit
+	scene = Omega::instance().getScene().get();
+	/* turn thermal the states which are not */
+	FOREACH(const shared_ptr<Body>& b, *scene->bodies) // YADE_PARALLEL_FOREACH_BODY is probably slower for such a trivial task
+	if (b and not YADE_PTR_DYN_CAST<ThermalState>(b->state)) b->state = shared_ptr<ThermalState>(new ThermalState(*b->state));
+	lenBodies = Omega::instance().getScene()->bodies->size(); //remember length of last visit
 }
 
 // void ThermalEngine::computeVolumeSolidPore(CellHandle& Cell){

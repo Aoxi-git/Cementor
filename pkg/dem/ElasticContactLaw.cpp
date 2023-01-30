@@ -112,9 +112,9 @@ bool Law2_ScGeom_FrictPhys_CundallStrack::go(shared_ptr<IGeom>& ig, shared_ptr<I
 		scene->forces.addTorque(id2, (geom->radius2 - 0.5 * geom->penetrationDepth) * geom->normal.cross(force));
 	} else { // The general case
 		Vector3r shift2 = scene->cell->hSize * contact->cellDist.cast<Real>();
-		State* de1 = Body::byId(id1, scene)->state.get();
-		State* de2 = Body::byId(id2, scene)->state.get();
-		applyForceAtContactPoint(-phys->normalForce - shearForce, geom->contactPoint, id1, de1->se3.position, id2, de2->se3.position+shift2);
+		State*   de1    = Body::byId(id1, scene)->state.get();
+		State*   de2    = Body::byId(id2, scene)->state.get();
+		applyForceAtContactPoint(-phys->normalForce - shearForce, geom->contactPoint, id1, de1->se3.position, id2, de2->se3.position + shift2);
 	}
 	return true;
 }

@@ -36,4 +36,3 @@ REGISTER_SERIALIZABLE(SnapshotEngine);
 } // namespace yade
 
 #endif
-

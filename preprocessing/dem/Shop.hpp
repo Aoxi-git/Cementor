@@ -148,15 +148,15 @@ public:
 
 	//! Function to compute fabric tensor
 	static void fabricTensor(
-	        Real&     Fmean,
-	        Matrix3r& fabric,
-	        Matrix3r& fabricStrong,
-	        Matrix3r& fabricWeak,
-	        Real      cutoff         = 0.0,
-	        bool      splitTensor    = false,
-	        Real      thresholdForce = NaN,
-	        vector<Vector3r> extrema = vector<Vector3r>());
-	static py::tuple fabricTensor(Real cutoff = 0.0, bool splitTensor = false, Real thresholdForce = NaN, vector<Vector3r> extrema= vector<Vector3r>());
+	        Real&            Fmean,
+	        Matrix3r&        fabric,
+	        Matrix3r&        fabricStrong,
+	        Matrix3r&        fabricWeak,
+	        Real             cutoff         = 0.0,
+	        bool             splitTensor    = false,
+	        Real             thresholdForce = NaN,
+	        vector<Vector3r> extrema        = vector<Vector3r>());
+	static py::tuple fabricTensor(Real cutoff = 0.0, bool splitTensor = false, Real thresholdForce = NaN, vector<Vector3r> extrema = vector<Vector3r>());
 
 	//! Function to set translational and rotational velocities of all bodies to zero
 	static void calm(const shared_ptr<Scene>& rb = shared_ptr<Scene>(), int mask = -1);

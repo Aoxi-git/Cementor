@@ -16,8 +16,8 @@
 #include <pkg/common/ElastMat.hpp>
 #include <pkg/common/Sphere.hpp>
 #include <pkg/dem/FrictPhys.hpp>
-#include <preprocessing/dem/Shop.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <preprocessing/dem/Shop.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 

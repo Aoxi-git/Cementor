@@ -148,7 +148,8 @@ namespace math {
 	// Add more functions as necessary, but remember to add them in py/high-precision/_math.cpp, py/tests/testMath.py and py/tests/testMathHelper.py
 	// They can be converted to accept complex by changing levelOfRealHP<> → levelOfHP<>, provided that a complex version exists.
 	// But remember to add tests for complex versions in py/high-precision/_math.cpp, py/tests/testMath.py and py/tests/testMathHelper.py
-	template <typename Rr, int Level = levelOfRealHPAllow<Rr, int>> inline typename boost::enable_if_c<isRealHP<PromoteHP<Rr>>, PromoteHP<Rr>>::type log(const Rr& a)
+	template <typename Rr, int Level = levelOfRealHPAllow<Rr, int>>
+	inline typename boost::enable_if_c<isRealHP<PromoteHP<Rr>>, PromoteHP<Rr>>::type log(const Rr& a)
 	{
 		using ::std::log;
 		using YADE_REAL_MATH_NAMESPACE::log;

@@ -3,8 +3,8 @@
 
 #include <core/Aabb.hpp>
 #include <core/Clump.hpp>
-#include <pkg/potential/KnKsPBLaw.hpp>
 #include <pkg/dem/ScGeom.hpp>
+#include <pkg/potential/KnKsPBLaw.hpp>
 
 #include "Gl1_PotentialBlock.hpp"
 

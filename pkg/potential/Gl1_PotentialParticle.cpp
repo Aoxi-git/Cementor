@@ -6,8 +6,8 @@
 #include <lib/opengl/OpenGLWrapper.hpp>
 #endif
 
-#include <pkg/potential/KnKsLaw.hpp>
 #include <pkg/dem/ScGeom.hpp>
+#include <pkg/potential/KnKsLaw.hpp>
 //#include<pkg/dem/Clump.hpp>
 #include <core/Aabb.hpp>
 

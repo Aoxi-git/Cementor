@@ -178,10 +178,10 @@ void TesselationWrapper::clear2(void) //for testing purpose
 void TesselationWrapper::insertSceneSpheres(bool reset)
 {
 	// declaration of ‘scene’ shadows a member of ‘yade::TesselationWrapper’ [-Werror=shadow]
-// 	Scene* scene2 = Omega::instance().getScene().get();
+	// 	Scene* scene2 = Omega::instance().getScene().get();
 	// 	Real_timer clock;
 	//         clock.start();
-// 	const shared_ptr<BodyContainer>& bodies = scene2->bodies;
+	// 	const shared_ptr<BodyContainer>& bodies = scene2->bodies;
 	build_triangulation_with_ids(scene->bodies, *this, reset);
 	// 	clock.top("Triangulation");
 }
@@ -261,29 +261,29 @@ bool TesselationWrapper::nextFacet(std::pair<unsigned int, unsigned int>& facet)
 
 int TesselationWrapper::addBoundingPlane(short axis, bool positive)
 {
-	Vector3r cornerMin = Vector3r(Pmin.x(), Pmin.y(), Pmin.z());
-	Vector3r cornerMax = Vector3r(Pmax.x(), Pmax.y(), Pmax.z());
-	Vector3r halfSize = 0.5*(cornerMax-cornerMin);
-	Vector3r centerPoint = 0.5*(cornerMin+cornerMax);
+	Vector3r cornerMin   = Vector3r(Pmin.x(), Pmin.y(), Pmin.z());
+	Vector3r cornerMax   = Vector3r(Pmax.x(), Pmax.y(), Pmax.z());
+	Vector3r halfSize    = 0.5 * (cornerMax - cornerMin);
+	Vector3r centerPoint = 0.5 * (cornerMin + cornerMax);
 	// shift by half-size + a large radius
 	Vector3r shift = Vector3r::Zero();
-	shift[axis] = positive ? 1 : -1;
-	shift *= far*(cornerMax - cornerMin).norm();
-	shift[axis]+= positive ? halfSize[axis] : -halfSize[axis];
+	shift[axis]    = positive ? 1 : -1;
+	shift *= far * (cornerMax - cornerMin).norm();
+	shift[axis] += positive ? halfSize[axis] : -halfSize[axis];
 	centerPoint += shift;
-	
+
 	//find a free id
 	int freeId = 0;
-	while (Tes->vertexHandles[freeId] != NULL) ++freeId;
-	
+	while (Tes->vertexHandles[freeId] != NULL)
+		++freeId;
+
 	// we don't want to count this virtual sphere's radius in the average, so compute it before inserting
 	if (!rad_divided) {
 		mean_radius /= n_spheres;
 		rad_divided = true;
-	}	
+	}
 	// now insert
-	Tes->vertexHandles[freeId] = Tes->insert(
-		        centerPoint[0], centerPoint[1], centerPoint[2], far*(cornerMax - cornerMin).norm(), freeId, false);
+	Tes->vertexHandles[freeId] = Tes->insert(centerPoint[0], centerPoint[1], centerPoint[2], far * (cornerMax - cornerMin).norm(), freeId, false);
 	return freeId;
 }
 
@@ -450,8 +450,8 @@ boost::python::list TesselationWrapper::getAlphaCaps(Real alpha, Real shrinkedAl
 void TesselationWrapper::applyAlphaForces(Matrix3r stress, Real alpha, Real shrinkedAlpha, bool fixedAlpha, bool reset)
 {
 	// Scene* scene = Omega::instance().getScene().get();
-	if ((Tes->Triangulation().number_of_vertices()==0) or reset) insertSceneSpheres(true);
-// 	build_triangulation_with_ids(scene->bodies, *this, true); //triangulation needed
+	if ((Tes->Triangulation().number_of_vertices() == 0) or reset) insertSceneSpheres(true);
+	// 	build_triangulation_with_ids(scene->bodies, *this, true); //triangulation needed
 	vector<AlphaCap> caps;
 	Tes->setExtendedAlphaCaps(caps, alpha, shrinkedAlpha, fixedAlpha);
 	for (const auto& b : *scene->bodies)
@@ -502,7 +502,7 @@ Matrix3r TesselationWrapper::calcAlphaStress(Real alpha, Real shrinkedAlpha, boo
 
 boost::python::list TesselationWrapper::getAlphaGraph(Real alpha, Real shrinkedAlpha, bool fixedAlpha)
 {
-	if (Tes->Triangulation().number_of_vertices()==0) insertSceneSpheres(true);
+	if (Tes->Triangulation().number_of_vertices() == 0) insertSceneSpheres(true);
 	segments = Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
 	boost::python::list ret;
 	for (auto f = segments.begin(); f != segments.end(); f++)
@@ -523,68 +523,71 @@ boost::python::list TesselationWrapper::getAlphaVertices(Real alpha)
 
 YADE_PLUGIN((GlExtra_AlphaGraph))
 
-GLUquadric* GlExtra_AlphaGraph::gluQuadric = NULL;
-int GlExtra_AlphaGraph::glCylinderList = -1;
-int GlExtra_AlphaGraph::oneCylinder = -1;
+GLUquadric* GlExtra_AlphaGraph::gluQuadric     = NULL;
+int         GlExtra_AlphaGraph::glCylinderList = -1;
+int         GlExtra_AlphaGraph::oneCylinder    = -1;
 
 void GlExtra_AlphaGraph::render()
 {
-	if (not tesselationWrapper) tesselationWrapper=shared_ptr<TesselationWrapper>(new TesselationWrapper);
-	if (tesselationWrapper->Tes->Triangulation().number_of_vertices()==0) tesselationWrapper->insertSceneSpheres(true);
-	if (tesselationWrapper->segments.size()==0 or reset) {
+	if (not tesselationWrapper) tesselationWrapper = shared_ptr<TesselationWrapper>(new TesselationWrapper);
+	if (tesselationWrapper->Tes->Triangulation().number_of_vertices() == 0) tesselationWrapper->insertSceneSpheres(true);
+	if (tesselationWrapper->segments.size() == 0 or reset) {
 #ifdef BREAK_OPENGL
-		segments = 
+		segments =
 #endif
-		tesselationWrapper->segments = tesselationWrapper->Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
-		reset = true;
+		        tesselationWrapper->segments = tesselationWrapper->Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
+		reset                                = true;
 	}
 #ifdef BREAK_OPENGL
-	else segments = tesselationWrapper->segments;
+	else
+		segments = tesselationWrapper->segments;
 #endif
 	if ((reset or refreshDisplay) and not wire) {
 		rots.clear();
 		lengths.clear();
 	}
-// 	const vector<Vector3r>& segments_ = segments;
+	// 	const vector<Vector3r>& segments_ = segments;
 	const vector<Vector3r>& segments_ = tesselationWrapper->segments;
-	unsigned maxI = segments_.size()-1;
- 	glLineWidth(lineWidth);
+	unsigned                maxI      = segments_.size() - 1;
+	glLineWidth(lineWidth);
 	glColor3v(color);
 	if (lighting) glEnable(GL_LIGHTING);
-	else glDisable(GL_LIGHTING);
+	else
+		glDisable(GL_LIGHTING);
 	glDisable(GL_CULL_FACE);
-	if ((rots.size()==0 or reset or refreshDisplay) and not wire) {
-		Real radiusTemp=0;
-		unsigned i=0;
-		while (i<maxI ) {
-			const Vector3r&        p1        = segments_[i];
-			const Vector3r&        p2        = segments_[i+1];
-			Vector3r relPos = p2 - p1;
-			Real length = relPos.norm();
+	if ((rots.size() == 0 or reset or refreshDisplay) and not wire) {
+		Real     radiusTemp = 0;
+		unsigned i          = 0;
+		while (i < maxI) {
+			const Vector3r& p1     = segments_[i];
+			const Vector3r& p2     = segments_[i + 1];
+			Vector3r        relPos = p2 - p1;
+			Real            length = relPos.norm();
 			lengths.push_back(length);
-			rots.push_back( Eigen::Transform<Real, 3, Eigen::Affine>(Quaternionr().setFromTwoVectors(Vector3r(0, 0, 1), relPos / length) ) );
+			rots.push_back(Eigen::Transform<Real, 3, Eigen::Affine>(Quaternionr().setFromTwoVectors(Vector3r(0, 0, 1), relPos / length)));
 			radiusTemp += length;
-			i+=2;
+			i += 2;
 		}
-		if (radius==0) radius = radiusTemp/Real(i*3);
+		if (radius == 0) radius = radiusTemp / Real(i * 3);
 		reset = false;
 	}
-	if (glCylinderList<0) // will always be true unless the glGenLists() below is commented in (not sure it helps, should be tested)
+	if (glCylinderList < 0) // will always be true unless the glGenLists() below is commented in (not sure it helps, should be tested)
 	{
-		unsigned i = 0, jj=0;
+		unsigned i = 0, jj = 0;
 		if (!gluQuadric) {
-		gluQuadric = gluNewQuadric();
-		if (!gluQuadric) throw runtime_error("Gl1_NormPhys::go unable to allocate new GLUquadric object (out of memory?).");
+			gluQuadric = gluNewQuadric();
+			if (!gluQuadric) throw runtime_error("Gl1_NormPhys::go unable to allocate new GLUquadric object (out of memory?).");
 		}
-// 		glCylinderList = glGenLists(1);
-// 		glNewList(glCylinderList, GL_COMPILE); // create the list here, call it after the "if{}".
-		while (i<maxI ) {
-			const Vector3r&        p1        = segments_[i];
-			const Vector3r&        p2        = segments_[i+1];
+		// 		glCylinderList = glGenLists(1);
+		// 		glNewList(glCylinderList, GL_COMPILE); // create the list here, call it after the "if{}".
+		while (i < maxI) {
+			const Vector3r& p1 = segments_[i];
+			const Vector3r& p2 = segments_[i + 1];
 			if (wire) {
-				glBegin(GL_LINES);
-				glVertex3v(p1);
-				glVertex3v(p2);
+				glBegin(GL_LINES)
+					;
+					glVertex3v(p1);
+					glVertex3v(p2);
 				glEnd();
 			} else {
 				glPushMatrix();
@@ -593,11 +596,11 @@ void GlExtra_AlphaGraph::render()
 				gluCylinder(gluQuadric, radius, radius, lengths[jj], 4, 1);
 				glPopMatrix();
 			}
-			i+=2;
+			i += 2;
 			++jj;
 		}
-	}	
-// 	glCallList(glCylinderList);
+	}
+	// 	glCallList(glCylinderList);
 }
 #endif /*OPENGL*/
 

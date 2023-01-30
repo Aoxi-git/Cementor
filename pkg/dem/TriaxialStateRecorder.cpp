@@ -16,8 +16,8 @@
 #include <pkg/common/Sphere.hpp>
 #include <pkg/dem/FrictPhys.hpp>
 #include <pkg/dem/ScGeom.hpp>
-#include <preprocessing/dem/Shop.hpp>
 #include <pkg/dem/TriaxialStressController.hpp>
+#include <preprocessing/dem/Shop.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
