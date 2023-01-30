@@ -4,7 +4,6 @@
 #  This program is free software; it is licensed under the terms of the  #
 #  GNU General Public License v2 or later. See file LICENSE for details. #
 ##########################################################################
-
 """
 When yade uses high-precision number as ``Real`` type the usual (old):
 
@@ -35,4 +34,3 @@ The ``RealHP<n>`` :ref:`higher precision<higher-hp-precision>` vectors and matri
 # all C++ functions are accessible now:
 import yade
 from yade._minieigenHP import *
-

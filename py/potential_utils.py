@@ -1,15 +1,14 @@
 # encoding: utf-8
 # 2022 © Vasileios Angelidakis <vasileios.angelidakis@ncl.ac.uk>
-
 """
 Auxiliary functions for the Potential Blocks
 """
 
 from builtins import range
-import math,random,doctest,geom,numpy
+import math, random, doctest, geom, numpy
 from yade import Vector3, Quaternion, utils
 from yade.wrapper import *
-from math import sin, cos, tan, sqrt, pi, radians # atan, atan2
+from math import sin, cos, tan, sqrt, pi, radians  # atan, atan2
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -18,14 +17,16 @@ from numpy import array
 #from yade import utils	# FIXME: I only use utils._commonBodySetup
 from yade.utils import _commonBodySetup, randomColor
 
-try: # use psyco if available
+try:  # use psyco if available
 	import psyco
 	psyco.full()
-except ImportError: pass
+except ImportError:
+	pass
+
 
 #**********************************************************************************
 #creates Potential Blocks, defining the coefficients of their faces
-def potentialblock(material, a=[], b=[], c=[], d=[], r=0.0, R=0.0, mask=1, isBoundary=False, fixed=False, color=[-1,-1,-1]):
+def potentialblock(material, a=[], b=[], c=[], d=[], r=0.0, R=0.0, mask=1, isBoundary=False, fixed=False, color=[-1, -1, -1]):
 	"""creates potential block.
 
 	:param Material material: material of new body
@@ -35,37 +36,42 @@ def potentialblock(material, a=[], b=[], c=[], d=[], r=0.0, R=0.0, mask=1, isBou
 	:param bool isBoundary: whether this is a boundary body (see PotentialBlock docs)
 	"""
 	# TODO: In this function, I can introduce all the other attributes of the PBs, like: fixedNormal, boundaryNormal -> Naah, the invocation gets too long. I can use *kw!!!
-	pb=Body()
-	pb.mask=mask
+	pb = Body()
+	pb.mask = mask
 	pb.aspherical = True
 
-	pb.shape=PotentialBlock(a=a,b=b,c=c,d=d,r=r,R=R,isBoundary=isBoundary, AabbMinMax=True) #id=len(O.bodies) #FIXME: Check if I need id for vtk output
+	pb.shape = PotentialBlock(
+	        a=a, b=b, c=c, d=d, r=r, R=R, isBoundary=isBoundary, AabbMinMax=True
+	)  #id=len(O.bodies) #FIXME: Check if I need id for vtk output
 	if color[0] == -1:
-		pb.shape.color = randomColor(seed=random.randint(0,1E6))
+		pb.shape.color = randomColor(seed=random.randint(0, 1E6))
 	else:
 		pb.shape.color = color
-	utils._commonBodySetup(pb,pb.shape.volume,pb.shape.inertia,material,pos=pb.shape.position,fixed=fixed)
-	pb.state.ori=pb.shape.orientation
+	utils._commonBodySetup(pb, pb.shape.volume, pb.shape.inertia, material, pos=pb.shape.position, fixed=fixed)
+	pb.state.ori = pb.shape.orientation
 	return pb
+
 
 #**********************************************************************************
 #creates cuboidal particle using the Potential Blocks
-def cuboid(material, edges=Vector3(1,1,1), r=0.0, R=0.0, center=[0,0,0], mask=1, isBoundary=False, fixed=False, color=[-1,-1,-1]):
+def cuboid(material, edges=Vector3(1, 1, 1), r=0.0, R=0.0, center=[0, 0, 0], mask=1, isBoundary=False, fixed=False, color=[-1, -1, -1]):
 	"""creates cuboid using the Potential Blocks
 
 	:param Vector3 edges: edges of the cuboid
 	:param Material material: material of new body (FrictMat)
 	:param Vector3 center: center of the new body
 	"""
-	aa=[  1, -1,  0,  0,  0,  0 ]
-	bb=[  0,  0,  1, -1,  0,  0 ]
-	cc=[  0,  0,  0,  0,  1, -1 ]
-	dd=[ edges[0]/2., edges[0]/2., edges[1]/2., edges[1]/2., edges[2]/2., edges[2]/2. ]
+	aa = [1, -1, 0, 0, 0, 0]
+	bb = [0, 0, 1, -1, 0, 0]
+	cc = [0, 0, 0, 0, 1, -1]
+	dd = [edges[0] / 2., edges[0] / 2., edges[1] / 2., edges[1] / 2., edges[2] / 2., edges[2] / 2.]
 
-	if not r: r=min(dd)/2.
-	cuboid = potentialblock(material=material,a=aa,b=bb,c=cc,d=array(dd)-r,r=r,R=R,mask=mask,isBoundary=isBoundary,fixed=fixed,color=color)
+	if not r:
+		r = min(dd) / 2.
+	cuboid = potentialblock(material=material, a=aa, b=bb, c=cc, d=array(dd) - r, r=r, R=R, mask=mask, isBoundary=isBoundary, fixed=fixed, color=color)
 	cuboid.state.pos = center
 	return cuboid
+
 
 #**********************************************************************************
 #creates Aabb boundary plates using the Potential Blocks, around a given cuboidal space
@@ -81,28 +87,36 @@ def aabbPlates(material, extrema=None, thickness=0.0, r=0.0, R=0.0, mask=1, isBo
 
 	:returns: a list of 6 PotentialBlock Bodies enclosing the packing, in the order minX,maxX,minY,maxY,minZ,maxZ.
 	"""
-	walls=[]
-#	if not extrema: extrema=aabbExtrema() #TODO: aabbExtrema() is not compatible with non-spherical particles yet
-	if not thickness: thickness=min(extrema[1][0]-extrema[0][0], extrema[1][1]-extrema[0][1], extrema[1][2]-extrema[0][2])/10.
-	
-	randColor=False
-	if not color: randColor=True
+	walls = []
+	#	if not extrema: extrema=aabbExtrema() #TODO: aabbExtrema() is not compatible with non-spherical particles yet
+	if not thickness:
+		thickness = min(extrema[1][0] - extrema[0][0], extrema[1][1] - extrema[0][1], extrema[1][2] - extrema[0][2]) / 10.
 
-	for axis in [0,1,2]:
-		mi,ma=extrema
-		center=[(mi[i]+ma[i])/2. for i in range(3)]
-		extents=[(ma[i]-mi[i]) for i in range(3)]
-		extents[axis]=thickness/2.
-		if randColor: color=randomColor(seed=random.randint(0,1E6))
-		for j in [0,1]:
-			center[axis]=extrema[j][axis]+(j-.5)*thickness/2.
-			walls.append(cuboid(material=material,edges=extents,r=r,R=R,center=center,mask=mask,isBoundary=isBoundary,fixed=fixed,color=color))
-			walls[-1].shape.wire=True
+	randColor = False
+	if not color:
+		randColor = True
+
+	for axis in [0, 1, 2]:
+		mi, ma = extrema
+		center = [(mi[i] + ma[i]) / 2. for i in range(3)]
+		extents = [(ma[i] - mi[i]) for i in range(3)]
+		extents[axis] = thickness / 2.
+		if randColor:
+			color = randomColor(seed=random.randint(0, 1E6))
+		for j in [0, 1]:
+			center[axis] = extrema[j][axis] + (j - .5) * thickness / 2.
+			walls.append(
+			        cuboid(material=material, edges=extents, r=r, R=R, center=center, mask=mask, isBoundary=isBoundary, fixed=fixed, color=color)
+			)
+			walls[-1].shape.wire = True
 	return walls
+
 
 #**********************************************************************************
 #creates cylindrical boundary plates using the Potential Blocks, using a given radius and around a given axis
-def cylindricalPlates(material, radius=0.0, height=0.0, thickness=0.0, numFaces=3, r=0.0, R=0.0, mask=1, isBoundary=False, fixed=True, lid=[True,True], color=None):
+def cylindricalPlates(
+        material, radius=0.0, height=0.0, thickness=0.0, numFaces=3, r=0.0, R=0.0, mask=1, isBoundary=False, fixed=True, lid=[True, True], color=None
+):
 	"""Return numFaces cuboids that will wrap existing packing as walls from all sides. 			#FIXME: Correct this comment
 
 	:param Material material: material of new bodies (FrictMat)
@@ -120,38 +134,80 @@ def cylindricalPlates(material, radius=0.0, height=0.0, thickness=0.0, numFaces=
 	# TODO: Check facetCylinder for orientation of the cylinder
 	# TODO: Add center of the cylinder
 
-	walls=[]
-	if not thickness: thickness=min(radius,height/2.)/10.
-	angle=radians(360)/numFaces
-	axis=Vector3(0,0,1)	#TODO: To make it work for any axis - have to change: center, edges
+	walls = []
+	if not thickness:
+		thickness = min(radius, height / 2.) / 10.
+	angle = radians(360) / numFaces
+	axis = Vector3(0, 0, 1)  #TODO: To make it work for any axis - have to change: center, edges
 
-	randColor=False
-	if not color: randColor=True
-	for i in range(0,numFaces):
-		center=Vector3((radius+thickness/2.)*cos(i*angle), (radius+thickness/2.)*sin(i*angle), height/2.) #*(axis.asDiagonal())
+	randColor = False
+	if not color:
+		randColor = True
+	for i in range(0, numFaces):
+		center = Vector3((radius + thickness / 2.) * cos(i * angle), (radius + thickness / 2.) * sin(i * angle), height / 2.)  #*(axis.asDiagonal())
 
-		if randColor: color=[abs(cos(i*angle)), abs(sin(i*angle)), 1]
-		walls.append(cuboid(material=material, edges=Vector3(thickness,2*(radius)*tan(pi/numFaces), height), r=r, R=R, center=center, mask=mask, isBoundary=isBoundary, fixed=fixed, color=color))
-		walls[-1].state.ori=Quaternion(axis,i*angle)
-		walls[-1].shape.wire=True
+		if randColor:
+			color = [abs(cos(i * angle)), abs(sin(i * angle)), 1]
+		walls.append(
+		        cuboid(
+		                material=material,
+		                edges=Vector3(thickness, 2 * (radius) * tan(pi / numFaces), height),
+		                r=r,
+		                R=R,
+		                center=center,
+		                mask=mask,
+		                isBoundary=isBoundary,
+		                fixed=fixed,
+		                color=color
+		        )
+		)
+		walls[-1].state.ori = Quaternion(axis, i * angle)
+		walls[-1].shape.wire = True
 
-	color=[0.36, 0.54, 0.66]
-	if lid[0]==True:
+	color = [0.36, 0.54, 0.66]
+	if lid[0] == True:
 		# Create top plate
-		walls.append(prism(material=material,radius1=radius,thickness=thickness,numFaces=numFaces,r=r,R=R,color=color,mask=mask,isBoundary=isBoundary,fixed=fixed))
-		walls[-1].state.pos=axis*(height+thickness/2)
-		walls[-1].state.ori=Quaternion(axis,i*angle) #FIXME: Here I use i outside the loop?
-	if lid[1]==True:
+		walls.append(
+		        prism(
+		                material=material,
+		                radius1=radius,
+		                thickness=thickness,
+		                numFaces=numFaces,
+		                r=r,
+		                R=R,
+		                color=color,
+		                mask=mask,
+		                isBoundary=isBoundary,
+		                fixed=fixed
+		        )
+		)
+		walls[-1].state.pos = axis * (height + thickness / 2)
+		walls[-1].state.ori = Quaternion(axis, i * angle)  #FIXME: Here I use i outside the loop?
+	if lid[1] == True:
 		# Create bottom plate
-		walls.append(prism(material=material,radius1=radius,thickness=thickness,numFaces=numFaces,r=r,R=R,color=color,mask=mask,isBoundary=isBoundary,fixed=fixed))
-		walls[-1].state.pos=-axis*thickness/2
-		walls[-1].state.ori=Quaternion(axis,i*angle) #FIXME: Here I use i outside the loop?
+		walls.append(
+		        prism(
+		                material=material,
+		                radius1=radius,
+		                thickness=thickness,
+		                numFaces=numFaces,
+		                r=r,
+		                R=R,
+		                color=color,
+		                mask=mask,
+		                isBoundary=isBoundary,
+		                fixed=fixed
+		        )
+		)
+		walls[-1].state.pos = -axis * thickness / 2
+		walls[-1].state.ori = Quaternion(axis, i * angle)  #FIXME: Here I use i outside the loop?
 
 	return walls
 
+
 ##**********************************************************************************
 #creates regular prism with N faces
-def prism(material, radius1=0.0, radius2=-1, thickness=0.0, numFaces=3, r=0.0, R=0.0, center=None, color=[1,0,0], mask=1, isBoundary=False, fixed=False):
+def prism(material, radius1=0.0, radius2=-1, thickness=0.0, numFaces=3, r=0.0, R=0.0, center=None, color=[1, 0, 0], mask=1, isBoundary=False, fixed=False):
 	"""Return regular prism with numFaces
 
 	:param Material material: material of new bodies (FrictMat)
@@ -166,33 +222,40 @@ def prism(material, radius1=0.0, radius2=-1, thickness=0.0, numFaces=3, r=0.0, R
 
 	:returns: an axial-symmetric Potential Block with variable cross-section, which can become either a regular prism (radius1=radius2), a pyramid (radius2=0) or a cylinder or cone respectively, for a large enough numFaces value.
 	"""
-	aa=[]; bb=[]; cc=[]; dd=[];
-	if radius2==-1: radius2=radius1
-	if not thickness: thickness=radius1
-	angle=radians(360)/numFaces
+	aa = []
+	bb = []
+	cc = []
+	dd = []
+	if radius2 == -1:
+		radius2 = radius1
+	if not thickness:
+		thickness = radius1
+	angle = radians(360) / numFaces
 
-	for i in range(0,numFaces):
-		aTemp=cos(i*angle)
-		bTemp=sin(i*angle)
-		cTemp=(radius1-radius2)/thickness
-		dTemp=(radius1+radius2)/2
+	for i in range(0, numFaces):
+		aTemp = cos(i * angle)
+		bTemp = sin(i * angle)
+		cTemp = (radius1 - radius2) / thickness
+		dTemp = (radius1 + radius2) / 2
 
-		magnitude=Vector3(aTemp,bTemp,cTemp).norm()
+		magnitude = Vector3(aTemp, bTemp, cTemp).norm()
 
-		aa.append(aTemp/magnitude)
-		bb.append(bTemp/magnitude)
-		cc.append(cTemp/magnitude)
-		dd.append(dTemp/magnitude)
+		aa.append(aTemp / magnitude)
+		bb.append(bTemp / magnitude)
+		cc.append(cTemp / magnitude)
+		dd.append(dTemp / magnitude)
 
-	aa.extend([0.0,  0.0])
-	bb.extend([0.0,  0.0])
+	aa.extend([0.0, 0.0])
+	bb.extend([0.0, 0.0])
 	cc.extend([1.0, -1.0])
-	dd.extend([thickness/2., thickness/2.])
+	dd.extend([thickness / 2., thickness / 2.])
 
-	if not r: r=min(dd)/2.
-	prism=potentialblock(material=material,a=aa,b=bb,c=cc,d=array(dd)-r,r=r,R=R,mask=mask,isBoundary=isBoundary,fixed=fixed,color=color)
-#	if center: prism.state.pos=prism.state.pos+center; print(center) #FIXME: Maybe assign center if not (0,0,0), but add it to the local position, rather than overwriting it
+	if not r:
+		r = min(dd) / 2.
+	prism = potentialblock(material=material, a=aa, b=bb, c=cc, d=array(dd) - r, r=r, R=R, mask=mask, isBoundary=isBoundary, fixed=fixed, color=color)
+	#	if center: prism.state.pos=prism.state.pos+center; print(center) #FIXME: Maybe assign center if not (0,0,0), but add it to the local position, rather than overwriting it
 	return prism
+
 
 ##**********************************************************************************
 #TODO: export PotentialBlock to stl file: This would better fit in the export module
@@ -303,10 +366,26 @@ def prism(material, radius1=0.0, radius2=-1, thickness=0.0, numFaces=3, r=0.0, R
 #	ellipsoid.state.pos = center
 #	return ellipsoid
 
+
 #**********************************************************************************
 #creates platonic solids using the Potential Blocks
-def platonic_solid(material, numFaces, edge=0.0, ri=0.0, rm=0.0, rc=0.0, volume=0.0, r=0.0, R=None, center=[0,0,0], mask=1, isBoundary=False, fixed=False, color=[-1,-1,-1]):
-	errors=0
+def platonic_solid(
+        material,
+        numFaces,
+        edge=0.0,
+        ri=0.0,
+        rm=0.0,
+        rc=0.0,
+        volume=0.0,
+        r=0.0,
+        R=None,
+        center=[0, 0, 0],
+        mask=1,
+        isBoundary=False,
+        fixed=False,
+        color=[-1, -1, -1]
+):
+	errors = 0
 	"""creates platonic solids using the Potential Blocks
 	User must specify either the edge, the inradius, the circumradius or the volume of the particle (only one of them)
 
@@ -319,94 +398,122 @@ def platonic_solid(material, numFaces, edge=0.0, ri=0.0, rm=0.0, rc=0.0, volume=
 	:param Material material: material of new body (FrictMat)
 	:param Vector3 center: center of the new body
 	"""
-	inputParams=[edge, ri, rm, rc, volume]
-	count = sum(1 for i in inputParams if i > 0.0) 
-	if (count>1):
+	inputParams = [edge, ri, rm, rc, volume]
+	count = sum(1 for i in inputParams if i > 0.0)
+	if (count > 1):
 		logging.error(' Assign only one of: edge - ri - rm - rc - volume')
-		return(None)
+		return (None)
 
-	gamma	= 1/sqrt(3)
+	gamma = 1 / sqrt(3)
 
-	delta	= sqrt( (5-sqrt(5))/10. )
-	epsilon	= sqrt( (5+sqrt(5))/10. )
+	delta = sqrt((5 - sqrt(5)) / 10.)
+	epsilon = sqrt((5 + sqrt(5)) / 10.)
 
-	zeta	= sqrt( (3-sqrt(5))/6. )
-	eta	= sqrt( (3+sqrt(5))/6. )
+	zeta = sqrt((3 - sqrt(5)) / 6.)
+	eta = sqrt((3 + sqrt(5)) / 6.)
 
 	# Schläfli symbols {p,q}: https://en.wikipedia.org/wiki/Platonic_solid
 
-	p={ 4:3,  6:4,  8:3,  12:5,  20:3 }
-	q={ 4:3,  6:3,  8:4,  12:3,  20:5 }
-	h={ 4:4,  6:6,  8:6, 12:10, 20:10 }		# Coxeter number
-	t=cos(pi/q[numFaces])/sin(pi/h[numFaces])	# tan(theta/2)
+	p = {4: 3, 6: 4, 8: 3, 12: 5, 20: 3}
+	q = {4: 3, 6: 3, 8: 4, 12: 3, 20: 5}
+	h = {4: 4, 6: 6, 8: 6, 12: 10, 20: 10}  # Coxeter number
+	t = cos(pi / q[numFaces]) / sin(pi / h[numFaces])  # tan(theta/2)
 
-	if (numFaces==4): #tetrahedron
-		aa=array([ +gamma, +gamma, -gamma, -gamma ])
-		bb=array([ -gamma, +gamma, +gamma, -gamma ])
-		cc=array([ +gamma, -gamma, +gamma, -gamma ])
+	if (numFaces == 4):  #tetrahedron
+		aa = array([+gamma, +gamma, -gamma, -gamma])
+		bb = array([-gamma, +gamma, +gamma, -gamma])
+		cc = array([+gamma, -gamma, +gamma, -gamma])
 
-	elif (numFaces==6): #hexahedron (cube)
-		aa=[  1, -1,  0,  0,  0,  0 ]
-		bb=[  0,  0,  1, -1,  0,  0 ]
-		cc=[  0,  0,  0,  0,  1, -1 ]
+	elif (numFaces == 6):  #hexahedron (cube)
+		aa = [1, -1, 0, 0, 0, 0]
+		bb = [0, 0, 1, -1, 0, 0]
+		cc = [0, 0, 0, 0, 1, -1]
 
-	elif (numFaces==8): #octahedron
-		aa=array([+gamma, -gamma, -gamma, +gamma, +gamma, -gamma, +gamma, -gamma])
-		bb=array([+gamma, -gamma, +gamma, -gamma, -gamma, +gamma, +gamma, -gamma])
-		cc=array([+gamma, -gamma, +gamma, -gamma, +gamma, -gamma, -gamma, +gamma])
+	elif (numFaces == 8):  #octahedron
+		aa = array([+gamma, -gamma, -gamma, +gamma, +gamma, -gamma, +gamma, -gamma])
+		bb = array([+gamma, -gamma, +gamma, -gamma, -gamma, +gamma, +gamma, -gamma])
+		cc = array([+gamma, -gamma, +gamma, -gamma, +gamma, -gamma, -gamma, +gamma])
 
-	elif (numFaces==12): #dodecahedron
-		aa = array([  delta,     -delta,    delta,   -delta,        0,        0,        0,        0,  epsilon, -epsilon, -epsilon,  epsilon  ])
-		bb = array([  epsilon, -epsilon, -epsilon,  epsilon,  delta,     -delta,    delta,   -delta,        0,        0,        0,        0  ])
-		cc = array([        0,        0,        0,        0,  epsilon, -epsilon, -epsilon,  epsilon,  delta,     -delta,    delta,   -delta  ])
+	elif (numFaces == 12):  #dodecahedron
+		aa = array([delta, -delta, delta, -delta, 0, 0, 0, 0, epsilon, -epsilon, -epsilon, epsilon])
+		bb = array([epsilon, -epsilon, -epsilon, epsilon, delta, -delta, delta, -delta, 0, 0, 0, 0])
+		cc = array([0, 0, 0, 0, epsilon, -epsilon, -epsilon, epsilon, delta, -delta, delta, -delta])
 
-	elif (numFaces==20): #icosahedron: first 8 faces
-		aa = [ +gamma, -gamma, -gamma, +gamma, +gamma, -gamma, +gamma, -gamma,  ]
-		bb = [ +gamma, -gamma, +gamma, -gamma, -gamma, +gamma, +gamma, -gamma,  ]
-		cc = [ +gamma, -gamma, +gamma, -gamma, +gamma, -gamma, -gamma, +gamma,  ]
+	elif (numFaces == 20):  #icosahedron: first 8 faces
+		aa = [
+		        +gamma,
+		        -gamma,
+		        -gamma,
+		        +gamma,
+		        +gamma,
+		        -gamma,
+		        +gamma,
+		        -gamma,
+		]
+		bb = [
+		        +gamma,
+		        -gamma,
+		        +gamma,
+		        -gamma,
+		        -gamma,
+		        +gamma,
+		        +gamma,
+		        -gamma,
+		]
+		cc = [
+		        +gamma,
+		        -gamma,
+		        +gamma,
+		        -gamma,
+		        +gamma,
+		        -gamma,
+		        -gamma,
+		        +gamma,
+		]
 
 		# icosahedron: rest 12 faces
-		aa.extend([ +zeta, -zeta, +zeta, -zeta,     0,     0,     0,     0,  +eta,  -eta,  +eta,  -eta  ])
-		bb.extend([  +eta,  -eta,  -eta,  +eta, +zeta, -zeta, +zeta, -zeta,     0,     0,     0,     0  ])
-		cc.extend([     0,     0,     0,     0,  +eta,  -eta,  -eta,  +eta, +zeta, -zeta, -zeta, +zeta  ])
+		aa.extend([+zeta, -zeta, +zeta, -zeta, 0, 0, 0, 0, +eta, -eta, +eta, -eta])
+		bb.extend([+eta, -eta, -eta, +eta, +zeta, -zeta, +zeta, -zeta, 0, 0, 0, 0])
+		cc.extend([0, 0, 0, 0, +eta, -eta, -eta, +eta, +zeta, -zeta, -zeta, +zeta])
 	else:
-		errors+=1
+		errors += 1
 		logging.error('Invalid numFaces. Should be either: {4: tetrahedron, 6: cube, 8: octahedron, 12: dodecahedron, 20: icosahedron}')
-		return(None)
+		return (None)
+
 
 #	if errors==0:
-	if edge>0.:
-		ri=(edge/2.)/tan(pi/p[numFaces])*t
-		rm=(edge/2.)*cos(pi/p[numFaces])/sin(pi/h[numFaces])
-		rc=(edge/2.)*tan(pi/q[numFaces])*t
-	elif ri>0.:
-		edge=2*ri*tan(pi/p[numFaces])/t
-		rm=(edge/2.)*cos(pi/p[numFaces])/sin(pi/h[numFaces])
-		rc=(edge/2.)*tan(pi/q[numFaces])*t
-	elif rm>0.:
-		edge=2*rm*sin(pi/h[numFaces])/cos(pi/p[numFaces])
-		ri=(edge/2.)/tan(pi/p[numFaces])*t
-		rc=(edge/2.)*tan(pi/q[numFaces])*t
-	elif rc>0.:
-		edge=2*rc/(tan(pi/q[numFaces])*t)
-		ri=(edge/2.)/tan(pi/p[numFaces])*t
-		rm=(edge/2.)*cos(pi/p[numFaces])/sin(pi/h[numFaces])
-	elif volume>0.:
-		edge=(24*volume*(tan(pi/p[numFaces])**2)/(t*numFaces*p[numFaces]))**(1/3)
-		ri=(edge/2.)/tan(pi/p[numFaces])*t
-		rm=(edge/2.)*cos(pi/p[numFaces])/sin(pi/h[numFaces])
-		rc=(edge/2.)*tan(pi/q[numFaces])*t
+	if edge > 0.:
+		ri = (edge / 2.) / tan(pi / p[numFaces]) * t
+		rm = (edge / 2.) * cos(pi / p[numFaces]) / sin(pi / h[numFaces])
+		rc = (edge / 2.) * tan(pi / q[numFaces]) * t
+	elif ri > 0.:
+		edge = 2 * ri * tan(pi / p[numFaces]) / t
+		rm = (edge / 2.) * cos(pi / p[numFaces]) / sin(pi / h[numFaces])
+		rc = (edge / 2.) * tan(pi / q[numFaces]) * t
+	elif rm > 0.:
+		edge = 2 * rm * sin(pi / h[numFaces]) / cos(pi / p[numFaces])
+		ri = (edge / 2.) / tan(pi / p[numFaces]) * t
+		rc = (edge / 2.) * tan(pi / q[numFaces]) * t
+	elif rc > 0.:
+		edge = 2 * rc / (tan(pi / q[numFaces]) * t)
+		ri = (edge / 2.) / tan(pi / p[numFaces]) * t
+		rm = (edge / 2.) * cos(pi / p[numFaces]) / sin(pi / h[numFaces])
+	elif volume > 0.:
+		edge = (24 * volume * (tan(pi / p[numFaces])**2) / (t * numFaces * p[numFaces]))**(1 / 3)
+		ri = (edge / 2.) / tan(pi / p[numFaces]) * t
+		rm = (edge / 2.) * cos(pi / p[numFaces]) / sin(pi / h[numFaces])
+		rc = (edge / 2.) * tan(pi / q[numFaces]) * t
 
-	dd=[ri]*numFaces
-	if not r: r=min(dd)/2.
-	platonic = potentialblock(material=material, a=aa, b=bb, c=cc, d=array(dd)-r, r=r, R=R, mask=mask, isBoundary=isBoundary, fixed=fixed, color=color)
+	dd = [ri] * numFaces
+	if not r:
+		r = min(dd) / 2.
+	platonic = potentialblock(material=material, a=aa, b=bb, c=cc, d=array(dd) - r, r=r, R=R, mask=mask, isBoundary=isBoundary, fixed=fixed, color=color)
 
-	platonic.shape.edge=edge
-	platonic.shape.ri=ri # Add inradius attribute from Python (visible only to Python objects/functions)
-	platonic.shape.rm=rm # Add midradius attribute from Python (visible only to Python objects/functions)
-	platonic.shape.rc=rc # Add circumradius attribute from Python (visible only to Python objects/functions)
+	platonic.shape.edge = edge
+	platonic.shape.ri = ri  # Add inradius attribute from Python (visible only to Python objects/functions)
+	platonic.shape.rm = rm  # Add midradius attribute from Python (visible only to Python objects/functions)
+	platonic.shape.rc = rc  # Add circumradius attribute from Python (visible only to Python objects/functions)
 
 	platonic.state.pos = center
 	platonic.state.ori = platonic.shape.orientation
-	return platonic		
-
+	return platonic

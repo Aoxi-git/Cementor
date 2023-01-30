@@ -152,7 +152,7 @@ from traitlets.config import Config
 from IPython import InteractiveShell
 from IPython.core.profiledir import ProfileDir
 from IPython.utils import io
-try: 
+try:
 	from IPython.utils.py3compat import PY3
 except ImportError:
 	from ipython_genutils.py3compat import PY3

@@ -135,12 +135,12 @@ class SimpleTests(unittest.TestCase):
 		  , "catalan"   : {"6": 1   , "15": 1   , "18": 1    , "33": 1      , "100": 1     , "150" : 1     , "100_b" : 1       , "150_b" : 50     }
 		  }
 		# yapf: enable
-		if (yade.libVersions.getArchitecture() in ['arm64','s390x']):
+		if (yade.libVersions.getArchitecture() in ['arm64', 's390x']):
 			for a in ["read", "add", "mul", "cread", "cadd", "cmul"]:
 				for b in ["18", "33"]:
 					self.defaultTolerances[a][b] = self.defaultTolerances[a]["100"]
 		if (yade.libVersions.getArchitecture() == 'ppc64el'):
-			self.defaultTolerances["asinh"]["100"] = 1e14 # NOTE: something seems to be off with asinh on ppc64el architecture
+			self.defaultTolerances["asinh"]["100"] = 1e14  # NOTE: something seems to be off with asinh on ppc64el architecture
 			self.defaultTolerances["asinh"]["150"] = 1e14
 		self.testLevelsHP = mth.RealHPConfig.getSupportedByMinieigen()
 		self.baseDigits = mth.RealHPConfig.getDigits10(1)
@@ -289,7 +289,9 @@ class SimpleTests(unittest.TestCase):
 		if ((self.digs0 == 31) and (yade.libVersions.getArchitecture() == 'ppc64el')):  # long double on ppc64el
 			self.bits = 106
 			#self.expectedEpsilon = MPn.mpf('2.465190328815661891911651766508706967e-32')  # value for 1 + epsilon
-			self.expectedEpsilon = MPn.mpf('4.9406564584124654417656879286822137013e-324') # note: ppc64el uses 0+epsilon, not 1+epsilon. This can be misleading.
+			self.expectedEpsilon = MPn.mpf(
+			        '4.9406564584124654417656879286822137013e-324'
+			)  # note: ppc64el uses 0+epsilon, not 1+epsilon. This can be misleading.
 		if (self.digs0 == 33):  # float128 case
 			self.bits = 113
 			self.expectedEpsilon = MPn.mpf('1.925929944387235853055977942584926994e-34')
@@ -656,11 +658,11 @@ class SimpleTests(unittest.TestCase):
 				if (yade.libVersions.getArchitecture() in ['ppc64el', 's390x']):
 					if ('sphericalHarmonic' in func or func in ['complex tan real', 'complex tanh imag', 'cylBesselJ']):
 						tolerateErrorULP = 2e19  # TODO: these migh need a fix later. Or it may be just older boost library
-					if (yade.math.RealHPConfig.getDigits10(1) == 31): # ppc64el with long double
+					if (yade.math.RealHPConfig.getDigits10(1) == 31):  # ppc64el with long double
 						tolerateErrorULP = 40000
-						if(func in ['asinh']):
-							tolerateErrorULP = 4e15 # NOTE: something seems to be off with asinh on ppc64el
-						if(func in ['complex pow imag','complex pow real']):
+						if (func in ['asinh']):
+							tolerateErrorULP = 4e15  # NOTE: something seems to be off with asinh on ppc64el
+						if (func in ['complex pow imag', 'complex pow real']):
 							tolerateErrorULP = 2e6
 						if ('sphericalHarmonic' in func or func in ['complex tan real', 'complex tanh imag']):
 							tolerateErrorULP = 4e34
