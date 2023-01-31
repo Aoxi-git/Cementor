@@ -51,7 +51,9 @@ if 1:
 	O.bodies.clear()
 	r = .5  # radius of the sphere
 	nPoly = 12
+
 	# try 128, it is still quite fast
+
 
 	def sphPt(i, j):
 		if i == 0:

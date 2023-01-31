@@ -105,6 +105,7 @@ initMPI()  #Initialize the mpi environment, always required.
 fluidCoupling = yade.FoamCoupling()
 #Initialize the engine
 fluidCoupling.getRank()
+
 #part of Initialization.
 
 

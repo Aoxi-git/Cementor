@@ -59,9 +59,7 @@ def addPlotData():
 	plot.addData(mat1mat2=s1, mat1mat3=s2, mat2mat3=s3, it=O.iter)
 
 
-plot.plots = {
-        'it': ('mat1mat2', 'mat1mat3', 'mat2mat3')
-}
+plot.plots = {'it': ('mat1mat2', 'mat1mat3', 'mat2mat3')}
 plot.plot()
 
 O.step()

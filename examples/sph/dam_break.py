@@ -86,9 +86,7 @@ def addPlotData():
 	plot.addData(t=O.time, eKin=utils.kineticEnergy())
 
 
-plot.plots = {
-        't': ('eKin')
-}
+plot.plots = {'t': ('eKin')}
 plot.plot()
 
 qt.View()

@@ -169,13 +169,7 @@ def breakControl():
 		O.pause()
 
 
-plot.plots = {
-        'time': ('Energy'),
-        'uT': ('SigmaT'),
-        'uL': ('SigmaL'),
-        'uB': ('SigmaB'),
-        'time2': ('SigmaLT')
-}
+plot.plots = {'time': ('Energy'), 'uT': ('SigmaT'), 'uL': ('SigmaL'), 'uB': ('SigmaB'), 'time2': ('SigmaLT')}
 
 plot.plot()
 

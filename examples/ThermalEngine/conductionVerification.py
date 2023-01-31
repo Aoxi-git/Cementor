@@ -192,6 +192,7 @@ def history():
 	        vars=('t', 'i', 'temp1', 'temp2', 'temp3', 'temp4', 'temp5', 'temp6', 'temp7', 'temp8', 'temp9', 'temp10', 'temp11')
 	)
 
+
 #plot.addData(e22=-triax.strain[1],t=O.time,s22=-triax.stress(2)[1],p=flow.MeasurePorePressure((0.5,0.5,0.5)))
 
 O.engines = O.engines + [PyRunner(iterPeriod=500, command='history()', label='recorder')]

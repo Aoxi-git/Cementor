@@ -99,8 +99,8 @@ public:
 	Real    getMaxTimeStep() const { return maxTimeStep; }
 	void    makeThermal();
 	bool    checkThermal(); // return false and print warning if some bodies don't have a thermal state
-	        //void         applyBoundaryHeatFluxes();
-	        // clang-format off
+	//void         applyBoundaryHeatFluxes();
+	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(ThermalEngine,PartialEngine,"An engine typically used in combination with FlowEngine to simulate thermal-hydraulic-mechanical processes. Framework description and demonstration presented within the following paper [Caulk2019a]_ :Caulk, R.A. and Chareyre, B. (2019) An open framework for the simulation of thermal-hydraulic-mechanical processes in discrete element systems. Thermal Process Engineering: Proceedings of DEM8 International Conference for Discrete Element Methods, Enschede Netherlands, July 2019.",
 		/*attributes*/
 		((bool,advection,true,,"Activates advection"))

@@ -86,10 +86,7 @@ def addPlotData():
 	plot.addData(sc=O.iter, s1=s1, s2=s2, s3=s3, s4=s4, s5=s5, fc=O.iter, f1=f1, f2=f2, f3=f3, f4=f4, f5=f5)
 
 
-plot.plots = {
-        'sc': ('s1', 's2', 's3', 's4', 's5'),
-        'fc': ('f1', 'f2', 'f3', 'f4', 'f5')
-}
+plot.plots = {'sc': ('s1', 's2', 's3', 's4', 's5'), 'fc': ('f1', 'f2', 'f3', 'f4', 'f5')}
 plot.plot()
 
 O.run(1, True)

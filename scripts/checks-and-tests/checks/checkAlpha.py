@@ -33,14 +33,14 @@ if ('CGAL' in features):
 	if len(ag) != 63640:
 		raise YadeCheckError("the number of segments changed")
 # this one is not reproducible, random numbering of segments
-	#if ag[0]!=Vector3(16.50265245538970049,23.978674468408812,-0.496985303100643705):
-	#raise YadeCheckError("a vertex position changed", ag[0],"!=",Vector3(16.50265245538970049,23.978674468408812,-0.496985303100643705))
+#if ag[0]!=Vector3(16.50265245538970049,23.978674468408812,-0.496985303100643705):
+#raise YadeCheckError("a vertex position changed", ag[0],"!=",Vector3(16.50265245538970049,23.978674468408812,-0.496985303100643705))
 
-	# for display, comment out
-	#graph = GlExtra_AlphaGraph(tesselationWrapper=TW,wire=False)
-	#graph.lighting=True
-	#from yade import qt
-	#rr = qt.Renderer().extraDrawers = [graph]
-	#v = qt.View()
+# for display, comment out
+#graph = GlExtra_AlphaGraph(tesselationWrapper=TW,wire=False)
+#graph.lighting=True
+#from yade import qt
+#rr = qt.Renderer().extraDrawers = [graph]
+#v = qt.View()
 else:
 	print("CGAL not in features, skip")

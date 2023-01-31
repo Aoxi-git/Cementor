@@ -41,9 +41,7 @@ def addPlotData():
 	plot.addData(sc=O.time, fc1=s1, fc2=s2)
 
 
-plot.plots = {
-        'sc': ('fc1', 'fc2')
-}
+plot.plots = {'sc': ('fc1', 'fc2')}
 plot.plot()
 
 from yade import qt

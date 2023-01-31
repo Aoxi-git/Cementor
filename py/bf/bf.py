@@ -28,10 +28,8 @@ def stressTensor(b, stress_correction=True):
 			pp = ii.geom.contactPoint
 			contact_vector = pp - center
 			cont_normal = ii.geom.normal
-			ss = ii.phys.shearForce * \
-                            np.dot(contact_vector/np.linalg.norm(contact_vector), -cont_normal)
-			nn = ii.phys.normalForce * \
-                            np.dot(contact_vector/np.linalg.norm(contact_vector), -cont_normal)
+			ss = ii.phys.shearForce * np.dot(contact_vector / np.linalg.norm(contact_vector), -cont_normal)
+			nn = ii.phys.normalForce * np.dot(contact_vector / np.linalg.norm(contact_vector), -cont_normal)
 			ff = ss + nn
 			for i in range(3):
 				for j in range(3):
@@ -51,10 +49,8 @@ def stressTensor(b, stress_correction=True):
 			pp = ii.geom.contactPoint
 			contact_vector = pp - center
 			cont_normal = ii.geom.normal
-			ss = ii.phys.shearForce * \
-                            np.dot(contact_vector/np.linalg.norm(contact_vector), -cont_normal)
-			nn = ii.phys.normalForce * \
-                            np.dot(contact_vector/np.linalg.norm(contact_vector), -cont_normal)
+			ss = ii.phys.shearForce * np.dot(contact_vector / np.linalg.norm(contact_vector), -cont_normal)
+			nn = ii.phys.normalForce * np.dot(contact_vector / np.linalg.norm(contact_vector), -cont_normal)
 			ff = ss + nn
 			f_u += ff
 			t_u += np.cross(contact_vector, ss)
@@ -182,8 +178,7 @@ def replaceSphere(
 		master_predicate = pack.inSphere(sphere_center, sphere_radius * initial_packing_scale)
 		for neighbour_id in neighbours_ids:  # only works for spheres
 			nb = O.bodies[neighbour_id]
-			master_predicate = master_predicate - \
-                            pack.inSphere(nb.state.pos, nb.shape.radius)
+			master_predicate = master_predicate - pack.inSphere(nb.state.pos, nb.shape.radius)
 		if outer_predicate != None:
 			master_predicate = master_predicate & outer_predicate
 		sp = pack.regularHexa(master_predicate, radius=exact_radius / grow_radius, gap=relative_gap * exact_radius, material=sphere_mat)

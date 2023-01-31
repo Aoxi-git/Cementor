@@ -62,9 +62,7 @@ def addPlotData():
 	plot.addData(t=O.time, Ekin=utils.kineticEnergy())
 
 
-plot.plots = {
-        't': ('Ekin')
-}
+plot.plots = {'t': ('Ekin')}
 plot.plot()
 
 enlargeF = h / Rad * 1.1

@@ -55,12 +55,7 @@ def addPlotData():
 		pass
 
 
-plot.plots = {
-        'time1': ('delta'),
-        'time2': ('deltaDot'),
-        'time3': ('Fn'),
-        'time4': ('Fv')
-}
+plot.plots = {'time1': ('delta'), 'time2': ('deltaDot'), 'time3': ('Fn'), 'time4': ('Fv')}
 plot.plot()
 
 O.run(1)

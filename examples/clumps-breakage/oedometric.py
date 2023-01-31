@@ -30,8 +30,7 @@ def clump_psd(density, skip_Ids=[], percentage_result=True):
 	df_grouped['D'] = 2 * df_grouped['r']
 	df_grouped['cum_mass'] = df_grouped['m'].cumsum()
 	if percentage_result:
-		df_grouped['cum_mass'] = 100 * \
-                    df_grouped['cum_mass']/max(df_grouped['cum_mass'])
+		df_grouped['cum_mass'] = 100 * df_grouped['cum_mass'] / max(df_grouped['cum_mass'])
 
 	return df_grouped
 
