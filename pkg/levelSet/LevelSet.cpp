@@ -156,7 +156,9 @@ bool LevelSet::rayTraceInCell(const Vector3r& ray, const Vector3r& pointP, const
 	        "We think finding surface-ray intersection is like finding the roots of this polynom (coeffs of increasing order):\n"
 	        << coeffs[0] << " " << coeffs[1] << " " << coeffs[2] << " " << coeffs[3]);
 	// Then, solving for the 1st root given by Boost root finding algorithm boost::math::tools::newton_raphson_iterate, in a concise syntax thanks to C++11 lambda notation, that replaces going through e.g. an operator() of some struct (whose instance may depend on coeffs)
-	Real root(boost::math::tools::newton_raphson_iterate(
+	Real root(std::numeric_limits<Real>::max());
+	try{
+	  root=boost::math::tools::newton_raphson_iterate(
 	        [coeffs](Real k) {
 		        return std::make_tuple( // (only ?) problematic part for High Precision (HP) compatibility and REAL_* cmake options different than 64
 		                coeffs[0] + coeffs[1] * k + coeffs[2] * k * k + coeffs[3] * k * k * k,
@@ -166,7 +168,10 @@ bool LevelSet::rayTraceInCell(const Vector3r& ray, const Vector3r& pointP, const
 	        -sqrt(3.),
 	        sqrt(3.),
 	        std::numeric_limits<Real>::
-	                digits)); // doc https://www.boost.org/doc/libs/1_75_0/libs/math/doc/html/math_toolkit/roots_deriv.html suggests to use 0.6 * std::numeric_limits<Real>::digits for the last "digits" argument. With std::numeric_limits<double>::digits = 53, as per standard for the significand
+		        digits); // doc https://www.boost.org/doc/libs/1_75_0/libs/math/doc/html/math_toolkit/roots_deriv.html suggests to use 0.6 * std::numeric_limits<Real>::digits for the last "digits" argument. With std::numeric_limits<double>::digits = 53, as per standard for the significand
+	}
+	catch(const std::exception& e) // starting from somewhere between boost 1.71.0 and 1.74.0, a boost::math::evaluation_error is thrown if no root is found, which can be catched as a std::exception
+	  {LOG_INFO("No root actually found");};
 	LOG_INFO(
 	        "N-R root = " << root << " , leading to a dimensionless distance (through the ray cubic polynom) = "
 	                      << coeffs[0] + coeffs[1] * root + coeffs[2] * root * root + coeffs[3] * root * root * root
