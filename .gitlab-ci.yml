@@ -93,6 +93,8 @@ variables:
   <<: *gitlab_runner_retry_definition
   stage: build
   script:
+    # check how much free disc space is available, to debug nova1 and nova2
+    - /bin/df -h
     - cd ./data
     - git log --oneline -n 5
     - cd ..
@@ -512,6 +514,8 @@ make_SSE:
   <<: *gitlab_runner_retry_definition
   stage: test
   script:
+    # check how much free disc space is available, to debug nova1 and nova2
+    - /bin/df -h
     - cd ./data
     - git log --oneline -n 5
     - cd ..
@@ -769,6 +773,8 @@ test_SSE:
 #    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
 #    - export OMPI_MCA_mpi_yield_when_idle=1 #degraded mode when oversubscribing (https://www.open-mpi.org/faq/?category=running#oversubscribing)
   script:
+    # check how much free disc space is available, to debug nova1 and nova2
+    - /bin/df -h
     - cd ./data
     - git log --oneline -n 5
     - cd ..
