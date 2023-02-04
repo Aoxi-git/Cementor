@@ -490,6 +490,54 @@ __ https://youtu.be/kqisX2LfwIg
 
 
 
+Clumps-breakage
+^^^^^^^^^^^^^^^^^^^^^
+
+.. _refFastClumps-breakage-first-example:
+
+* refFastClumps-breakage-first-example_, :ysrc:`source file<examples/clumps-breakage/first_example.py>`, `video`__.
+
+__ https://youtu.be/WMFo_8tI1KM
+
+
+
+
+.. _refFastAbrasive:
+
+* refFastAbrasive_, :ysrc:`source file<examples/clumps-breakage/abrasive.py>`, `video`__.
+
+__ https://youtu.be/v__ORwA-IPc
+
+
+
+
+.. _refFastOedometric:
+
+* refFastOedometric_, :ysrc:`source file<examples/clumps-breakage/oedometric.py>`, `video`__.
+
+__ https://youtu.be/EJYV-T7H0Ks
+
+
+
+
+.. _refFastUniaxial-clump:
+
+* refFastUniaxial-clump_, :ysrc:`source file<examples/clumps-breakage/uniaxial_clump.py>`, `video`__.
+
+__ https://youtu.be/GAcW_zTKTLU
+
+
+
+
+.. _refFastUniaxial-sphere:
+
+* refFastUniaxial-sphere_, :ysrc:`source file<examples/clumps-breakage/uniaxial_sphere_batch.py>`, `video`__.
+
+__ https://youtu.be/5OSsnooCDv0
+
+
+
+
 Concrete
 ^^^^^^^^^^^^^^^^^^^^^
 

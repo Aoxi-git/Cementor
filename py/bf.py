@@ -1,14 +1,61 @@
+# encoding: utf-8
+"""
+Overview
+=======
+This module contains breakage functions (bf) that can be used for particle breakage by replacement approach. Functions can be used for both spheres and clumps of spheres. However, this module is particularly useful for clumps because it deals with multiple clump-specific issues:
+
+* Clump members do not interact. Hence, modification of the Love-Webber stress tensor is proposed to mimic interactions between clump members when the stress state is computed.
+
+* If clumped spheres overlap, their total mass and volume are bigger than the mass and volume of the clump. Thus, clump should not split by simply releasing clump members. The mass of new sub-particles is adjusted to balance the mass of a nonoverlapping volume of the broken clump member.
+
+* New sub-particles can be generated beyond the outline of the broken clump member to avoid excessive overlapping. Particles are generated taking into account the positions of neighbor particles and additional constraints (e.g. predicate can be prescribed to make sure that new particles are generated inside the container).
+
+Clump breakage algorithm
+=======
+The typical workflow consists of the following steps (full description in [Brzezinski2022]_):
+
+* Stress computation of each clump member. The stress is computed using the Love-Weber (LV) definition of the stress tensor. Then, a proposed correction of the stress tensor is applied.
+* Based on the adopted strength criterion, the level of effort for each clump member is computed. Clump breaks if the level of effort for any member is greater than one. Only the most strained member can be split in one iteration.
+* The most strained member of the clump is first released from the clump and erased from simulation. New mass and moment of inertia are computed for the new clump. The difference between the “old" and the “new" mass must be replaced by new bodies in the simulation.
+* New, smaller spheres are added to the simulation balancing the mass difference. The spheres are placed in the void space, hence do not overlap with other bodies that are already present in the simulation (`splitting_clump`_).
+* Finally, the soundness of the remaining part of the original clump needs to be verified. If the clump members do not contact each other anymore, the clump needs to be replaced with smaller clumps/spheres (`handling_new_clumps`_).
+* Optionally, overlapping between new sub-particles of sub-particles and existing bodies can be allowed (`packing_parameters`_).
+
+
+.. _splitting_clump:
+.. figure:: fig/clump-breakage-splitting-clump.*
+	:scale: 35 %
+	:align: center
+	
+	Stages of creating a clump in Yade software and splitting due to the proposed algorithm: (a) overlapping bodies, (b) clumped body (reduced mass and moments of inertia), (c) selection of clump member for splitting, (d) searching for potential positions of sub-particles, (e) replacing clump member with sub-particles, updating clump mass and moments of inertia.
+
+.. _handling_new_clumps:
+.. figure:: fig/clump-breakage-handling-new-clumps.*
+	:scale: 35 %
+	:align: center
+	
+	Different scenarios of clump splitting: (a) clump remains in the simulation - only updated, (b) clump is split into spheres, (c) clump is split into a sphere and a new clump.
+
+.. _packing_parameters:
+.. figure:: fig/clump-breakage-packing-parameters.*
+	:scale: 35 %
+	:align: center
+	
+	Replacing sphere with sub-particles: (a-c) non-overlapping, (d-f) overlapping sub-particles and potentially overlapping with neighbor bodies, (g-i) non-overlapping sub-particles but potentially overlapping with neighbor bodies.
+	
+	
+Functions required for clump breakage algorithm described in:
+    Brzeziński, K., & Gladky, A. (2022), Clump breakage algorithm for DEM simulation of crushable aggregates. [Brzezinski2022]_
+Strength Criterion adopted from;
+    Gladkyy, A., & Kuna, M. (2017). DEM simulation of polyhedral particle cracking using a combined Mohr–Coulomb–Weibull failure criterion. Granular Matter, 19(3), 41. [Gladky2017]_
+
+:ysrc:`Source code file<py/bf.py>`
+"""
 from yade import pack
 import numpy as np
 # required when functions are put in an external module
 from yade import Sphere, math
 from yade.utils import sphere, growParticle
-"""
-Functions required for clump breakage algorithm described in:
-    Brzeziński, K., & Gladkyy, A. (2022), Clump breakage algorithm for DEM simulation of crushable aggregates.
-Strength Criterion adopted from;
-	Gladkyy, A., & Kuna, M. (2017). DEM simulation of polyhedral particle cracking using a combined Mohr–Coulomb–Weibull failure criterion. Granular Matter, 19(3), 41.
-"""
 
 
 def stressTensor(b, stress_correction=True):
@@ -199,6 +246,10 @@ def replaceSphere(
 	for i in range(req_number_of_spheres):
 		b_id = O.bodies.append(sq_dist_sorted[i][0])
 		growParticle(b_id, grow_radius)
+	# erase interactions and then sphere
+	ii = O.bodies[sphere_id].intrs()
+	for i in ii:
+		O.interactions.erase(i.id1,i.id2)
 	O.bodies.erase(sphere_id)
 	return None
 

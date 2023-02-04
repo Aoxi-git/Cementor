@@ -73,6 +73,7 @@ mods={
         , 'linterpolation'  : []
         , 'gridpfacet'      : []
         , 'mpy'             : []
+        , 'bf'              : []
     }
 # yapf: enable
 #
