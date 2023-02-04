@@ -95,6 +95,8 @@ variables:
   script:
     # check how much free disc space is available, to debug nova1 and nova2
     - /bin/df -h
+    - /usr/bin/du -sh /root/.ccache
+    - ccache -s
     - cd ./data
     - git log --oneline -n 5
     - cd ..
