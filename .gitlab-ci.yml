@@ -207,6 +207,7 @@ variables:
     - echo -e "\n\e[93m===\n(make_minimal only) clang-format reports CHANGED_LINES = "$CHANGED_LINES"\n===\e[0m\n";
   tags:
     - fast
+    - grenoble
 
 .artifacts_template: &artifacts_definition
   artifacts:
@@ -275,6 +276,7 @@ mk_bookw_i386:
   tags:
     - fast
     - qemu
+    - grenoble
 
 mk_bll_ppc64el:
   <<: *make_definition
@@ -284,6 +286,7 @@ mk_bll_ppc64el:
   tags:
     - fast
     - qemu
+    - grenoble
 
 mk_bll_arm64:
   <<: *make_definition
@@ -293,6 +296,7 @@ mk_bll_arm64:
   tags:
     - fast
     - qemu
+    - grenoble
 
 mk_bookw_arm64:
   <<: *make_definition
@@ -302,6 +306,7 @@ mk_bookw_arm64:
   tags:
     - fast
     - qemu
+    - grenoble
 
 make_no_mpi:
   <<: *make_definition
@@ -363,6 +368,7 @@ make_asan:
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
   tags:
     - debug
+    - grenoble
   artifacts:
     when: always
     paths:
@@ -398,6 +404,7 @@ make_asan_HP:
   image: registry.gitlab.com/yade-dev/docker-yade:debian-bullseye
   tags:
     - debug
+    - grenoble
   artifacts:
     when: always
     paths:
@@ -532,6 +539,8 @@ make_SSE:
     when: always
     paths:
       - screenshots
+  tags:
+    - grenoble
 
 test_16_04:
   <<: *test_definition
@@ -607,6 +616,7 @@ tst_bookw_i386:
   needs: ["mk_bookw_i386"]
   tags:
     - qemu
+    - grenoble
   timeout: 55 minutes
 
 tst_bll_ppc64el:
@@ -618,6 +628,7 @@ tst_bll_ppc64el:
   needs: ["mk_bll_ppc64el"]
   tags:
     - qemu
+    - grenoble
   timeout: 55 minutes
 
 tst_bll_arm64:
@@ -629,6 +640,7 @@ tst_bll_arm64:
   needs: ["mk_bll_arm64"]
   tags:
     - qemu
+    - grenoble
   timeout: 55 minutes
 
 tst_bookw_arm64:
@@ -640,6 +652,7 @@ tst_bookw_arm64:
   needs: ["mk_bookw_arm64"]
   tags:
     - qemu
+    - grenoble
   timeout: 55 minutes
 
 test_no_mpi:
@@ -788,6 +801,8 @@ test_SSE:
     - cat /etc/os-release
     - if grep -q "Arch Linux" /etc/issue; then /usr/sbin/uname -m; else  /usr/bin/dpkg --print-architecture ; fi
   timeout: 35 minutes
+  tags:
+    - grenoble
 
 check_16_04:
   <<: *check_definition
@@ -870,6 +885,7 @@ ck_bookw_i386:
   needs: ["mk_bookw_i386"]
   tags:
     - qemu
+    - grenoble
   timeout: 3 hours
 
 ck_bll_ppc64el:
@@ -881,6 +897,7 @@ ck_bll_ppc64el:
   needs: ["mk_bll_ppc64el"]
   tags:
     - qemu
+    - grenoble
   timeout: 3 hours
 
 ck_bll_arm64:
@@ -892,6 +909,7 @@ ck_bll_arm64:
   needs: ["mk_bll_arm64"]
   tags:
     - qemu
+    - grenoble
   timeout: 3 hours
 
 ck_bookw_arm64:
@@ -903,6 +921,7 @@ ck_bookw_arm64:
   needs: ["mk_bookw_arm64"]
   tags:
     - qemu
+    - grenoble
   timeout: 3 hours
 
 check_no_mpi:
@@ -1082,6 +1101,7 @@ pages:
     expire_in: 5 day
   tags:
     - fast
+    - grenoble
 
 deb_stretch:
   <<: *deb_definition
