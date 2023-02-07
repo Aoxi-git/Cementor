@@ -249,7 +249,7 @@ def replaceSphere(
 	# erase interactions and then sphere
 	ii = O.bodies[sphere_id].intrs()
 	for i in ii:
-		O.interactions.erase(i.id1,i.id2)
+		O.interactions.erase(i.id1, i.id2)
 	O.bodies.erase(sphere_id)
 	return None
 
