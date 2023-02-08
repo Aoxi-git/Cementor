@@ -43,12 +43,12 @@ except:
 # -------------------------------------------------------------------- #
 # Materials
 material='M1' # only option herein
-Steel=O.materials.append(FrictMat(young=210e9,poisson=0.2,density=7200,frictionAngle=atan(0.2),label='Steel'))
+Steel=O.materials.append(FrictMat(young=210e9,poisson=0.2,density=7200,frictionAngle=atan(0.5),label='Steel'))
 
 # -------------------------------------------------------------------- #
 # Assign coeff of restitution (e)
 e_M1_M1=0.5;
-e_M1_St=0.4;
+e_M1_St=0.6;
 
 M1=O.materials.append(FrictMat(young=1.0e9,poisson=0.2,density=2500,frictionAngle=atan(0.3),label='M1'))
 e_gg=e_M1_M1	# Coefficient of restitution (e) between granular material (g) and granular material (g)
@@ -124,7 +124,7 @@ O.engines=[
 	ForceResetter(),
 	InsertionSortCollider([Bo1_Sphere_Aabb(),Bo1_Facet_Aabb()],verletDist=-0.1),
 	InteractionLoop(
-		[Ig2_Sphere_Sphere_ScGeom(), Ig2_Facet_Sphere_ScGeom(hertzian=True)],
+		[Ig2_Sphere_Sphere_ScGeom(), Ig2_Facet_Sphere_ScGeom()],
 		[Ip2_FrictMat_FrictMat_MindlinPhys(
 			en         = MatchMaker(matches=((1,1,e_gg),(0,1,e_gs),(0,0,e_ss)))  # e_ss is not needed, as the steel ball is not supposed to touch the steel box. <= I've put it back, found contact once then segfault
 		)],

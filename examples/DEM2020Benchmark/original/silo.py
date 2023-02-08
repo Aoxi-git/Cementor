@@ -140,7 +140,7 @@ O.engines=[
     ForceResetter(),
     InsertionSortCollider([Bo1_Sphere_Aabb(),Bo1_Facet_Aabb()],label="collider"),
     InteractionLoop(
-        [Ig2_Sphere_Sphere_ScGeom(), Ig2_Facet_Sphere_ScGeom(hertzian=True)],
+        [Ig2_Sphere_Sphere_ScGeom(), Ig2_Facet_Sphere_ScGeom()],
         [Ip2_FrictMat_FrictMat_MindlinPhys(
             frictAngle = MatchMaker(matches=((1,1,F_gg),(0,1,F_gs))), # 0 being the id of Steel and
             en         = MatchMaker(matches=((1,1,e_gg),(0,1,e_gs)))  # 1 being the id of material
