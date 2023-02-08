@@ -48,7 +48,7 @@
 
 
 # That url should point to valid gitlab branch from where the benchmark scripts can be retrieved
-export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/5cbbc95ed986b/examples/DEM2020Benchmark/original'
+export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/bc4e751016b15a98b/examples/DEM2020Benchmark/original'
 # latest would be:
 # export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/master/examples/DEM2020Benchmark'
 
@@ -60,6 +60,7 @@ wget -nc $YADE_BRANCH/penetration.py
 wget -nc $YADE_BRANCH/plot.py
 
 export YADE='yadedaily'
+# export YADE="yade" #stable release
 # export YADE="/path/to/my/own/yadeVersion"
 
 export OMP_THREADS=12 # OpenMP threads, should be less than number of cores. 12 max suggested.
