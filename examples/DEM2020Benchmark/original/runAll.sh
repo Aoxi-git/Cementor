@@ -48,7 +48,7 @@
 
 
 # That url should point to valid gitlab branch from where the benchmark scripts can be retrieved
-export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/cf9949d6c/examples/DEM2020Benchmark/original'
+export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/2020Benchmark/examples/DEM2020Benchmark/original'
 # latest would be:
 # export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/master/examples/DEM2020Benchmark'
 
@@ -69,21 +69,20 @@ export OMP_PROC_BIND=true # pin OMP threads to physical cores
 # Official simulation times
 export simulationTime1=5
 export simulationTime2=5
-export simulationTime3=0.01
+export simulationTime3=0.1
 
 # For testing other times
 # export simulationTime1=0.00001
 # export simulationTime2=0.00001
 # export simulationTime3=0.00001
 
-# Cases with output provided in 02/2021 are signaled by ending the line [*]
-$YADE -j $OMP_THREADS -n -x silo.py small M1 $simulationTime1 #[*]
+$YADE -j $OMP_THREADS -n -x silo.py small M1 $simulationTime1
 $YADE -j $OMP_THREADS -n -x silo.py small M2 $simulationTime1
-$YADE -j $OMP_THREADS -n -x silo.py large M1 $simulationTime1 #[*]
+$YADE -j $OMP_THREADS -n -x silo.py large M1 $simulationTime1
 $YADE -j $OMP_THREADS -n -x silo.py large M2 $simulationTime1
-$YADE -j $OMP_THREADS -n -x mixer.py $simulationTime2 #[*]
-$YADE -j $OMP_THREADS -n -x penetration.py 25000 $simulationTime3 #[*]
-$YADE -j $OMP_THREADS -n -x penetration.py 50000 $simulationTime3 #[*]
-$YADE -j $OMP_THREADS -n -x penetration.py 100000 $simulationTime3 #[*]
+$YADE -j $OMP_THREADS -n -x mixer.py $simulationTime2
+$YADE -j $OMP_THREADS -n -x penetration.py 25000 $simulationTime3
+$YADE -j $OMP_THREADS -n -x penetration.py 50000 $simulationTime3
+$YADE -j $OMP_THREADS -n -x penetration.py 100000 $simulationTime3
 
 $YADE -n -x plot.py # would run just as well with python3
