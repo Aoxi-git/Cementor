@@ -5,13 +5,13 @@
 # Case 3: Penetration test
 
 # for efficient production run with the following command (it will terminate automatically when done):
-#   'yadedaily -n -x Case3_PenetrationTest.py 25000'
+#   'yadedaily -n -x penetration.py 25000'
 # for keeping GUI run like this:
-#   'yadedaily Case3_PenetrationTest.py 25000'
+#   'yadedaily penetration.py 25000'
 # adapt yade executable if not 'daily' version and pick one in 25000,50000,100000
 
 # an additional argument can be used to define a custom simulated time in seconds, default is 0.1s:
-#    'yadedaily Case3_PenetrationTest.py 25000 0.001'
+#    'yadedaily penetration.py 25000 0.001'
 
 # the input scripts are downloaded from TUHH as part of the script execution if not available in current path
 # provided input should be in ./inputData relative to where yade is executed
@@ -48,12 +48,13 @@ Steel=O.materials.append(FrictMat(young=210e9,poisson=0.2,density=7200,frictionA
 # -------------------------------------------------------------------- #
 # Assign coeff of restitution (e)
 e_M1_M1=0.5;
-e_M1_St=0.6;
+e_M1_St=0.4;
+e_St_St=0.6
 
 M1=O.materials.append(FrictMat(young=1.0e9,poisson=0.2,density=2500,frictionAngle=atan(0.3),label='M1'))
 e_gg=e_M1_M1	# Coefficient of restitution (e) between granular material (g) and granular material (g)
 e_gs=e_M1_St	# Coefficient of restitution (e) between granular material (g) and steel (s)
-e_ss=e_M1_St	# Coefficient of restitution (e) between steel ball and steel walls
+e_ss=e_St_St	# Coefficient of restitution (e) between steel ball and steel walls
 
 inputFileName = 'inputData/'+str(int(N/1000))+'KParticles.txt'
 altName = 'inputData/'+str(int(N/1000))+'KParticlesSwapped.txt'
@@ -147,8 +148,8 @@ def addPlotData(save=True):
 	z=bSphere.state.pos[2]
 	plot.addData(z=z, time1=O.time)
 	if save:
-		plot.plot(noShow=True).savefig('outputData/Case3_PenetrationTest_'+str(N)+'.png')
-		plot.saveDataTxt('outputData/Case3_PenetrationTest_'+str(N)+'.txt',vars=('time1','z'))
+		plot.plot(noShow=True).savefig('outputData/penetration_'+str(N)+'.png')
+		plot.saveDataTxt('outputData/penetration_'+str(N)+'.txt',vars=('time1','z'))
 	if O.time >= waitTime and bSphere.state.blockedDOFs == 'xyzXYZ':
 		bSphere.state.vel=[0,0,-5]
 		bSphere.state.blockedDOFs = ''
@@ -178,6 +179,6 @@ O.run(-1,wait = opts.nogui)
 
 wallTime = time.time() - startTime
 f = open("timings.txt","a")
-f.write('Case3_PenetrationTest_'+str(N)+' '+str(O.time)+' '+str(wallTime)+'\n')
+f.write('penetration_'+str(N)+' '+str(O.time)+' '+str(wallTime)+'\n')
 
 
