@@ -13,7 +13,7 @@
 angularVelocity = 2
 
 # 5 sec. This is the timeframe of interest, proposed by the organizers 
-# pass additional argument to the script to change it: 'yadedaily -n -x Case2_rotating_drum.py 0.0001'
+# pass additional argument to the script to change it: 'yadedaily -n -x mixer.py 0.0001'
 
 simulatedTime = 5 if len(sys.argv)<=1 else float(sys.argv[1])
 
@@ -230,8 +230,8 @@ def addPlotData(save=True):
 						zone2_M2_count=zone2_M2_count, 
 						time1=O.time)
 	if save:
-		plot.saveDataTxt('outputData/Case2_rotating_drum.txt',vars=('time1','zone1_M1_count','zone1_M2_count','zone2_M1_count','zone2_M2_count'))
-		plot.plot(noShow=True).savefig('outputData/Case2_rotating_drum.png')
+		plot.saveDataTxt('outputData/mixer.txt',vars=('time1','zone1_M1_count','zone1_M2_count','zone2_M1_count','zone2_M2_count'))
+		plot.plot(noShow=True).savefig('outputData/mixer.png')
 
 print('particles settled and ready to rotate')
 
@@ -261,4 +261,4 @@ O.run(-1,wait = opts.nogui)
 
 wallTime = time.time() - startTime
 f = open("timings.txt","a")
-f.write('Case2_rotating_drum '+str(O.time)+' '+str(wallTime)+'\n')
+f.write('mixer '+str(O.time)+' '+str(wallTime)+'\n')

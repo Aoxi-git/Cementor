@@ -6,12 +6,12 @@
 # Units: SI (m, N, Pa, kg, sec)
 
 # script execution:
-# yade Case1SiloFlow.py   (with default arguments, else:)
-# yade Case1SiloFlow.py  [small|large] [M1|M2]
-# example: yade Case1SiloFlow.py  small M1 (equivalent to default)
+# yade silo.py   (with default arguments, else:)
+# yade silo.py  [small|large] [M1|M2]
+# example: yade silo.py  small M1 (equivalent to default)
 # 
 # third optional argument is simulated time (default 5s), example:
-# yade Case1SiloFlow.py small M1 0.3
+# yade silo.py small M1 0.3
 
 
 numThreads=1
@@ -47,11 +47,11 @@ material=str(sys.argv[2]) if len(sys.argv)>2 else 'M1'
 simulationTime = float(sys.argv[3]) if len(sys.argv)>3 else 5
 
 if size == 'large':
-    fileName='Case1_large'+material
+    fileName='silo_large'+material
     z=55.4222/1000. 	# This is the height of the lowest point of the funnel (at the orifice), measuring from the lowest cylindrical cross section of the silo
 else:
     z=59.3008/1000.
-    fileName='Case1_small'+material
+    fileName='silo_small'+material
 
 
 # -------------------------------------------------------------------- #
