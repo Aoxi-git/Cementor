@@ -48,7 +48,7 @@
 
 
 # That url should point to valid gitlab branch from where the benchmark scripts can be retrieved
-export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/bc4e751016b15a98b/examples/DEM2020Benchmark/original'
+export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/cf9949d6c/examples/DEM2020Benchmark/original'
 # latest would be:
 # export YADE_BRANCH='https://gitlab.com/yade-dev/trunk/-/raw/master/examples/DEM2020Benchmark'
 
