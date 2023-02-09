@@ -100,18 +100,18 @@ if not os.path.exists(wallFileName):
 
 #####################   2. YADE PART  #####################
 
-# -------------------------------------------------------------------- #
-# Load facets making the box
 from yade import ymport
-facets = ymport.textFacets(wallFileName,color=(0,1,0),material=Steel)
-fctIds = range(len(facets))
-O.bodies.append(facets)
-
 # -------------------------------------------------------------------- #
 # Load the initial sphere pack from .txt file
 sp=ymport.text(altName,material= M1)
 sp[-1]=sphere(sp[-1].state.pos,sp[-1].shape.radius,material='Steel') # Redefine this with the correct material, as sp[-1] corresponds to the large sphere made of steel
 O.bodies.append(sp)
+
+# -------------------------------------------------------------------- #
+# Load facets making the box
+facets = ymport.textFacets(wallFileName,color=(0,1,0),material=Steel)
+fctIds = range(len(facets))
+O.bodies.append(facets)
 
 # -------------------------------------------------------------------- #
 # Timestep
@@ -149,7 +149,7 @@ def addPlotData(save=True):
 	if save:
 		plot.plot(noShow=True).savefig('outputData/Case3_PenetrationTest_'+str(N)+'.png')
 		plot.saveDataTxt('outputData/Case3_PenetrationTest_'+str(N)+'.txt',vars=('time1','z'))
-	if O.time > waitTime and bSphere.state.blockedDOFs == 'xyzXYZ':
+	if O.time >= waitTime and bSphere.state.blockedDOFs == 'xyzXYZ':
 		bSphere.state.vel=[0,0,-5]
 		bSphere.state.blockedDOFs = ''
 
