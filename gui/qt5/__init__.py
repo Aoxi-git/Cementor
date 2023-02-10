@@ -15,7 +15,12 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from PyQt5 import QtWebKit, QtWebKitWidgets
+USE_QT_WEB_ENGINE = False
+try:
+	from PyQt5 import QtWebKit, QtWebKitWidgets
+except ImportError:
+	from PyQt5 import QtWebEngineWidgets
+	USE_QT_WEB_ENGINE=True
 
 from yade.qt.ui_controller import Ui_Controller
 
@@ -63,7 +68,10 @@ def openUrl(url):
 		pass
 	if not reuseLast:
 		if len(webWindows) < maxWebWindows:
-			webWindows.append(QtWebKitWidgets.QWebView())
+			if USE_QT_WEB_ENGINE:
+				webWindows.append(QtWebEngineWidgets.QWebEngineView())
+			else:
+				webWindows.append(QtWebKitWidgets.QWebView())
 		else:
 			webWindows = webWindows[1:] + [webWindows[0]]
 	web = webWindows[-1]
