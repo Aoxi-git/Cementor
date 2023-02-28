@@ -117,7 +117,9 @@ void build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, Tesse
 	TW.rad_divided = true;
 	spheres.resize(Ng);
 	pointsPtrs.resize(Ng);
-	std::random_shuffle(pointsPtrs.begin(), pointsPtrs.end());
+	// random shuffling here is suggested in CGAL examples but it is probably not very helpful in yade since the positions are _usually_ random already.
+	// We skip it to avoid unnecessary indeterminacy
+	// std::random_shuffle(pointsPtrs.begin(), pointsPtrs.end());
 	spatial_sort(pointsPtrs.begin(), pointsPtrs.end(), RTraits_for_spatial_sort() /*, CGT::RTriangulation::Weighted_point*/);
 
 	RTriangulation::Cell_handle hint;
