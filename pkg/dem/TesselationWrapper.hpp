@@ -148,6 +148,7 @@ public:
 	((Real,far,10000.,,"Defines the radius of the large virtual spheres used to define nearly flat boundaries around the assembly. The radius will be the (scene's) bounding box size multiplied by 'far'. Higher values will minimize the error theoretically (since the infinite sphere really defines a plane), but it may increase numerical errors at some point. The default should give a resonable compromize."))
 	((Real,alphaCapsVol,0.,,"The volume of the packing as defined by the boundary alpha cap polygons"))
 	((Matrix3r,grad_u,Matrix3r::Zero(),,"The Displacement Gradient Tensor"))
+	((mask_t,groupMask,0,,"Bitmask for filtering spheres, ignored if 0."))
 	,/*deprec*/
 	,/*init*/
 	,/*ctor*/
