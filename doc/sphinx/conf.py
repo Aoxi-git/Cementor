@@ -204,7 +204,11 @@ def customExclude(app, what, name, obj, skip, options):
 			return False
 		return True
 	#escape crash on non iterable __doc__ in some qt object
-	if hasattr(obj, '__doc__') and obj.__doc__ and not isinstance(obj.__doc__, collections.Iterable):
+	try:
+		iterableTest = isinstance(obj.__doc__, collections.Iterable) # before some Python version
+	except AttributeError:
+		iterableTest = isinstance(obj.__doc__, collections.abc.Iterable) # after some Python version (3.3 minimum)
+	if hasattr(obj, '__doc__') and obj.__doc__ and not iterableTest:
 		return True
 	if hasattr(obj, '__doc__') and obj.__doc__ and ('|ydeprecated|' in obj.__doc__ or '|yhidden|' in obj.__doc__):
 		return True
