@@ -740,7 +740,7 @@ namespace CGT {
 		Somme(T, V, S);
 	}
 
-	void KinematicLocalisationAnalyser::Grad_u(Finite_cells_iterator cell, Tenseur3& T, bool vol_divide) // Calcule le gradient de d�p.
+	void KinematicLocalisationAnalyser::Grad_u(Finite_cells_iterator cell, Tenseur3& T, bool vol_divide) // Gradient of displacement
 	{
 		T.reset();
 		CVector v;
@@ -789,7 +789,7 @@ namespace CGT {
 		//compute grad_u and volumes of all cells in the triangulation, and assign them to each of the vertices ( volume*grad_u is added here rather than grad_u, the weighted average is computed later )
 		//define the number of non-fictious cells, i.e. not in contact with a boundary
 		n_real_cells = 0;
-		for (; cell != cell0; cell++) { // calcule la norme du d�viateur dans chaque cellule
+		for (; cell != cell0; cell++) {
 			cell->info().isFictious
 			        = (cell->vertex(0)->info().isFictious || cell->vertex(1)->info().isFictious || cell->vertex(2)->info().isFictious
 			           || cell->vertex(3)->info().isFictious);
@@ -797,7 +797,6 @@ namespace CGT {
 				Grad_u(cell,
 				       grad_u,
 				       false); // false : don't divide by volume, here grad_u = volume of cell * average grad_u in cell, the final value is divided by the total volume later (see below)
-				//cerr << "grad_u=" << grad_u << endl;
 				v = Tri.tetrahedron(cell).volume();
 				grad_u_total += grad_u;
 				v_total += v;

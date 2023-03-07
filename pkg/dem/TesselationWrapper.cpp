@@ -325,23 +325,23 @@ void TesselationWrapper::addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, R
 
 void TesselationWrapper::addBoundingPlanes(void) { addBoundingPlanes(Pmin.x(), Pmax.x(), Pmin.y(), Pmax.y(), Pmin.z(), Pmax.z()); }
 
-void TesselationWrapper::setState(bool state) { mma.setState(state ? 2 : 1); }
+void TesselationWrapper::setState(bool state) { mma->setState(state ? 2 : 1); }
 
 void TesselationWrapper::loadState(string filename, bool stateNumber, bool bz2)
 {
-	CGT::TriaxialState& TS = stateNumber ? *(mma.analyser->TS1) : *(mma.analyser->TS0);
+	CGT::TriaxialState& TS = stateNumber ? *(mma->analyser->TS1) : *(mma->analyser->TS0);
 	TS.from_file(filename.c_str(), bz2);
 }
 
 void TesselationWrapper::saveState(string filename, bool stateNumber, bool bz2)
 {
-	CGT::TriaxialState& TS = stateNumber ? *(mma.analyser->TS1) : *(mma.analyser->TS0);
+	CGT::TriaxialState& TS = stateNumber ? *(mma->analyser->TS1) : *(mma->analyser->TS0);
 	TS.to_file(filename.c_str(), bz2);
 }
 
 void TesselationWrapper::defToVtkFromStates(string inputFile1, string inputFile2, string outputFile, bool bz2)
 {
-	mma.analyser->DefToFile(inputFile1.c_str(), inputFile2.c_str(), outputFile.c_str(), bz2);
+	mma->analyser->DefToFile(inputFile1.c_str(), inputFile2.c_str(), outputFile.c_str(), bz2);
 }
 
 void createSphere(shared_ptr<Body>& body, Vector3r position, Real radius, bool /*big*/, bool /*dynamic*/)
@@ -370,7 +370,7 @@ void TesselationWrapper::defToVtkFromPositions(string inputFile1, string inputFi
 		createSphere(body, sp.c, sp.r, false, true);
 		scene->bodies->insert(body);
 	}
-	mma.setState(1);
+	mma->setState(1);
 	scene->bodies->clear();
 	for (size_t i = 0; i < imax; i++) {
 		const SpherePack::Sph& sp(sp2.pack[i]);
@@ -378,23 +378,23 @@ void TesselationWrapper::defToVtkFromPositions(string inputFile1, string inputFi
 		createSphere(body, sp.c, sp.r, false, true);
 		scene->bodies->insert(body);
 	}
-	mma.setState(2);
-	mma.analyser->DefToFile(outputFile.c_str());
+	mma->setState(2);
+	mma->analyser->DefToFile(outputFile.c_str());
 }
 
-void TesselationWrapper::defToVtk(string outputFile) { mma.analyser->DefToFile(outputFile.c_str()); }
+void TesselationWrapper::defToVtk(string outputFile) { mma->analyser->DefToFile(outputFile.c_str()); }
 
 boost::python::dict TesselationWrapper::calcVolPoroDef(bool deformation)
 {
 	delete Tes;
 	CGT::TriaxialState* ts;
 	if (deformation) { //use the final state to compute volumes
-		/*const vector<CGT::Tenseur3>& def =*/mma.analyser->computeParticlesDeformation();
-		Tes = &mma.analyser->TS1->tesselation();
-		ts  = mma.analyser->TS1;
+		/*const vector<CGT::Tenseur3>& def =*/mma->analyser->computeParticlesDeformation();
+		Tes = &mma->analyser->TS1->tesselation();
+		ts  = mma->analyser->TS1;
 	} else {
-		Tes = &mma.analyser->TS0->tesselation(); //no reason to use the final state if we don't want to compute deformations, keep using the initial
-		ts  = mma.analyser->TS0;
+		Tes = &mma->analyser->TS0->tesselation(); //no reason to use the final state if we don't want to compute deformations, keep using the initial
+		ts  = mma->analyser->TS0;
 	}
 	RTriangulation& Tri = Tes->Triangulation();
 	Pmin                = ts->box.base;
@@ -418,7 +418,7 @@ boost::python::dict TesselationWrapper::calcVolPoroDef(bool deformation)
 		Real             sphereVol = 4.188790 * math::pow((V_it->point().weight()), 1.5); // 4/3*PI*R³ = 4.188...*R³
 		vol[id]                    = V_it->info().v();
 		poro[id]                   = (V_it->info().v() - sphereVol) / V_it->info().v();
-		if (deformation) MATRIX3R_TO_NUMPY(mma.analyser->ParticleDeformation[id], def[id]);
+		if (deformation) MATRIX3R_TO_NUMPY(mma->analyser->ParticleDeformation[id], def[id]);
 		//cerr << V_it->info().v()<<" "<<ParticleDeformation[id]<<endl;
 	}
 	boost::python::dict ret;

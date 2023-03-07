@@ -124,7 +124,7 @@ namespace CGT {
 				//			cerr << "Tes.insert(git->sphere.x(), git->sphere.y(), git->sphere.z(), git->sphere.weight(), git->id);" << endl;
 			}
 			tesselated = true;
-			cerr << "Triangulated Grains : " << Tes.Triangulation().number_of_vertices() << endl;
+			cerr << "Triangulated Grains (TriaxialState::Tesselate) : " << Tes.Triangulation().number_of_vertices() << endl;
 		}
 		return Tes;
 	}

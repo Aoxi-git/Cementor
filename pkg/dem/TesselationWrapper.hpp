@@ -57,7 +57,8 @@ public:
 	CGT::Point                Pmin;
 	CGT::Point                Pmax;
 	vector<Vector3r>          segments;
-
+// 	MicroMacroAnalyser*       mma_ptr;
+	
 	~TesselationWrapper();
 
 	/// Insert a sphere, "id" will be used by some getters to retrieve spheres
@@ -95,16 +96,16 @@ public:
 	///compute Voronoi vertices + volumes of all cells
 	///use computeTesselation to force update, e.g. after spheres positions have been updated
 	void computeVolumes(void);
-	void computeDeformations(void) { mma.analyser->computeParticlesDeformation(); }
+	void computeDeformations(void) { mma->analyser->computeParticlesDeformation(); }
 	///Get volume of the sphere inserted with indentifier "id""
 	Real Volume(unsigned int id);
 	Real deformation(unsigned int id, unsigned int i, unsigned int j)
 	{
-		if (!mma.analyser->ParticleDeformation.size()) {
+		if (!mma->analyser->ParticleDeformation.size()) {
 			LOG_ERROR("compute deformations first");
 			return 0;
 		}
-		if (mma.analyser->ParticleDeformation.size() < id) {
+		if (mma->analyser->ParticleDeformation.size() < id) {
 			LOG_ERROR("id out of bounds");
 			return 0;
 		}
@@ -112,7 +113,23 @@ public:
 			LOG_ERROR("tensor index must be between 1 and 3");
 			return 0;
 		}
-		return mma.analyser->ParticleDeformation[id](i, j);
+		return mma->analyser->ParticleDeformation[id](i, j);
+	}
+	
+	Matrix3r deformationTensor(unsigned int id)
+	{
+		if (!mma->analyser->ParticleDeformation.size()) {
+			LOG_ERROR("compute deformations first");
+			return Matrix3r::Zero();
+		}
+		if (mma->analyser->ParticleDeformation.size() < id) {
+			LOG_ERROR("id out of bounds");
+			return Matrix3r::Zero();
+		}
+		auto m = mma->analyser->ParticleDeformation[id];
+		Matrix3r m3;
+		m3 << m(1,1),m(1,2),m(1,3),m(2,1),m(2,2),m(2,3),m(3,1),m(3,2),m(3,3);
+		return m3;
 	}
 
 	/// number of facets in the tesselation (finite branches of the triangulation)
@@ -140,7 +157,6 @@ public:
 	FiniteEdgesIterator facet_begin;
 	FiniteEdgesIterator facet_end;
 	FiniteEdgesIterator facet_it;
-	MicroMacroAnalyser  mma;
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_DEPREC_INIT_CTOR_PY(TesselationWrapper,GlobalEngine,"Handle the triangulation of spheres in a scene, build tesselation on request, and give access to computed quantities (see also the :ref:`dedicated section in user manual <MicroStressAndMicroStrain>`). The calculation of microstrain is explained in [Catalano2014a]_ \n\nSee example usage in script example/tesselationWrapper/tesselationWrapper.py.\n\nBelow is an output of the :yref:`defToVtk<TesselationWrapper::defToVtk>` function visualized with paraview (in this case Yade's TesselationWrapper was used to process experimental data obtained on sand by Edward Ando at Grenoble University, 3SR lab.)\n\n.. figure:: fig/localstrain.*\n\t:width: 9cm\n\nThe definition of outer contours of arbitrary shapes and the application of stress on them, based on CGAL's 'alpha shapes' is also possible. See :ysrc:`scripts/examples/alphaShapes/GlDrawAlpha.py` (giving the figure below) and other examples therein. Read more in [Pekmezi2020]_ and further papers by the same authors. \n\n.. figure:: fig/alphaShape.*\n\t:width: 9cm",
@@ -149,8 +165,10 @@ public:
 	((Real,alphaCapsVol,0.,,"The volume of the packing as defined by the boundary alpha cap polygons"))
 	((Matrix3r,grad_u,Matrix3r::Zero(),,"The Displacement Gradient Tensor"))
 	((mask_t,groupMask,0,,"Bitmask for filtering spheres, ignored if 0."))
+	((shared_ptr<MicroMacroAnalyser>, mma, new MicroMacroAnalyser,, "underlying object processing the data - see specific settings in :yref:`MicroMacroAnalyser` class documentation"))
 	,/*deprec*/
 	,/*init*/
+// 	mma_ptr(mma->get())
 	,/*ctor*/
   	Tes = new Tesselation;
 	clear();
@@ -158,7 +176,7 @@ public:
 	facet_end = Tes->Triangulation().finite_edges_end();
 	facet_it = Tes->Triangulation().finite_edges_begin();
 	inf=1e10;
-	mma.analyser->SetConsecutive(false);
+	mma->analyser->SetConsecutive(false);
 	,/*py*/
 	.def("triangulate",&TesselationWrapper::insertSceneSpheres,(boost::python::arg("reset")=true),"triangulate spheres of the packing")
 	.def("addBoundingPlane",&TesselationWrapper::addBoundingPlane,((boost::python::arg("axis")),(boost::python::arg("positive"))),"add a bounding plane (in fact a sphere with very large radius) bounding the spheres along the direction 'axis' (0,1,2), on the 'positive' or negative side.")
@@ -172,7 +190,8 @@ public:
  	.def("computeVolumes",&TesselationWrapper::computeVolumes,"compute volumes of all Voronoi's cells.")
 	.def("calcVolPoroDef",&TesselationWrapper::calcVolPoroDef,(boost::python::arg("deformation")=false),"Return a table with per-sphere computed quantities. Include deformations on the increment defined by states 0 and 1 if deformation=True (make sure to define states 0 and 1 consistently).")
 	.def("computeDeformations",&TesselationWrapper::computeDeformations,"compute per-particle deformation. Get it with :yref:`TesselationWrapper::deformation` (id,i,j).")
-	.def("deformation",&TesselationWrapper::deformation,(boost::python::arg("id"),boost::python::arg("i"),boost::python::arg("j")),"Get particle deformation")
+	.def("deformation",&TesselationWrapper::deformation,(boost::python::arg("id"),boost::python::arg("i"),boost::python::arg("j")),"Get individual components of the particle deformation tensors")
+	.def("deformationTensor",&TesselationWrapper::deformationTensor,(boost::python::arg("id")),"Get particle deformation (tensor)")
 	.def("testAlphaShape",&TesselationWrapper::testAlphaShape,(boost::python::arg("alpha")=0),"transitory function, testing AlphaShape feature")
 	.def("getAlphaFaces",&TesselationWrapper::getAlphaFaces,(boost::python::arg("alpha")=0),"Get the list of alpha faces for a given alpha. If alpha is not specified or null the minimum alpha resulting in a unique connected domain is used")
 	.def("getAlphaCaps",&TesselationWrapper::getAlphaCaps,(boost::python::arg("alpha")=0,boost::python::arg("shrinkedAlpha")=0,boost::python::arg("fixedAlpha")=false),"Get the list of area vectors for the polyhedral caps associated to boundary particles ('extended' alpha-contour). If alpha is not specified or null the minimum alpha resulting in a unique connected domain is used. Taking a smaller 'shrinked' alpha for placing the virtual spheres moves the enveloppe outside the packing, It should be ~(alpha-refRad) typically.")
