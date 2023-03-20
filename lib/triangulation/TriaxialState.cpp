@@ -23,7 +23,8 @@ namespace CGT {
 	TriaxialState::TriaxialState(void)
 	        : NO_ZERO_ID(false)
 	        , filter_distance(-0.1)
-	        , tesselated(false)
+			, maxId(-1)
+			, tesselated(false)
 	{
 	}
 
@@ -124,7 +125,6 @@ namespace CGT {
 				//			cerr << "Tes.insert(git->sphere.x(), git->sphere.y(), git->sphere.z(), git->sphere.weight(), git->id);" << endl;
 			}
 			tesselated = true;
-			cerr << "Triangulated Grains (TriaxialState::Tesselate) : " << Tes.Triangulation().number_of_vertices() << endl;
 		}
 		return Tes;
 	}
@@ -190,17 +190,18 @@ namespace CGT {
 		}
 
 		long i = NO_ZERO_ID ? 1 : 0;
+		
+		using math::max; // when used inside function it does not leak - it is safe.
+		using math::min;
 
 		for (; i <= Ng; ++i) {
 			Statefile >> Idg >> pos >> rad >> trans >> rot >> isSphere;
+			maxId = max(maxId,Idg);
 			grains[Idg].id = Idg;
 			grains[Idg].sphere = Sphere(pos, rad);
 			grains[Idg].translation = trans;
 			grains[Idg].rotation = rot;
 			grains[Idg].isSphere = isSphere;
-
-			using math::max; // when used inside function it does not leak - it is safe.
-			using math::min;
 			box.base = Point(min(box.base.x(), pos.x() - rad), min(box.base.y(), pos.y() - rad), min(box.base.z(), pos.z() - rad));
 			box.sommet = Point(max(box.sommet.x(), pos.x() + rad), max(box.sommet.y(), pos.y() + rad), max(box.sommet.z(), pos.z() + rad));
 			if (isSphere) {

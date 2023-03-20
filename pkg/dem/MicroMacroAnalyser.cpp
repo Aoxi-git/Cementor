@@ -116,14 +116,15 @@ CGT::TriaxialState& MicroMacroAnalyser::makeState(unsigned int state, const char
 	CGT::TriaxialState& TS = *ts;
 
 	TS.reset();
-	long Ng        = bodies->size();
+	auto lengthBodies  = bodies->size();
 	TS.mean_radius = 0;
-	TS.grains.resize(Ng);
-	Ng = 0;
+	TS.grains.resize(lengthBodies);
+	long Ng = 0;
 	vector<Body::id_t> fictiousVtx;
 	for (const auto& bi : *bodies) {
 		const Body::id_t Idg = bi->getId();
 		TS.grains[Idg].id    = Idg;
+		TS.maxId = max(TS.maxId,long(Idg));
 		if (not dynamic_cast<Sphere*>(bi->shape.get())) {
 			if (!nonSphereAsFictious) continue;
 			TS.grains[Idg].isSphere = false;
@@ -149,9 +150,10 @@ CGT::TriaxialState& MicroMacroAnalyser::makeState(unsigned int state, const char
 	TS.mean_radius /= Ng; //rayon moyen
 	LOG_INFO(" loaded : " << Ng << " grains with mean radius = " << TS.mean_radius);
 	Real FAR = 1e4;
-	if (fictiousVtx.size() == 0) {
-		TS.grains.resize(Ng + 6);
-		for (int fv = Ng; fv < Ng + 6; fv++) {
+	if (fictiousVtx.size() < 6) {
+		unsigned missing = 6 - fictiousVtx.size();
+		TS.grains.resize(lengthBodies + missing);
+		for (unsigned fv = lengthBodies; fv < lengthBodies + missing; fv++) {
 			fictiousVtx.push_back(fv);
 			TS.grains[fv].id       = fv;
 			TS.grains[fv].isSphere = false;

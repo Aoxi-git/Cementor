@@ -106,6 +106,7 @@ namespace CGT {
 		Real          rfric, Eyn, Eys, wszzh, wsxxd, wsyyfa, eps1, eps2, eps3, porom, haut, larg, prof, ratio_f, vit;
 		VectorContact contacts;
 		VectorGrain   grains;
+		long          maxId;
 
 	private:
 		Tesselation  Tes;
