@@ -218,6 +218,7 @@ bool TesselationWrapper::move(Real x, Real y, Real z, Real rad, unsigned int id)
 void TesselationWrapper::computeTesselation(void)
 {
 	if (not(Tes->vertexHandles.size() > 0)) insertSceneSpheres();
+	addBoundingPlanes();
 	if (!rad_divided) {
 		mean_radius /= n_spheres;
 		rad_divided = true;
@@ -234,8 +235,6 @@ void TesselationWrapper::computeTesselation(Real pminx, Real pmaxx, Real pminy, 
 
 void TesselationWrapper::computeVolumes(void)
 {
-	if (not(Tes->vertexHandles.size() > 0)) insertSceneSpheres();
-	if (!bounded) addBoundingPlanes();
 	computeTesselation();
 	Tes->computeVolumes();
 }
@@ -303,7 +302,7 @@ void TesselationWrapper::addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, R
 		for (int k = 0; k < 6; k++) {
 			while (Tes->vertexHandles[i] != NULL)
 				++i;
-			freeIds[k] = i;
+			freeIds[k] = i++;
 		}
 		// now insert
 		Tes->vertexHandles[freeIds[0]] = Tes->insert(
@@ -388,6 +387,7 @@ boost::python::dict TesselationWrapper::calcVolPoroDef(bool deformation)
 {
 	delete Tes;
 	CGT::TriaxialState* ts;
+	bounded = true; // TriaxialState already has bounding planes together with the actual spheres, no need to bound again.
 	if (deformation) { //use the final state to compute volumes
 		/*const vector<CGT::Tenseur3>& def =*/mma->analyser->computeParticlesDeformation();
 		Tes = &mma->analyser->TS1->tesselation();
@@ -396,11 +396,11 @@ boost::python::dict TesselationWrapper::calcVolPoroDef(bool deformation)
 		Tes = &mma->analyser->TS0->tesselation(); //no reason to use the final state if we don't want to compute deformations, keep using the initial
 		ts  = mma->analyser->TS0;
 	}
+	computeVolumes();
 	RTriangulation& Tri = Tes->Triangulation();
 	Pmin                = ts->box.base;
 	Pmax                = ts->box.sommet;
-	//if (!scene->isPeriodic) addBoundingPlanes();
-	computeVolumes();
+
 	int bodiesDim = Tes->Max_id() + 1; //=scene->bodies->size();
 	cerr << "bodiesDim=" << bodiesDim << endl;
 	int dim1[] = { bodiesDim };
@@ -442,6 +442,7 @@ boost::python::list TesselationWrapper::getAlphaCaps(Real alpha, Real shrinkedAl
 {
 	vector<AlphaCap> caps;
 	Tes->setExtendedAlphaCaps(caps, alpha, shrinkedAlpha, fixedAlpha);
+	bounded=true;
 	boost::python::list ret;
 	for (auto f = caps.begin(); f != caps.end(); f++)
 		ret.append(boost::python::make_tuple(f->id, makeVector3r(f->normal), makeVector3r(f->centroid)));
@@ -456,6 +457,7 @@ void TesselationWrapper::applyAlphaForces(Matrix3r stress, Real alpha, Real shri
 	// 	build_triangulation_with_ids(scene->bodies, *this, true); //triangulation needed
 	vector<AlphaCap> caps;
 	Tes->setExtendedAlphaCaps(caps, alpha, shrinkedAlpha, fixedAlpha);
+	bounded = true;
 	for (const auto& b : *scene->bodies)
 		scene->forces.setPermForce(b->id, Vector3r::Zero());
 	for (auto f = caps.begin(); f != caps.end(); f++) {
@@ -470,6 +472,7 @@ void TesselationWrapper::applyAlphaVel(Matrix3r velGrad, Real alpha, Real shrink
 	build_triangulation_with_ids(scene->bodies, *this, true); //triangulation needed
 	vector<AlphaCap> caps;
 	Tes->setExtendedAlphaCaps(caps, alpha, shrinkedAlpha, fixedAlpha);
+	bounded=true;
 	for (const auto& b : *scene->bodies)
 		b->state->blockedDOFs = State::DOF_NONE;
 	const auto aabb     = Shop::aabbExtrema();
@@ -488,6 +491,7 @@ Matrix3r TesselationWrapper::calcAlphaStress(Real alpha, Real shrinkedAlpha, boo
 	build_triangulation_with_ids(scene->bodies, *this, true); //triangulation needed
 	vector<AlphaCap> caps;
 	Tes->setExtendedAlphaCaps(caps, alpha, shrinkedAlpha, fixedAlpha);
+	bounded=true;
 	Matrix3r cauchyLWS(Matrix3r::Zero());
 	scene->forces.sync(); // needed to make resultants predictable
 	alphaCapsVol = 0.;
@@ -506,6 +510,7 @@ boost::python::list TesselationWrapper::getAlphaGraph(Real alpha, Real shrinkedA
 {
 	if (Tes->Triangulation().number_of_vertices() == 0) insertSceneSpheres(true);
 	segments = Tes->getExtendedAlphaGraph(alpha, shrinkedAlpha, fixedAlpha);
+	bounded = true;
 	boost::python::list ret;
 	for (auto f = segments.begin(); f != segments.end(); f++)
 		ret.append(*f);
