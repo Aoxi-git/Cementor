@@ -13,15 +13,6 @@
 #include <preprocessing/dem/Shop.hpp>
 #include <preprocessing/dem/SpherePack.hpp>
 
-// https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpragmas"
-#pragma GCC diagnostic ignored "-Wunused-function"
-// Code that generates this warning, Note: we cannot do this trick in yade. If we have a warning in yade, we have to fix it! See also https://gitlab.com/yade-dev/trunk/merge_requests/73
-// This method will work once g++ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431#c34 is fixed.
-#include <lib/pyutil/numpy_boost.hpp>
-#pragma GCC diagnostic pop
-
 #ifdef YADE_OPENGL
 #include <lib/opengl/GLUtils.hpp>
 #include <lib/opengl/OpenGLWrapper.hpp>
@@ -40,15 +31,15 @@ CREATE_LOGGER(TesselationWrapper);
 
 // helper macro do assign Matrix3r values to subarrays
 #define MATRIX3R_TO_NUMPY(mat, arr)                                                                                                                            \
-	arr[0] = mat(0, 0);                                                                                                                                    \
-	arr[1] = mat(0, 1);                                                                                                                                    \
-	arr[2] = mat(0, 2);                                                                                                                                    \
-	arr[3] = mat(1, 0);                                                                                                                                    \
-	arr[4] = mat(1, 1);                                                                                                                                    \
-	arr[5] = mat(1, 2);                                                                                                                                    \
-	arr[6] = mat(2, 0);                                                                                                                                    \
-	arr[7] = mat(2, 1);                                                                                                                                    \
-	arr[8] = mat(2, 2);
+	arr(0,0) = mat(1, 1);                                                                                                                                    \
+	arr(0,1) = mat(1, 2);                                                                                                                                    \
+	arr(0,2) = mat(1, 3);                                                                                                                                    \
+	arr(1,0) = mat(2, 1);                                                                                                                                    \
+	arr(1,1) = mat(2, 2);                                                                                                                                    \
+	arr(1,2) = mat(2, 3);                                                                                                                                    \
+	arr(2,0) = mat(3, 1);                                                                                                                                    \
+	arr(2,1) = mat(3, 2);                                                                                                                                    \
+	arr(2,2) = mat(3, 3);
 
 //spatial sort traits to use with a pair of CGAL::sphere pointers and integer.
 //template<class _Triangulation>
@@ -402,25 +393,26 @@ boost::python::dict TesselationWrapper::calcVolPoroDef(bool deformation)
 	Pmax                = ts->box.sommet;
 
 	int bodiesDim = Tes->Max_id() + 1; //=scene->bodies->size();
-	cerr << "bodiesDim=" << bodiesDim << endl;
-	int dim1[] = { bodiesDim };
-	int dim2[] = { bodiesDim, 9 };
-	/// This is the code that needs numpy include
-	//numpy_boost<Body::id_t,1> id(dim1);
-	numpy_boost<Real, 1> vol(dim1);
-	numpy_boost<Real, 1> poro(dim1);
-	numpy_boost<Real, 2> def(dim2);
+	vector<Real> vol_(bodiesDim,0);
+	vector<Real> poro_(bodiesDim,0);
+	vector<Matrix3r> def_(bodiesDim,Matrix3r::Zero()); 
+	
+	boost::python::list vol;
+	boost::python::list poro;
+	boost::python::list def;
+	
 	//for(const auto & b :  *scene->bodies){
 	for (RTriangulation::Finite_vertices_iterator V_it = Tri.finite_vertices_begin(); V_it != Tri.finite_vertices_end(); V_it++) {
-		//id[]=V_it->info().id()
-		//if(!b) continue;
 		const Body::id_t id        = V_it->info().id();
 		Real             sphereVol = 4.188790 * math::pow((V_it->point().weight()), 1.5); // 4/3*PI*R³ = 4.188...*R³
-		vol[id]                    = V_it->info().v();
-		poro[id]                   = (V_it->info().v() - sphereVol) / V_it->info().v();
-		if (deformation) MATRIX3R_TO_NUMPY(mma->analyser->ParticleDeformation[id], def[id]);
-		//cerr << V_it->info().v()<<" "<<ParticleDeformation[id]<<endl;
+		vol_[id]                    = V_it->info().v();
+		poro_[id]                   = (V_it->info().v() - sphereVol) / V_it->info().v();
+		if (deformation) MATRIX3R_TO_NUMPY(mma->analyser->ParticleDeformation[id], def_[id]);
 	}
+
+	for (auto& v : vol_) vol.append(v);
+	for (auto& v : poro_) poro.append(v);
+	if (deformation) for (auto& v : def_) def.append(v);
 	boost::python::dict ret;
 	ret["vol"]  = vol;
 	ret["poro"] = poro;
