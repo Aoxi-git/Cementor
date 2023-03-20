@@ -818,13 +818,9 @@ namespace CGT {
 		}
 		grad_u_total_g /= v_total_g;
 		if (1) {
-			cerr << "sym_grad_u_total_g (wrong averaged strain):" << endl << Tenseur_sym3(grad_u_total_g) << endl;
 			if (v_total) grad_u_total /= v_total;
-			cerr << "Total volume = " << v_total << ", grad_u = " << endl
-			     << grad_u_total << endl
-			     << "sym_grad_u (true average strain): " << endl
-			     << Tenseur_sym3(grad_u_total) << endl;
-			cerr << "Macro strain : " << endl << Delta_epsilon << endl;
+			cout << "Total volume = " << v_total << endl << "grad_u = " << endl
+			     << grad_u_total << endl;
 		}
 		return ParticleDeformation;
 	}
