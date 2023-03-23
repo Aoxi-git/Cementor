@@ -715,7 +715,7 @@ namespace CGT {
 				id = cell->vertex(i)->info().id();
 				v = v + (TS1->grain(id).sphere.point() - TS0->grain(id).sphere.point());
 			}
-		v *= Real(1)/Real(3);
+		v *= 0.333333333333333;
 		return v;
 	}
 
