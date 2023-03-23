@@ -315,7 +315,7 @@ void TesselationWrapper::addBoundingPlanes(Real pminx, Real pmaxx, Real pminy, R
 
 void TesselationWrapper::addBoundingPlanes(void) { addBoundingPlanes(Pmin.x(), Pmax.x(), Pmin.y(), Pmax.y(), Pmin.z(), Pmax.z()); }
 
-void TesselationWrapper::setState(bool state) { mma->setState(state ? 2 : 1); }
+void TesselationWrapper::setState(bool state) { mma->setState(state ? 2 : 1, false, false, groupMask); }
 
 void TesselationWrapper::loadState(string filename, bool stateNumber, bool bz2)
 {

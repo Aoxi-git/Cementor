@@ -79,10 +79,10 @@ void MicroMacroAnalyser::action()
 	//cerr << "ENDOF MicroMacro::action" << endl;
 }
 
-void MicroMacroAnalyser::setState(unsigned int state, bool save_states, bool computeIncrement)
+void MicroMacroAnalyser::setState(unsigned int state, bool save_states, bool computeIncrement, mask_t mask)
 {
 	LOG_INFO("MicroMacroAnalyser::setState");
-	CGT::TriaxialState& TS = makeState(state);
+	CGT::TriaxialState& TS = makeState(state, NULL, mask);
 	if (state == 2) {
 		analyser->Delta_epsilon(3, 3) = analyser->TS1->eps3 - analyser->TS0->eps3;
 		analyser->Delta_epsilon(1, 1) = analyser->TS1->eps1 - analyser->TS0->eps1;
@@ -102,7 +102,7 @@ void MicroMacroAnalyser::setState(unsigned int state, bool save_states, bool com
 }
 
 //Copy simulation data in the triaxialState structure
-CGT::TriaxialState& MicroMacroAnalyser::makeState(unsigned int state, const char* filename)
+CGT::TriaxialState& MicroMacroAnalyser::makeState(unsigned int state, const char* filename, mask_t mask)
 {
 	//  declaration of ‘scene’ shadows a member of ‘yade::MicroMacroAnalyser’ [-Werror=shadow]
 	Scene*                     scene2 = Omega::instance().getScene().get();
@@ -121,12 +121,17 @@ CGT::TriaxialState& MicroMacroAnalyser::makeState(unsigned int state, const char
 	TS.grains.resize(lengthBodies);
 	long Ng = 0;
 	vector<Body::id_t> fictiousVtx;
+	
 	for (const auto& bi : *bodies) {
+		if (mask and not (mask & bi->groupMask)) continue;
 		const Body::id_t Idg = bi->getId();
 		TS.grains[Idg].id    = Idg;
 		TS.maxId = max(TS.maxId,long(Idg));
 		if (not dynamic_cast<Sphere*>(bi->shape.get())) {
-			if (!nonSphereAsFictious) continue;
+			if (!nonSphereAsFictious or fictiousVtx.size()>=6) {
+				TS.grains[Idg].id    = -1; // invalidate so they won't be inserted in triangulation
+				continue;
+			}
 			TS.grains[Idg].isSphere = false;
 			fictiousVtx.push_back(Idg);
 		} else { //then it is a sphere (not a wall)

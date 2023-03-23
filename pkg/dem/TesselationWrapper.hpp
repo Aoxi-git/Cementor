@@ -180,7 +180,7 @@ public:
 	,/*py*/
 	.def("triangulate",&TesselationWrapper::insertSceneSpheres,(boost::python::arg("reset")=true),"triangulate spheres of the packing")
 	.def("addBoundingPlane",&TesselationWrapper::addBoundingPlane,((boost::python::arg("axis")),(boost::python::arg("positive"))),"add a bounding plane (in fact a sphere with very large radius) bounding the spheres along the direction 'axis' (0,1,2), on the 'positive' or negative side.")
- 	.def("setState",&TesselationWrapper::setState,(boost::python::arg("state")=0),"Make the current state of the simulation the initial (0) or final (1) configuration for the definition of displacement increments, use only state=0 if you just want to get  volmumes and porosity.")
+ 	.def("setState",&TesselationWrapper::setState,((boost::python::arg("state")=0)),"Make the current state of the simulation the initial (0) or final (1) configuration for the definition of displacement increments, use only state=0 if you just want to get  volmumes and porosity. Exclude bodies using the bitmask :yref:`TesselationWrapper::groupMask`.")
  	.def("loadState",&TesselationWrapper::loadState,(boost::python::arg("inputFile")="state",boost::python::arg("state")=0,boost::python::arg("bz2")=true),"Load a file with positions to define state 0 or 1.")
  	.def("saveState",&TesselationWrapper::saveState,(boost::python::arg("outputFile")="state",boost::python::arg("state")=0,boost::python::arg("bz2")=true),"Save a file with positions, can be later reloaded in order to define state 0 or 1.")
  	.def("volume",&TesselationWrapper::Volume,(boost::python::arg("id")=0),"Returns the volume of Voronoi's cell of a sphere.")
