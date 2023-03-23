@@ -715,7 +715,7 @@ namespace CGT {
 				id = cell->vertex(i)->info().id();
 				v = v + (TS1->grain(id).sphere.point() - TS0->grain(id).sphere.point());
 			}
-		v *= 0.33333333333333333333;
+		v *= Real(1)/Real(3);
 		return v;
 	}
 
@@ -817,11 +817,6 @@ namespace CGT {
 			if (V_it->info().v()) ParticleDeformation[V_it->info().id()] /= V_it->info().v();
 		}
 		grad_u_total_g /= v_total_g;
-		if (1) {
-			if (v_total) grad_u_total /= v_total;
-			cout << "Total volume = " << v_total << endl << "grad_u = " << endl
-			     << grad_u_total << endl;
-		}
 		return ParticleDeformation;
 	}
 
