@@ -123,7 +123,7 @@ CGT::TriaxialState& MicroMacroAnalyser::makeState(unsigned int state, const char
 	vector<Body::id_t> fictiousVtx;
 	
 	for (const auto& bi : *bodies) {
-		if (mask and not (mask & bi->groupMask)) continue;
+		if (not bi->maskOk(mask)) continue;
 		const Body::id_t Idg = bi->getId();
 		TS.grains[Idg].id    = Idg;
 		TS.maxId = max(TS.maxId,long(Idg));
