@@ -701,7 +701,7 @@ namespace CGT {
 	{
 		TriaxialState::GrainIterator gend = TS1->grains_end();
 		for (TriaxialState::GrainIterator git = TS1->grains_begin(); git != gend; ++git)
-			if (git->id >= 0) git->translation = TS1->grain(git->id).sphere.point() - TS0->grain(git->id).sphere.point();
+			if (git->id >= 0) git->translation = TS0->grain(git->id).translation = TS1->grain(git->id).sphere.point() - TS0->grain(git->id).sphere.point();
 		consecutive = true;
 	}
 
@@ -742,7 +742,7 @@ namespace CGT {
 
 	const vector<Tenseur3>& KinematicLocalisationAnalyser::computeParticlesDeformation(void)
 	{
-		Tesselation&    Tes = TS1->tesselation();
+		Tesselation&    Tes = TS0->tesselation();
 		RTriangulation& Tri = Tes.Triangulation();
 		Tenseur3        grad_u;
 		Real            v;
@@ -754,6 +754,7 @@ namespace CGT {
 		Delta_epsilon(3, 3) = TS1->eps3 - TS0->eps3;
 		Delta_epsilon(1, 1) = TS1->eps1 - TS0->eps1;
 		Delta_epsilon(2, 2) = TS1->eps2 - TS0->eps2;
+        vector<Real> volumeWeight(Tes.Max_id() + 1,0);
 
 		//compute Voronoi tesselation (i.e. voronoi center of each cell)
 		if (!Tes.computed) Tes.compute();
@@ -765,8 +766,6 @@ namespace CGT {
 		n_real_vertices = 0;
 		n_fictious_vertices = 0;
 		for (RTriangulation::Finite_vertices_iterator V_it = Tri.finite_vertices_begin(); V_it != Tri.finite_vertices_end(); V_it++) {
-			//cerr << V_it->info().id() << endl;
-			V_it->info().v() = 0; //WARNING : this will erase previous values if some have been computed
 			ParticleDeformation[V_it->info().id()].reset();
 			if (!V_it->info().isFictious) ++n_real_vertices;
 			else
@@ -791,9 +790,7 @@ namespace CGT {
 				v_total += v;
 				++n_real_cells;
 				for (unsigned int index = 0; index < 4; index++) {
-					cell->vertex(index)->info().v()
-					        += v; //WARNING2 : this will affect values which differ from the volumes of voronoi cells
-					//cerr << "ParticleDeformation[cell->vertex (" << cell->vertex ( index )->info().id() << ")"<< endl;
+                    volumeWeight[cell->vertex(index)->info().id()] += v;
 					ParticleDeformation[cell->vertex(index)->info().id()] += grad_u;
 				}
 			}
@@ -811,10 +808,10 @@ namespace CGT {
 
 		//Divide sum(v*grad_u) by sum(v) to get the average grad_u on each particle
 		for (RTriangulation::Finite_vertices_iterator V_it = Tri.finite_vertices_begin(); V_it != Tri.finite_vertices_end(); V_it++) {
-			v_total_g += V_it->info().v();
+			v_total_g += volumeWeight[V_it->info().id()];
 			v_solid_total += 4.188790 * pow(V_it->point().weight(), 1.5); //4.18... = 4/3*PI; and here, weight is rad²
 			grad_u_total_g += ParticleDeformation[V_it->info().id()];
-			if (V_it->info().v()) ParticleDeformation[V_it->info().id()] /= V_it->info().v();
+			if (volumeWeight[V_it->info().id()]>0) ParticleDeformation[V_it->info().id()] /= volumeWeight[V_it->info().id()];
 		}
 		grad_u_total_g /= v_total_g;
 		return ParticleDeformation;

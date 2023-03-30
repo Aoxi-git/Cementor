@@ -30,7 +30,7 @@ YADE_PLUGIN((TesselationWrapper));
 CREATE_LOGGER(TesselationWrapper);
 
 // helper macro do assign Matrix3r values to subarrays
-#define MATRIX3R_TO_NUMPY(mat, arr)                                                                                                                            \
+#define TENSOR_TO_MATRIX3R(mat, arr)  {                                                                                                                       \
 	arr(0,0) = mat(1, 1);                                                                                                                                    \
 	arr(0,1) = mat(1, 2);                                                                                                                                    \
 	arr(0,2) = mat(1, 3);                                                                                                                                    \
@@ -39,7 +39,7 @@ CREATE_LOGGER(TesselationWrapper);
 	arr(1,2) = mat(2, 3);                                                                                                                                    \
 	arr(2,0) = mat(3, 1);                                                                                                                                    \
 	arr(2,1) = mat(3, 2);                                                                                                                                    \
-	arr(2,2) = mat(3, 3);
+	arr(2,2) = mat(3, 3);}
 
 //spatial sort traits to use with a pair of CGAL::sphere pointers and integer.
 //template<class _Triangulation>
@@ -137,10 +137,7 @@ void build_triangulation_with_ids(const shared_ptr<BodyContainer>& bodies, Tesse
 
 Real thickness = 0;
 
-TesselationWrapper::~TesselationWrapper()
-{
-	if (Tes) delete Tes;
-}
+TesselationWrapper::~TesselationWrapper() {}
 
 void TesselationWrapper::clear(void)
 {
@@ -152,7 +149,6 @@ void TesselationWrapper::clear(void)
 	rad_divided = false;
 	bounded     = false;
 	Tes->vertexHandles.clear();
-	facet_it = Tes->Triangulation().finite_edges_end();
 }
 
 void TesselationWrapper::clear2(void) //for testing purpose
@@ -179,7 +175,7 @@ void TesselationWrapper::insertSceneSpheres(bool reset)
 	// 	clock.top("Triangulation");
 }
 
-Real TesselationWrapper::Volume(unsigned int id) { return ((unsigned int)Tes->Max_id() >= id) ? Tes->Volume(id) : -1; }
+Real TesselationWrapper::Volume(unsigned int id) { return ((unsigned int)Tes->Max_id() >= id and Tes->vertex(id)!=NULL ) ? Tes->Volume(id) : 0; }
 
 bool TesselationWrapper::insert(Real x, Real y, Real z, Real rad, unsigned int id)
 {
@@ -228,27 +224,6 @@ void TesselationWrapper::computeVolumes(void)
 {
 	computeTesselation();
 	Tes->computeVolumes();
-}
-unsigned int TesselationWrapper::NumberOfFacets(bool initIters)
-{
-	if (initIters) InitIter();
-	return Tes->Triangulation().number_of_finite_edges();
-}
-
-void TesselationWrapper::InitIter(void)
-{
-	facet_begin = Tes->Triangulation().finite_edges_begin();
-	facet_end   = Tes->Triangulation().finite_edges_end();
-	facet_it    = facet_begin;
-}
-
-bool TesselationWrapper::nextFacet(std::pair<unsigned int, unsigned int>& facet)
-{
-	if (facet_end == facet_it) return false;
-	facet.first  = facet_it->first->vertex(facet_it->second)->info().id();
-	facet.second = facet_it->first->vertex((facet_it)->third)->info().id();
-	++facet_it;
-	return true;
 }
 
 int TesselationWrapper::addBoundingPlane(short axis, bool positive)
@@ -376,17 +351,11 @@ void TesselationWrapper::defToVtk(string outputFile) { mma->analyser->DefToFile(
 
 boost::python::dict TesselationWrapper::calcVolPoroDef(bool deformation)
 {
-	delete Tes;
 	CGT::TriaxialState* ts;
 	bounded = true; // TriaxialState already has bounding planes together with the actual spheres, no need to bound again.
-	if (deformation) { //use the final state to compute volumes
-		/*const vector<CGT::Tenseur3>& def =*/mma->analyser->computeParticlesDeformation();
-		Tes = &mma->analyser->TS1->tesselation();
-		ts  = mma->analyser->TS1;
-	} else {
-		Tes = &mma->analyser->TS0->tesselation(); //no reason to use the final state if we don't want to compute deformations, keep using the initial
-		ts  = mma->analyser->TS0;
-	}
+	if (deformation) mma->analyser->computeParticlesDeformation();
+	Tes = &mma->analyser->TS0->tesselation(); //no reason to use the final state if we don't want to compute deformations, keep using the initial
+	ts  = mma->analyser->TS0;
 	computeVolumes();
 	RTriangulation& Tri = Tes->Triangulation();
 	Pmin                = ts->box.base;
@@ -404,10 +373,11 @@ boost::python::dict TesselationWrapper::calcVolPoroDef(bool deformation)
 	//for(const auto & b :  *scene->bodies){
 	for (RTriangulation::Finite_vertices_iterator V_it = Tri.finite_vertices_begin(); V_it != Tri.finite_vertices_end(); V_it++) {
 		const Body::id_t id        = V_it->info().id();
+		if (id<0 or  V_it->info().v()==0 or V_it->info().isFictious) continue;
 		Real             sphereVol = 4.188790 * math::pow((V_it->point().weight()), 1.5); // 4/3*PI*R³ = 4.188...*R³
 		vol_[id]                    = V_it->info().v();
 		poro_[id]                   = (V_it->info().v() - sphereVol) / V_it->info().v();
-		if (deformation) MATRIX3R_TO_NUMPY(mma->analyser->ParticleDeformation[id], def_[id]);
+		if (deformation) TENSOR_TO_MATRIX3R(mma->analyser->ParticleDeformation[id], def_[id]);
 	}
 
 	for (auto& v : vol_) vol.append(v);

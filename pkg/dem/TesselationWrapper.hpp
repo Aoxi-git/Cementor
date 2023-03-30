@@ -50,6 +50,7 @@ public:
 	typedef Tesselation::AlphaFace                           AlphaFace;
 	typedef Tesselation::AlphaCap                            AlphaCap;
 
+    Tesselation tesObj;
 	/*mutable */ Tesselation* Tes; // Modifying internal state of Tesselation in read-only functions is allowed.
 	Real                      mean_radius, inf;
 	bool                      rad_divided;
@@ -132,13 +133,6 @@ public:
 		return m3;
 	}
 
-	/// number of facets in the tesselation (finite branches of the triangulation)
-	unsigned int NumberOfFacets(bool initIters = false);
-	/// set first and last facets, set facet_it = facet_begin
-	void InitIter(void);
-	/// set facet = next pair (body1->id,body2->id), returns facet_it==facet_end
-	bool nextFacet(std::pair<unsigned int, unsigned int>& facet);
-
 	/// make the current state the initial (0) or final (1) configuration for the definition of displacement increments, use only state=0 if you just want to get only volmumes and porosity
 	void setState(bool state = 0);
 	void loadState(string fileName, bool stateNumber = 0, bool bz2 = false);
@@ -153,10 +147,6 @@ public:
 
 
 public:
-	/// edge iterators are used for returning tesselation "facets", i.e. spheres with a common branch in the triangulation, convert CGAL::edge to int pair (b1->id, b2->id)
-	FiniteEdgesIterator facet_begin;
-	FiniteEdgesIterator facet_end;
-	FiniteEdgesIterator facet_it;
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_DEPREC_INIT_CTOR_PY(TesselationWrapper,GlobalEngine,"Handle the triangulation of spheres in a scene, build tesselation on request, and give access to computed quantities (see also the :ref:`dedicated section in user manual <MicroStressAndMicroStrain>`). The calculation of microstrain is explained in [Catalano2014a]_ \n\nSee example usage in script example/tesselationWrapper/tesselationWrapper.py.\n\nBelow is an output of the :yref:`defToVtk<TesselationWrapper::defToVtk>` function visualized with paraview (in this case Yade's TesselationWrapper was used to process experimental data obtained on sand by Edward Ando at Grenoble University, 3SR lab.)\n\n.. figure:: fig/localstrain.*\n\t:width: 9cm\n\nThe definition of outer contours of arbitrary shapes and the application of stress on them, based on CGAL's 'alpha shapes' is also possible. See :ysrc:`scripts/examples/alphaShapes/GlDrawAlpha.py` (giving the figure below) and other examples therein. Read more in [Pekmezi2020]_ and further papers by the same authors. \n\n.. figure:: fig/alphaShape.*\n\t:width: 9cm",
@@ -168,13 +158,8 @@ public:
 	((shared_ptr<MicroMacroAnalyser>, mma, new MicroMacroAnalyser,, "underlying object processing the data - see specific settings in :yref:`MicroMacroAnalyser` class documentation"))
 	,/*deprec*/
 	,/*init*/
-// 	mma_ptr(mma->get())
 	,/*ctor*/
-  	Tes = new Tesselation;
-	clear();
-	facet_begin = Tes->Triangulation().finite_edges_begin();
-	facet_end = Tes->Triangulation().finite_edges_end();
-	facet_it = Tes->Triangulation().finite_edges_begin();
+	Tes = &tesObj;
 	inf=1e10;
 	mma->analyser->SetConsecutive(false);
 	,/*py*/

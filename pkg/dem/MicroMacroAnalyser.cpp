@@ -128,14 +128,15 @@ CGT::TriaxialState& MicroMacroAnalyser::makeState(unsigned int state, const char
 		TS.grains[Idg].id    = Idg;
 		TS.maxId = max(TS.maxId,long(Idg));
 		if (not dynamic_cast<Sphere*>(bi->shape.get())) {
+			TS.grains[Idg].isSphere = false;
 			if (!nonSphereAsFictious or fictiousVtx.size()>=6) {
 				TS.grains[Idg].id    = -1; // invalidate so they won't be inserted in triangulation
 				continue;
-			}
-			TS.grains[Idg].isSphere = false;
+			}			
 			fictiousVtx.push_back(Idg);
 		} else { //then it is a sphere (not a wall)
 			++Ng;
+			TS.grains[Idg].isSphere = true;
 			const Sphere* s = YADE_CAST<Sphere*>(bi->shape.get());
 			//const GranularMat* p = YADE_CAST<GranularMat*> ( (bi)->material.get() );
 			const Vector3r& pos = bi->state->pos;
