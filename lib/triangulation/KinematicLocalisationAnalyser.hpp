@@ -107,7 +107,8 @@ namespace CGT {
 		Tenseur3         grad_u_total;
 		vector<Tenseur3> ParticleDeformation;
 		Tenseur3         grad_u_total_g; //grad_u averaged on extended grain cells
-		TriaxialState *  TS1, *TS0;
+		TriaxialState    ts0, ts1;
+		TriaxialState    *TS1, *TS0;
 
 	private:
 		int    file_number_1, file_number_0;

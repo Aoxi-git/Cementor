@@ -38,16 +38,12 @@ namespace CGT {
 		linear_discretisation = LINEAR_DISCRETISATION;
 		consecutive = false;
 		bz2 = true;
-		TS1 = new TriaxialState;
-		TS0 = new TriaxialState;
+		TS1 = &ts1;
+		TS0 = &ts0;
 	}
 
 
-	KinematicLocalisationAnalyser::~KinematicLocalisationAnalyser()
-	{
-		delete (TS1);
-		delete (TS0);
-	}
+	KinematicLocalisationAnalyser::~KinematicLocalisationAnalyser() {}
 
 	KinematicLocalisationAnalyser::KinematicLocalisationAnalyser(const char* state_file1, bool /*usebz2*/)
 	{
@@ -55,8 +51,8 @@ namespace CGT {
 		linear_discretisation = LINEAR_DISCRETISATION;
 		consecutive = false;
 		bz2 = true;
-		TS1 = new (TriaxialState);
-		TS0 = NULL;
+		TS1 = &ts1;
+		TS0 = &ts0;
 		TS1->from_file(state_file1, /*use bz2?*/ bz2);
 	}
 
@@ -66,8 +62,8 @@ namespace CGT {
 		bz2 = usebz2;
 		sphere_discretisation = SPHERE_DISCRETISATION;
 		linear_discretisation = LINEAR_DISCRETISATION;
-		TS1 = new (TriaxialState);
-		TS0 = new (TriaxialState);
+		TS1 = &ts1;
+		TS0 = &ts0;
 		TS1->from_file(state_file1, /*use bz2?*/ bz2);
 		TS0->from_file(state_file0, /*use bz2?*/ bz2);
 
@@ -99,8 +95,8 @@ namespace CGT {
 		bz2 = usebz2;
 		sphere_discretisation = SPHERE_DISCRETISATION;
 		linear_discretisation = LINEAR_DISCRETISATION;
-		TS1 = new (TriaxialState);
-		TS0 = new (TriaxialState);
+		TS1 = &ts1;
+		TS0 = &ts0;
 		std::ostringstream file_name1, file_name0;
 		file_name1 << (string)(base_file_name) << n1;
 		file_name0 << (string)(base_file_name) << n0;
@@ -122,10 +118,9 @@ namespace CGT {
 				//file_name = base_file_name + n0;
 				bf0 = TS0->from_file((base_file_name + _itoa(file_number_0)).c_str(), bz2);
 			} else {
-				delete (TS0);
 				TS0 = TS1;
 				bf0 = true;
-				TS1 = new (TriaxialState);
+				TS1 = &ts0;
 				//file_name = base_file_name + string(n1);
 				bf1 = TS1->from_file((base_file_name + _itoa(file_number_1)).c_str(), bz2);
 			}
@@ -208,7 +203,6 @@ namespace CGT {
 
 		vtk.begin_cells();
 		Finite_cells_iterator cell = Tri.finite_cells_begin();
-		//FIXME : Preconditions : the fictious bounds are first in the list
 		for (; cell != Tri.finite_cells_end(); ++cell) {
 			if (!cell->info().isFictious)
 				vtk.write_cell(
