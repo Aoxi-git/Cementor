@@ -51,14 +51,13 @@ public:
 	typedef Tesselation::AlphaCap                            AlphaCap;
 
     Tesselation tesObj;
-	/*mutable */ Tesselation* Tes; // Modifying internal state of Tesselation in read-only functions is allowed.
+	Tesselation* Tes;
 	Real                      mean_radius, inf;
 	bool                      rad_divided;
 	bool                      bounded;
 	CGT::Point                Pmin;
 	CGT::Point                Pmax;
 	vector<Vector3r>          segments;
-// 	MicroMacroAnalyser*       mma_ptr;
 	
 	~TesselationWrapper();
 
@@ -72,7 +71,6 @@ public:
 	void checkMinMax(Real x, Real y, Real z, Real rad); //for experimentation purpose
 	                                                    /// Reset the triangulation
 	void clear(void);
-	void clear2(void);
 
 	/// Add 6 axis-aligned bounding planes (modelised as spheres with (almost) infinite radius)
 	void addBoundingPlanes(void);
