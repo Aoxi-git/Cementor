@@ -62,6 +62,7 @@ if ('CGAL' in features):
 	vv2 = vpd["vol"]
 	vv3 = [TW.volume(b.id) for b in O.bodies] 
 	vv4 = [TW.volume(id) for id in range(len(O.bodies))]  # not the same as vv2 after erasing bodies
+	print(vpd["def"])
 	deformations = vpd["def"]
 	
 	sums = [np.sum(xx) for xx in [vv1,vv2,vv3,vv4]]
@@ -71,9 +72,10 @@ if ('CGAL' in features):
 	vTol = 1e-4*N**3 + (6*shift*(N+2*shift)**2) # we have random fluctuations if shifts are large, add it to tolerance
 	if (np.abs(sums[0] - (N**3)) > vTol) : raise YadeCheckError("large error on volumes")
 	
-	F=Matrix3()
+	F=Matrix3.Zero
 	for f in deformations: F+=f
 	F/=N**3-nErased
+	print(F)
 	if (np.abs(F[0,1]-O.dt*shear))>1e-10: raise YadeCheckError("large error on deformation")
 	print("TesselationWrapper OK")
 
