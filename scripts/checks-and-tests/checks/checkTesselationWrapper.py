@@ -6,6 +6,7 @@ if ('CGAL' in features):
 	# Some of the steps below have no effect (inserting walls, inserting+deleting spheres) but they were producing errors in old versions
 	# we make sure TW remains immune to them
 	
+	O.engines = [ForceResetter(),NewtonIntegrator()]
 	
 	# 1. Insert stuff that should be disregarded by TesselationWrapper
 	O.bodies.append(wall(position=0, axis=0))
@@ -14,7 +15,6 @@ if ('CGAL' in features):
 	import random
 	random.seed(1)
 	N = 6
-	print("N=",N)
 	shear = 0.1
 	shift=0.01
 	for i in range(N):
@@ -50,7 +50,7 @@ if ('CGAL' in features):
 	TW = TesselationWrapper()
 	TW.setState(0)
 	O.step()
-	TW.setState(1)	
+	TW.setState(1)
 	vp=TW.getVolPoroDef(False)
 	vpd=TW.getVolPoroDef(True)
 	
@@ -62,7 +62,6 @@ if ('CGAL' in features):
 	vv2 = vpd["vol"]
 	vv3 = [TW.volume(b.id) for b in O.bodies] 
 	vv4 = [TW.volume(id) for id in range(len(O.bodies))]  # not the same as vv2 after erasing bodies
-	print(vpd["def"])
 	deformations = vpd["def"]
 	
 	sums = [np.sum(xx) for xx in [vv1,vv2,vv3,vv4]]
@@ -72,12 +71,8 @@ if ('CGAL' in features):
 	vTol = 1e-4*N**3 + (6*shift*(N+2*shift)**2) # we have random fluctuations if shifts are large, add it to tolerance
 	if (np.abs(sums[0] - (N**3)) > vTol) : raise YadeCheckError("large error on volumes")
 	
-	F=Matrix3.Zero
+	F=Matrix3()
 	for f in deformations: F+=f
 	F/=N**3-nErased
-	print(F)
 	if (np.abs(F[0,1]-O.dt*shear))>1e-10: raise YadeCheckError("large error on deformation")
 	print("TesselationWrapper OK")
-
-	
-	
