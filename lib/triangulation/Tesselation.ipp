@@ -20,7 +20,7 @@ namespace CGT {
 
 	template <class TT> _Tesselation<TT>::_Tesselation(void)
 	{
-		Tri = new RTriangulation;
+		Tri = &tri;
 		Tes = Tri;
 		computed = false;
 		maxId = -1;
@@ -39,10 +39,8 @@ namespace CGT {
 		compute();
 	}
 
-	template <class TT> _Tesselation<TT>::~_Tesselation(void)
-	{
-		if (Tri) delete Tri;
-	}
+	template <class TT> _Tesselation<TT>::~_Tesselation(void) {}
+	
 	template <class TT> void _Tesselation<TT>::Clear(void)
 	{
 		if (Tri) Tri->clear();
