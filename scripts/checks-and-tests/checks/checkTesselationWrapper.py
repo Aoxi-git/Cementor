@@ -66,13 +66,13 @@ if ('CGAL' in features):
 	
 	sums = [np.sum(xx) for xx in [vv1,vv2,vv3,vv4]]
 	
-	if (np.abs(sums[0]-sums[1])>1e-10 or np.abs(sums[0]-sums[2])>1e-10 or np.abs(sums[0]-sums[2])>1e-10) : raise YadeCheckError("total volumes are different")
+	if (np.abs(sums[0]-sums[1])>1e-10 or np.abs(sums[0]-sums[2])>1e-10 or np.abs(sums[0]-sums[2])>1e-10) : raise YadeCheckError("total volumes are different: "+str(sums))
 
 	vTol = 1e-4*N**3 + (6*shift*(N+2*shift)**2) # we have random fluctuations if shifts are large, add it to tolerance
-	if (np.abs(sums[0] - (N**3)) > vTol) : raise YadeCheckError("large error on volumes")
+	if (np.abs(sums[0] - (N**3)) > vTol) : raise YadeCheckError("large error on volumes: "+str(sums[0]))
 	
 	F=Matrix3()
 	for f in deformations: F+=f
 	F/=N**3-nErased
-	if (np.abs(F[0,1]-O.dt*shear))>1e-10: raise YadeCheckError("large error on deformation")
+	if (np.abs(F[0,1]-O.dt*shear))>1e-10: raise YadeCheckError("large error on deformation, F[0,1]="+str(F[0,1]))
 	print("TesselationWrapper OK")
