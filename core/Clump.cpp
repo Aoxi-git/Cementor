@@ -148,7 +148,7 @@ void Clump::updateProperties(const shared_ptr<Body>& clumpBody, unsigned int dis
 						intersecting = true;
 						break;
 					}
-				}
+				} // non-spherical cases trigger a warning below (here would not be ideal because of above "break")
 			}
 			if (intersecting) break;
 		}
@@ -168,7 +168,7 @@ void Clump::updateProperties(const shared_ptr<Body>& clumpBody, unsigned int dis
 	(some parts copied from woo: http://bazaar.launchpad.net/~eudoxos/woo/trunk/view/head:/pkg/dem/Clump.cpp)
 	*/
 	if (intersecting) {
-		//get boundaries of clump:
+		//get boundaries of clump Body (in global frame):
 		AlignedBox3r aabb;
 		for (const auto& mm : clump->members) {
 			const shared_ptr<Body> subBody = Body::byId(mm.first);
@@ -176,6 +176,9 @@ void Clump::updateProperties(const shared_ptr<Body>& clumpBody, unsigned int dis
 				const Sphere* sphere = YADE_CAST<Sphere*>(subBody->shape.get());
 				aabb.extend(subBody->state->pos + Vector3r::Constant(sphere->radius));
 				aabb.extend(subBody->state->pos - Vector3r::Constant(sphere->radius));
+			} else { // since we have intersecting = 1 here, discretization is necessarily > 0
+				// and we might still face non-spherical members: intersecting can be for instance detected to be true with a (2 overlapping Spheres + 1 non-Sphere) clump
+				LOG_ERROR("Clump member " << mm.first << " is not spherical, discretization > 0 is not effective");
 			}
 		}
 		Real rMin = min(aabb.diagonal()[0], min(aabb.diagonal()[1], aabb.diagonal()[2]));
@@ -227,6 +230,7 @@ void Clump::updateProperties(const shared_ptr<Body>& clumpBody, unsigned int dis
 				Ig += Clump::inertiaTensorTranslate(
 				        Vector3r::Constant((2 / 5.) * m * pow(sphere->radius, 2)).asDiagonal(), m, -1. * subState->pos);
 			} else { // non-spherical bodies
+				if (discretization > 0) LOG_ERROR("Clump member " << mm.first << " is not spherical, discretization > 0 is not effective");
 				State*             subState = subBody->state.get();
 				const Real&        m        = subState->mass;
 				const Vector3r&    inertia  = subState->inertia;
