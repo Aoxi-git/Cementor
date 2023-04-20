@@ -9,7 +9,7 @@ O.engines = [
         [Ip2_FrictMat_FrictMat_MindlinPhys(betan=0.0, betas=0.0)],
         [Law2_ScGeom_MindlinPhys_BeamConnectedSphere()]
     ),
-    NewtonIntegrator(gravity=(0, 0, 0), label='newton', damping=0, Omelyan98=False, exactAsphericalRot=False)
+    NewtonIntegrator(gravity=(0, 0, 0), label='newton', damping=0)
 ]
 
 O.bodies.append(beamConnectedSphere([10, 10, 10], 2, wire=False, fixed=False))
