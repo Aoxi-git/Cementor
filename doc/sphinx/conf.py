@@ -708,6 +708,10 @@ html_theme = 'default'
 # documentation.
 html_theme_options = {'stickysidebar': 'true', 'collapsiblesidebar': 'true', 'rightsidebar': 'false'}
 
+if (yade.libVersions.getVersion('sphinx') >= (1,7,0)):
+    # 1.7 version set an inconvenient upper-limit to page width, unset it
+    html_theme_options['body_max_width']='none'
+
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
 

@@ -235,6 +235,11 @@ make_20_04:
 make_22_04:
   <<: *make_definition
   <<: *artifacts_definition
+  artifacts:
+    paths:
+      - install
+      - build
+    expire_in: 2 weeks
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu22.04
 
 make_stretch:
@@ -1013,6 +1018,15 @@ doc_18_04:
   dependencies:
     - make_18_04
   needs: ["make_18_04"]
+  
+doc_22_04:
+  <<: *doc_definition
+  <<: *skip_WIP
+  <<: *gitlab_runner_retry_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu22.04
+  dependencies:
+    - make_22_04
+  needs: ["make_22_04"]
 
 
 # 5. pages stage; uploads documentation to the website
