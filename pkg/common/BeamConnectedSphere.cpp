@@ -153,8 +153,6 @@ void Beam::setMaterialProperties(Real Young_modulus, Real Shear_modulus, Real De
     Real aux_poisson = Young_modulus/(2.0*Shear_modulus) - 1.0;
     if (aux_poisson < -1.0 || aux_poisson > 0.5)
         LOG_WARN("Poisson ratio should be between -1 and 0.5. The properties provided give the value: " << aux_poisson << " .");
-    if(aux_poisson < 0.0)
-        LOG_WARN("Poisson ratio is negative. This implies an anisotropic material. Note that the elasticity theory used to derive this force model requires the material to be isotropic.");
 
     // Store beam material properties
     E = Young_modulus;
