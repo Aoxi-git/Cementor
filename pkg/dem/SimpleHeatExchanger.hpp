@@ -12,8 +12,9 @@ class BodyTwin : public Serializable {
 public:
 	Real Eth;//Thermal energy
 
-    BodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_): id(id_), mass(mass_), T(T_), cap(cap_), cond(cond_), clumpId(clumpId_) {};// constructor
-
+    BodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_): id(id_), mass(mass_), T(T_), cap(cap_), cond(cond_), clumpId(clumpId_) {Eth = mass_ * T_ * cap_;};// constructor
+    
+    Real getEth() const { return Eth;};
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(BodyTwin,Serializable,"Description....",
@@ -41,7 +42,7 @@ private:
 
 
 public:
-	void createBodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_);
+	void createBodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_);// nie wiem dlaczego ale ' override' musi być 
 	
 	void action() override;
 	// clang-format off
