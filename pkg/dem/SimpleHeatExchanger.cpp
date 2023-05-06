@@ -8,18 +8,19 @@ YADE_PLUGIN((SimpleHeatExchanger)(BodyTwin));
 /************************ UniaxialStrainer **********************/
 CREATE_LOGGER(SimpleHeatExchanger);
 
-void BodyTwin::init(int id_t, Real mass_t, Real cap_t, Real cond_t, Real T_t)
+/*
+void BodyTwin::BodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_)
 {
-	id = id_t;
-	mass = mass_t;
-	cap = cap_t;
-	cond = cond_t;
-	T = T_t;
+	id = id_;
+	mass = mass_;
+	cap = cap_;
+	cond = cond_;
+	T = T_;
 	
 	Eth = mass * T * cap;
 	return;
 
-}
+}*/
 
 void SimpleHeatExchanger::init()
 {
@@ -34,5 +35,13 @@ void SimpleHeatExchanger::action()
 	return;
 
 }
+
+void SimpleHeatExchanger::createBodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_) 
+{
+	bodyTwins_[id_] = new BodyTwin(id_, mass_, cap_, cond_, T_, clumpId_);  
+	return;
+
+}
+
 
 } // namespace yade
