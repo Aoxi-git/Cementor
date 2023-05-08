@@ -10,6 +10,15 @@ namespace yade { // Cannot have #include directive inside.
 
 class BodyTwin : public Serializable {
 public:
+	//type for storing interactions (body ids and area)
+	/*struct TwinInteraction {
+		int      id1;
+		int      id2;
+		Real     A;
+
+	};*/
+	//using intrVect = vector<>;
+	
 	Real Eth;//Thermal energy
 
     BodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_): id(id_), mass(mass_), T(T_), cap(cap_), cond(cond_), clumpId(clumpId_) {Eth = mass_ * T_ * cap_;};// constructor
@@ -24,6 +33,8 @@ public:
 		((Real,cap,,,"Specific heat capacity [J/(kg*K)] (449 is value for granite)."))
 		((Real,cond,,,"An analog of heat conductivity but the unit is not [W/(m*K)] but [W/(m^2*K)] - need to be found by callibration."))
 		((int,clumpId,-1,,"ClumpId of this body twin."))
+		((vector<Vector2i>,interactionIDs,,,"IDs of interactions."))
+		((vector<Real>,interactionAreas,,,"Areas of interactions."))
 		,
 		/* ctor */,
 		/* py */
