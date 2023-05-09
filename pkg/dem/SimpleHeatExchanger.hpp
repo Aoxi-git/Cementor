@@ -6,59 +6,30 @@
 
 namespace yade { // Cannot have #include directive inside.
 
-//##### BodyTwin
-
-class BodyTwin : public Serializable {
-public:
-	//type for storing interactions (body ids and area)
-	/*struct TwinInteraction {
-		int      id1;
-		int      id2;
-		Real     A;
-
-	};*/
-	//using intrVect = vector<>;
-	
-	Real Eth;//Thermal energy
-
-    BodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_): id(id_), mass(mass_), T(T_), cap(cap_), cond(cond_), clumpId(clumpId_) {Eth = mass_ * T_ * cap_;};// constructor
-    
-    Real getEth() const { return Eth;};
-
-	// clang-format off
-	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(BodyTwin,Serializable,"Description....",
-		((int,id,,,"Id of this body twin."))
-		((Real,mass,,,"Mass of this body twin."))
-		((Real,T,,,"T - temperature in [K]."))
-		((Real,cap,,,"Specific heat capacity [J/(kg*K)] (449 is value for granite)."))
-		((Real,cond,,,"An analog of heat conductivity but the unit is not [W/(m*K)] but [W/(m^2*K)] - need to be found by callibration."))
-		((int,clumpId,-1,,"ClumpId of this body twin."))
-		((vector<Vector2i>,interactionIDs,,,"IDs of interactions."))
-		((vector<Real>,interactionAreas,,,"Areas of interactions."))
-		,
-		/* ctor */,
-		/* py */
-		//
-	);
-	// clang-format on
-};
-REGISTER_SERIALIZABLE(BodyTwin);
-
 class SimpleHeatExchanger : public PeriodicEngine {
 private:
 	bool  needsInit; // KB: I just leave it temporarily.
 	void  init();
-	std::map<int, BodyTwin*> bodyTwins_;
+	std::map<int, int> bodyIdtoPosition;// maps th body id to its position in vector
 	
 
 
 public:
-	void createBodyTwin(int id_, Real mass_, Real cap_, Real cond_, Real T_, int clumpId_);// nie wiem dlaczego ale ' override' musi być 
-	
 	void action() override;
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(SimpleHeatExchanger,PeriodicEngine,"Description...",
-			((vector<int>,twinIds,,,"Ids of BodyTwins."))
+		((vector<Real>,mass,,,"Mass of this body twin."))
+		((vector<Real>,T,,,"T - temperature in [K]."))
+		((vector<Real>,cap,,,"Specific heat capacity [J/(kg*K)] (449 is value for granite)."))
+		((vector<Real>,cond,,,"An analog of heat conductivity but the unit is not [W/(m*K)] but [W/(m^2*K)] - need to be found by callibration."))
+		((vector<int>,bodyId,,,"Ids of bodies (actual bodies and quasiBodies). It is recommended to use negative values for quasi bodies so it is not mixed with real bodies."))
+		((vector<bool>,bodyReal,,,"If true, body is real, else is quasiBody."))
+		((vector<Real>,bodyEth,,,"Thermal energy of body. Note it is here for reading purposes only, but I leave it for development phase.."))
+		((vector<int>,clumpId,-1,,"ClumpId of this body twin."))
+		((vector<Real>,quasiInteractionionA,,,"Areas of interactions."))
+		((vector<Real>,quasiInteractionionId1,,,"Id1 of interactions."))
+		((vector<Real>,quasiInteractionionId2,,,"Id2 of interactions."))
+
 			,//!!!!!!!! uwaga - ten przecinek dopiero po wszystkich argumentach
 			/*ctor*/ needsInit=true; //  KB: I just leave it temporarily.
 		);
