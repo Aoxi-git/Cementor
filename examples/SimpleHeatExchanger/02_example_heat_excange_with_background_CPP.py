@@ -1,6 +1,5 @@
 # Example based on the gravity deposition example from documentation
 from yade import pack
-import numpy as np
 ############# BODIES
 O.bodies.append(geom.facetBox((.5, .5, .5), (.5, .5, .5), wallMask=31))
 sp = pack.SpherePack()
