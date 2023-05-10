@@ -1,4 +1,5 @@
 # Example based on the gravity deposition example from documentation
+# This example, compared to "01_example_CPP.py" contains additional boundary condition 'background'. Uppermost particles (preselected in a simplified way) are cooled down by additional 'dummy' body.
 from yade import pack
 ############# BODIES
 O.bodies.append(geom.facetBox((.5, .5, .5), (.5, .5, .5), wallMask=31))
