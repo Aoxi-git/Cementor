@@ -47,7 +47,10 @@ hfcpp.mass = mass
 hfcpp.cap = cap
 hfcpp.cond = cond 
 hfcpp.T = T 
-hfcpp.bodyReal = bodyReal    
+hfcpp.bodyReal = bodyReal  
+# colorizing
+hfcpp.minT = Tmin
+hfcpp.maxT = Tmax  
 
 ############ ENGINES
 O.engines = [

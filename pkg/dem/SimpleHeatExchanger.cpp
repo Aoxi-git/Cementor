@@ -78,6 +78,8 @@ void SimpleHeatExchanger::action()//
     energyFlow();
     updateTemp();
     
+    if (colorize) updateColors();
+    
 	previousNumberOfBodies = bodyIds.size();
 	return;
 
@@ -243,7 +245,52 @@ void SimpleHeatExchanger::updateTemp()//
             }// Else is not necessary since clump members were handled with the clump
             
         }
-    };
-    
+    };  
 }
+
+void SimpleHeatExchanger::updateColors()//
+{
+    /* Update temperature of the bodies based on their energy. Match the temperature of the clump members to the temperature of the clump.*/
+    long size = bodyIds.size();
+    
+    for (long i = 0; i < size; i++)
+    {
+        bool bReal = bodyReal[i];// Here I don't need position mapping since I iterate over bodyIds
+        if (bReal)
+        {
+            Real Temp = T[i];
+            Real red, green, blue;
+            //red
+            red = (Temp-minT)/(maxT-minT);
+            //blue
+            if((Temp-minT)/(maxT-minT)<0.5)
+            {
+                blue = 1-2*(Temp-minT)/(maxT-minT) ;
+            }
+            else
+            {
+                blue = 0;
+            }
+            //green
+            if((Temp-minT)/(maxT-minT)<0.75)
+            {
+                green = 0;
+            }
+            else
+            {
+                green = 4*(Temp-minT)/(maxT-minT)-3;
+            }
+                
+            Body::id_t id = bodyIds[i];
+            auto b  = Body::byId(id, scene);
+		    if (!b) continue;
+		    Vector3r color = Vector3r(red,green,blue);
+		    b->shape->color = color;
+		    
+            
+		}
+    }; 
+    return; 
+}
+
 } // namespace yade

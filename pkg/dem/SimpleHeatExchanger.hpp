@@ -12,7 +12,8 @@ private:
 	void  init();
 	void  energyFlow();
 	void  energyFlowOneInteraction(Body::id_t id1, Body::id_t id2, Real A);
-	void  updateTemp();
+	void  updateTemp(); 
+	void  updateColors();
 	long unsigned int previousNumberOfBodies = 0;
 	Real contactArea(Real r1, Real r2, Real penetrationDepth);//Provide radii of both spheres. If one of the radii is 0.0, assume that sphere is contacting facet.
 	std::map<Body::id_t, long> bodyIdtoPosition;// maps the body id to its position in vector
@@ -38,6 +39,9 @@ public:
 		((vector<Body::id_t>,dummyIntId2,,,"Id2 of interactions."))
 		((bool,onlyDummyInt,false,,"If true, the heat is exchanged only via dummy interactions."))
 		((vector<Real>,test,,,"For testing purposes, this vector is initialized with some numbers based on bodyId and ClumpId."))
+		((Real,minT,273.15,,"Minimum temperature for color scale."))
+		((Real,maxT,,,"Maximum temperature for color scale."))
+        ((bool,colorize,true,,"Whether color of bodies should be updated based on the temperature."))  
 		((bool,needsInit,true,,"Should be set to true if setup changes, so the the bodyEth is initialized. Authomatically turns true if number of bodies changes."))
 
 			,//!!!!!!!! uwaga - ten przecinek dopiero po wszystkich argumentach
