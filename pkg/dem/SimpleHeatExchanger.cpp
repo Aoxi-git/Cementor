@@ -63,38 +63,6 @@ void SimpleHeatExchanger::init()
 		Eth = mass[counter] * T[counter] * cap[counter];
 		bodyEth.push_back(Eth);// prepare proper length of the bodyEth vector
 	}
-	
-	/*//TESTING CLUMP ID MAPPING
-	for (auto clumpCounter = clumpIdtoPosition.cbegin(); clumpCounter != clumpIdtoPosition.cend(); clumpCounter++)// iterating over map
-	{
-	        vector<long> positions;
-	        Body::id_t cId;
-	        
-	        cId = clumpCounter->first;// key
-	        positions = clumpCounter->second;// value
-	        
-	        long posSize = positions.size();
-	        
-	    	for (long vCounter = 0; vCounter < posSize; vCounter++) 
-	        {
-	            long pos = positions[vCounter];
-	            test[pos] = (Real)cId;// for test purposes set test value as previously stored cId
-	        }
-	};*/
-	
-	//TESTING BODY ID MAPPING + some other functions
-	for (auto bodyCounter = bodyIdtoPosition.cbegin(); bodyCounter != bodyIdtoPosition.cend(); bodyCounter++)// iterating over map
-	{
-	        Body::id_t bId;
-	        long position;
-	        
-	        bId = bodyCounter->first;// key
-	        position = bodyCounter->second;// value
-	        
-
-	        test[position] = (Real)bId;
-	};	
-
 
 	return;
 
