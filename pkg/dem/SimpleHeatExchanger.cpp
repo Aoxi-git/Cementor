@@ -112,7 +112,6 @@ void SimpleHeatExchanger::energyFlow()//
     /* Let energy flow based on the temperature differences between interacting bodies.*/
     // first dummy interactions
     long size = dummyIntId1.size();
-    
     for (long i = 0; i < size; i++)
     {
          Body::id_t id1 = dummyIntId1[i];   
@@ -125,7 +124,9 @@ void SimpleHeatExchanger::energyFlow()//
     {
 
         int nIntr=(int)scene->interactions->size(); // hoist container size
-        //#pragma omp parallel for
+#ifdef YADE_OPENMP
+#pragma omp parallel for schedule(guided) num_threads(ompThreads > 0 ? std::min(ompThreads, omp_get_max_threads()) : omp_get_max_threads())
+#endif
         for(int j=0; j<nIntr; j++){
            const shared_ptr<Interaction>& i=(*scene->interactions)[j];
            if(!i->isReal()) continue;
@@ -212,7 +213,9 @@ void SimpleHeatExchanger::updateTemp()//
 {
     /* Update temperature of the bodies based on their energy. Match the temperature of the clump members to the temperature of the clump.*/
     long size = bodyIds.size();
-    
+#ifdef YADE_OPENMP
+#pragma omp parallel for schedule(guided) num_threads(ompThreads > 0 ? std::min(ompThreads, omp_get_max_threads()) : omp_get_max_threads())
+#endif    
     for (long i = 0; i < size; i++)
     {
         Real m = mass[i];// Here I don't need position mapping since I iterate over bodyIds
@@ -252,7 +255,9 @@ void SimpleHeatExchanger::updateColors()//
 {
     /* Update temperature of the bodies based on their energy. Match the temperature of the clump members to the temperature of the clump.*/
     long size = bodyIds.size();
-    
+#ifdef YADE_OPENMP
+#pragma omp parallel for schedule(guided) num_threads(ompThreads > 0 ? std::min(ompThreads, omp_get_max_threads()) : omp_get_max_threads())
+#endif    
     for (long i = 0; i < size; i++)
     {
         bool bReal = bodyReal[i];// Here I don't need position mapping since I iterate over bodyIds
