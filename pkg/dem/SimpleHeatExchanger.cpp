@@ -90,6 +90,7 @@ Real SimpleHeatExchanger::contactArea(Real r1, Real r2, Real penetrationDepth)//
 	assert(penetrationDepth >= 0);// I don't think this assert works at all.
 	assert(r1 >= 0);
 	assert(r2 >= 0);
+	if (r1 == 0 and r2 == 0) throw runtime_error("Both radii cannot be equal to zero for ScGeom.");
 	
 	Real d = r1 + r2 - penetrationDepth;//# distance between bodies
 	Real a;//radius of intersection circle
@@ -132,16 +133,17 @@ void SimpleHeatExchanger::energyFlow()//
 		    const auto b2  = Body::byId(id2, scene);
 		    Real r1 = 0;// if body is not sphere assume radius = 0
 		    Real r2 = 0;
-		    
-		    shared_ptr<Sphere> sh1 = YADE_PTR_DYN_CAST<Sphere>(b1->shape);//copied from SPherePack.cpp
-		    shared_ptr<Sphere> sh2 = YADE_PTR_DYN_CAST<Sphere>(b2->shape);//copied from SPherePack.cpp
-		    //const shared_ptr<Sphere>* sh2 = b2->shape.get();
-		    if (typeid(sh1) == typeid(Sphere)) r1 = sh1->radius;
-		    if (typeid(sh2) == typeid(Sphere)) r2 = sh2->radius;
+
 		    
 		    ScGeom*      geom  = dynamic_cast<ScGeom*>(i->geom.get()); 
 		    if (typeid(*geom) != typeid(ScGeom)) throw runtime_error("Currently the SimpleHeatExchanger can handle only real interactions of ScGeom type.");
 		    Real penetrationDepth = geom->penetrationDepth;
+		    
+		    shared_ptr<Sphere> sh1 = YADE_PTR_DYN_CAST<Sphere>(b1->shape);//copied from SPherePack.cpp
+		    shared_ptr<Sphere> sh2 = YADE_PTR_DYN_CAST<Sphere>(b2->shape);//copied from SPherePack.cpp
+		    if (typeid(sh1) != typeid(Sphere)) r1 = geom->refR1;
+		    if (typeid(sh2) != typeid(Sphere)) r2 = geom->refR2;
+
 		    
 		    Real A = contactArea(r1, r2, penetrationDepth);
 		    energyFlowOneInteraction(id1, id2, A);
