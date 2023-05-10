@@ -1,7 +1,9 @@
 // 2023 © Karol Brzeziński <karol.brze@gmail.com>
 #include <lib/high-precision/Constants.hpp>
 #include "SimpleHeatExchanger.hpp"
+#include "ScGeom.hpp"
 #include <core/Scene.hpp>
+#include <pkg/common/Sphere.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -147,6 +149,38 @@ void SimpleHeatExchanger::energyFlow()//
          Real A = dummyIntA[i];
          energyFlowOneInteraction(id1, id2, A);
     };
+    
+    if (!onlyDummyInt)
+    {
+
+        int nIntr=(int)scene->interactions->size(); // hoist container size
+        //#pragma omp parallel for
+        for(int j=0; j<nIntr; j++){
+           const shared_ptr<Interaction>& i=(*scene->interactions)[j];
+           if(!i->isReal()) continue;
+		    Body::id_t id1 = i->getId1();
+		    Body::id_t id2 = i->getId2();
+		    const auto b1  = Body::byId(id1, scene);
+		    const auto b2  = Body::byId(id2, scene);
+		    Real r1 = 0;// if body is not sphere assume radius = 0
+		    Real r2 = 0;
+		    
+		    shared_ptr<Sphere> sh1 = YADE_PTR_DYN_CAST<Sphere>(b1->shape);//copied from SPherePack.cpp
+		    shared_ptr<Sphere> sh2 = YADE_PTR_DYN_CAST<Sphere>(b2->shape);//copied from SPherePack.cpp
+		    //const shared_ptr<Sphere>* sh2 = b2->shape.get();
+		    if (typeid(sh1) == typeid(Sphere)) r1 = sh1->radius;
+		    if (typeid(sh2) == typeid(Sphere)) r2 = sh2->radius;
+		    
+		    ScGeom*      geom  = dynamic_cast<ScGeom*>(i->geom.get()); 
+		    if (typeid(*geom) != typeid(ScGeom)) throw runtime_error("Currently the SimpleHeatExchanger can handle only real interactions of ScGeom type.");
+		    Real penetrationDepth = geom->penetrationDepth;
+		    
+		    Real A = contactArea(r1, r2, penetrationDepth);
+		    energyFlowOneInteraction(id1, id2, A);
+        }        
+
+
+    }
     
 	return;
 
