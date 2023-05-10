@@ -106,7 +106,8 @@ void SimpleHeatExchanger::action()//
 	dTime = scene->time-lastTime;
 	lastTime = scene->time;
     energyFlow();
-
+    updateTemp();
+    
 	previousNumberOfBodies = bodyIds.size();
 	return;
 
@@ -141,10 +142,10 @@ void SimpleHeatExchanger::energyFlow()//
     
     for (long i = 0; i < size; i++)
     {
-     Body::id_t id1 = dummyIntId1[i];   
-     Body::id_t id2 = dummyIntId2[i];   
-     Real A = dummyIntA[i];
-     energyFlowOneInteraction(id1, id2, A);
+         Body::id_t id1 = dummyIntId1[i];   
+         Body::id_t id2 = dummyIntId2[i];   
+         Real A = dummyIntA[i];
+         energyFlowOneInteraction(id1, id2, A);
     };
     
 	return;
@@ -195,9 +196,50 @@ void SimpleHeatExchanger::energyFlowOneInteraction(Body::id_t id1, Body::id_t id
         bodyEth[pos1] = Eth1-EthFlow;
     if (m2 > 0)
         bodyEth[pos2] = Eth2+EthFlow;
-        
-    //////////////////////////////////////test[0] = (Real)id2;
 	return;
 
+}
+
+
+
+void SimpleHeatExchanger::updateTemp()//
+{
+    /* Update temperature of the bodies based on their energy. Match the temperature of the clump members to the temperature of the clump.*/
+    long size = bodyIds.size();
+    
+    for (long i = 0; i < size; i++)
+    {
+        Real m = mass[i];// Here I don't need position mapping since I iterate over bodyIds
+        Real Eth = bodyEth[i];
+        Real bCap = cap[i];
+        Body::id_t bId = bodyIds[i];
+        Body::id_t cId = clumpIds[i];
+        Real Temp = Eth/(m * bCap);// 
+        
+        if (m > 0) // Only change temperature of bodies with mass
+        {
+            if (cId == -1)// If Standalone
+            {
+                T[i] = Temp;
+            } 
+            else if (bId == cId) // is Clump
+            {
+                T[i] = Temp;// update clump T
+                // update T of clump members
+                vector<long> positions;// positions of the clump members
+                positions = clumpIdtoPosition[cId];
+                long posSize = positions.size();
+	        
+	        	for (long vCounter = 0; vCounter < posSize; vCounter++) 
+	            {
+	                long pos = positions[vCounter];
+	                T[pos] = Temp;
+	            }
+                
+            }// Else is not necessary since clump members were handled with the clump
+            
+        }
+    };
+    
 }
 } // namespace yade

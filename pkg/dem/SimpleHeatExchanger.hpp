@@ -12,6 +12,7 @@ private:
 	void  init();
 	void  energyFlow();
 	void  energyFlowOneInteraction(Body::id_t id1, Body::id_t id2, Real A);
+	void  updateTemp();
 	long unsigned int previousNumberOfBodies = 0;
 	Real contactArea(Real r1, Real r2, Real penetrationDepth);//Provide radii of both spheres. If one of the radii is 0.0, assume that sphere is contacting facet.
 	std::map<Body::id_t, long> bodyIdtoPosition;// maps the body id to its position in vector
