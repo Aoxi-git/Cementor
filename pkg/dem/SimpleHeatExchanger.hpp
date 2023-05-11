@@ -25,6 +25,9 @@ private:
 public:
 	void action() override;
 	void addRealBody(Body::id_t bId, Real L_, Real T_ = 273.15, Real cap_ = 449., Real cond_ = 3.0 );
+	void addBody(Body::id_t bId, Body::id_t cId, Real mass_, Real L_, Real T_ = 273.15, Real cap_ = 449., Real cond_ = 3.0, bool Real_ = true );
+	void addAllBodiesFromSimulation(Real T_ = 273.15, Real cap_ = 449., Real cond_ = 3.0 );// Add all bodies from simulation assume L = sphere radius for spheres, 0 otherwise
+	void addRealBodies(vector<Body::id_t> bodyIds_,  vector<Real> vectL_, Real T_ = 273.15, Real cap_ = 449., Real cond_ = 3.0);// 
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(SimpleHeatExchanger,PeriodicEngine,"Description...",//_PY required to make methods accesible
 		((vector<Real>,mass,,,"Mass of this body twin."))
@@ -48,6 +51,9 @@ public:
 			,//!!!!!!!! uwaga - ten przecinek dopiero po wszystkich argumentach
 			/*ctor*/,
 		.def("addRealBody",&SimpleHeatExchanger::addRealBody,"Simplified adding of the real body, since some of the properties are taken from body information.")// makes the method accesible in python
+		.def("addBody",&SimpleHeatExchanger::addBody,"Simplified adding of the any body (ral or dummy).")
+		.def("addAllBodiesFromSimulation",&SimpleHeatExchanger::addAllBodiesFromSimulation,"Add all bodies from simulation assume L = sphere radius for spheres, 0 otherwise.")
+		.def("addRealBodies",&SimpleHeatExchanger::addRealBodies,"Add real bodies from simulation lists of ids and L need to be provided.")
 		);
 	// clang-format on
 	DECLARE_LOGGER;

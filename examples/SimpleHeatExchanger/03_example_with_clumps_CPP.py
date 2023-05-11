@@ -42,8 +42,8 @@ for b in O.bodies:
             else:
                 clump2 += [b.id]
             
-O.bodies.clump(clump1)
-O.bodies.clump(clump2)       
+cId1 = O.bodies.clump(clump1)
+cId2 = O.bodies.clump(clump2)       
 
 ############# HEAT FLOW SETTINGS
 ### initialize HeatFlowController
@@ -53,46 +53,25 @@ conductivity = 3e7
 capacity = 449.
 Tmax = 350
 Tmin = 273.15
-ids = set([i for i in range(2,10,1)])
+
 
 hfcpp = SimpleHeatExchanger()
 hfcpp.iterPeriod = 10
-
-bodyIds = []
-clumpIds = []
-mass = []
-L = []
-cap = []
-cond = []
-T = []
-bodyReal = []
-
-for b in O.bodies:
-    bodyIds += [b.id]
-    clumpIds += [b.clumpId]
-    mass += [b.state.mass]
-    L += [b.shape.radius if isinstance(b.shape, Sphere) else (0 if isinstance(b.shape, Facet) else 0.5)]
-    cap += [capacity]
-    cond += [conductivity]
-    if b.id in ids:
-        T += [Tmax]  
-    else:
-        T += [Tmin] 
-    bodyReal += [True]
-    
-hfcpp.bodyIds = bodyIds 
-hfcpp.clumpIds = clumpIds 
-hfcpp.mass = mass
-hfcpp.L = L
-hfcpp.cap = cap
-hfcpp.cond = cond 
-hfcpp.T = T 
-hfcpp.bodyReal = bodyReal  
 # colorizing
 hfcpp.minT = Tmin
 hfcpp.maxT = Tmax  
 
-### enable heat flow
+hfcpp.addAllBodiesFromSimulation(Tmin, capacity, conductivity)# first add all bodies
+# update properties of some faces
+ids = [i for i in range(2,10,1)]
+L = [0 for i in range(len(ids))]
+hfcpp.addRealBodies(ids, L, Tmax, capacity, conductivity)
 
+### I am not sure what rule could be applied for clumps characteristic length. For now, clumps L need to be updated manually
+cIds = [cId1,cId2]
+cL = [0.5,0.5]
+hfcpp.addRealBodies(cIds, cL , Tmax, capacity, conductivity)
+
+### add engine
 O.engines += [hfcpp]
 

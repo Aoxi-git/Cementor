@@ -76,50 +76,80 @@ void SimpleHeatExchanger::addRealBody(Body::id_t bId, Real L_, Real T_, Real cap
     needsInit = true;// also set flag for initialization since the body setup changed
     
     const auto b  = Body::byId(bId, scene);
-    if (!b) throw runtime_error("There is no bodi with given Id in the simulation.");
+    if (!b) throw runtime_error("There is no body with given Id in the simulation.");
     Real m = b->state->mass;
     Body::id_t cId = b->clumpId;
     
+    addBody(bId, cId, m, L_, T_, cap_, cond_, true);
+	
+	return;
+}
+
+void SimpleHeatExchanger::addBody(Body::id_t bId, Body::id_t cId, Real mass_, Real L_, Real T_, Real cap_, Real cond_, bool Real_)
+{
+    if (bodyIdtoPosition.size() == 0) init();// initialize if never initialized
+    needsInit = true;// also set flag for initialization since the body setup changed   
     // If body id is in bodyIds, update properties, otherwise add Id at the end.
     if (bodyIdtoPosition.count(bId) == 0 )
     {
         bodyIds.push_back(bId);
-        mass.push_back(m);
+        mass.push_back(mass_);
         L.push_back(L_);
         T.push_back(T_);
         cap.push_back(cap_);
         cond.push_back(cond_);
-        bodyReal.push_back(true);
+        bodyReal.push_back(Real_);
         clumpIds.push_back(cId);        
     }
     else
     {
         long pos = bodyIdtoPosition[bId];
-        mass[pos] = m;
+        mass[pos] = mass_;
         L[pos] = L_;
         T[pos] = T_;
         cap[pos] = cap_;
         cond[pos] = cond_;
-        bodyReal[pos] = true;
+        bodyReal[pos] = Real_;
         clumpIds[pos] = cId;
     }
 	
 	return;
-
 }
 
 
 
-/*void SimpleHeatExchanger::addRealBodies(vector<Body::id_t> bodyIds_, vector<Real> L_, Real T_ = 273.15, Real cap_ = 449., Real cond_ = 3.0 ) 
+void SimpleHeatExchanger::addAllBodiesFromSimulation(Real T_ , Real cap_, Real cond_ )
 {
-    needsInit = true;
-	//long counter = bodyIds.size();
-	// If body id is in bodyIds, update properties, otherwise add Id at the end.
-	
+    long nBodies = scene->bodies->size();
+    
+	for (long counter = 0; counter < nBodies; counter++) 
+	{
+	    const shared_ptr<Body>& b=(*scene->bodies)[counter];
+	    Body::id_t bId = b->id;
+	    Real L_ = 0;
+	    
+	    Sphere* sh = dynamic_cast<Sphere*>(Body::byId(bId)->shape.get());// Based on VTKRecorder.cpp and  SPherePack.cpp
+	    if (sh) L_ = sh->radius; //
+	    
+	    addRealBody(bId, L_, T_, cap_, cond_);
+	};     
+	init();
 	return;
+}
 
-}*/
+void SimpleHeatExchanger::addRealBodies(vector<Body::id_t> bodyIds_,  vector<Real> vectL_, Real T_, Real cap_, Real cond_)
+{
+    long        size = bodyIds_.size();
+	for (long counter = 0; counter < size; counter++) 
+	{
+	    Body::id_t bId = bodyIds_[counter];
+	    Real L_ = vectL_[counter];
+	    addRealBody(bId, L_, T_, cap_, cond_);
+	};  
 
+	init();
+	return;
+}
 /*############ MAIN ACTION ##############*/
 
 void SimpleHeatExchanger::action()//
@@ -177,11 +207,11 @@ void SimpleHeatExchanger::energyFlow()//
 		    ScGeom*      geom  = dynamic_cast<ScGeom*>(i->geom.get()); 
 		    if (typeid(*geom) != typeid(ScGeom)) throw runtime_error("Currently the SimpleHeatExchanger can handle only real interactions of ScGeom type.");
 		    Real penetrationDepth = geom->penetrationDepth;
-		    
-		    shared_ptr<Sphere> sh1 = YADE_PTR_DYN_CAST<Sphere>(b1->shape);//copied from SPherePack.cpp
-		    shared_ptr<Sphere> sh2 = YADE_PTR_DYN_CAST<Sphere>(b2->shape);//copied from SPherePack.cpp
-		    if (typeid(sh1) != typeid(Sphere)) r1 = geom->refR1;
-		    if (typeid(sh2) != typeid(Sphere)) r2 = geom->refR2;
+
+	        Sphere* sh1 = dynamic_cast<Sphere*>(Body::byId(id1)->shape.get());// Based on VTKRecorder.cpp and  SPherePack.cpp
+	        if (sh1) r1 = sh1->radius; //
+	        Sphere* sh2 = dynamic_cast<Sphere*>(Body::byId(id2)->shape.get());// Based on VTKRecorder.cpp and  SPherePack.cpp
+	        if (sh2) r1 = sh2->radius; //
 
 		    
 		    Real A = contactArea(r1, r2, penetrationDepth);

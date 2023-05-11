@@ -8,6 +8,7 @@ sp.makeCloud((0, 0, 0), (1, 1, 1), rMean=.05, rRelFuzz=.5)
 sp.toSimulation()
 
 
+
 ############# HEAT FLOW SETTINGS
 ### initialize HeatFlowController
 # Note that 'cond' is an analog of head conductivity but the unit is not [W/(m*K)] but [W/(m^2*K)] - need to be found by callibration.
@@ -16,55 +17,26 @@ conductivity = 3e7
 capacity = 449.
 Tmax = 350
 Tmin = 273.15
-ids = set([i for i in range(2,10,1)])
+
 
 hfcpp = SimpleHeatExchanger()
 hfcpp.iterPeriod = 10
-
-bodyIds = []
-clumpIds = []
-mass = []
-L = []
-cap = []
-cond = []
-T = []
-bodyReal = []
-
-for b in O.bodies:
-    bodyIds += [b.id]
-    clumpIds += [b.clumpId]
-    mass += [b.state.mass]
-    L += [b.shape.radius if isinstance(b.shape, Sphere) else 0]
-    cap += [capacity]
-    cond += [conductivity]
-    if b.id in ids:
-        T += [Tmax]  
-    else:
-        T += [Tmin] 
-    bodyReal += [True]
-    
-hfcpp.bodyIds = bodyIds 
-hfcpp.clumpIds = clumpIds 
-hfcpp.mass = mass
-hfcpp.L = L
-hfcpp.cap = cap
-hfcpp.cond = cond 
-hfcpp.T = T 
-hfcpp.bodyReal = bodyReal  
 # colorizing
 hfcpp.minT = Tmin
 hfcpp.maxT = Tmax  
 
+hfcpp.addAllBodiesFromSimulation(Tmin, capacity, conductivity)# first add all bodies
+# update properties of some faces
+ids = [i for i in range(2,10,1)]
+L = [0 for i in range(len(ids))]
+hfcpp.addRealBodies(ids, L, Tmax, capacity, conductivity)
+
 #### (NEW PART) now add 'background' for example ambient conditions of given temperature, tak can cool down uppermost particles.
 backgroundId = -2 # negative iD for purpose
-hfcpp.bodyIds = bodyIds + [backgroundId]
-hfcpp.clumpIds = clumpIds + [-1]
-hfcpp.mass = mass + [0]# zero mass so the temp would be constant
-hfcpp.L = L + [0]
-hfcpp.cap = cap + [capacity]
-hfcpp.cond = cond + [conductivity]
-hfcpp.T = T + [Tmin]
-hfcpp.bodyReal = bodyReal + [False]
+bodyReal = False
+hfcpp.addBody(backgroundId, -1, 0, 0, Tmin, capacity, conductivity, bodyReal)
+
+
 # I also need to identify the particles that interactis with this backgroung, I will prepare a function here and will run it separately in Pyrunner.
 def create_dummy_interactions():
     """
