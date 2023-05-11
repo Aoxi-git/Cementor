@@ -174,20 +174,22 @@ void SimpleHeatExchanger::energyFlowOneInteraction(Body::id_t id1, Body::id_t id
     if (cId1 != -1) pos1 = bodyIdtoPosition[cId1]; // If body is clumped, threat the whole clump as the the energy source
     if (cId2 != -1) pos2 = bodyIdtoPosition[cId2]; 
     
-    Real m1, m2, T1, T2, cond1, cond2, condMin, Eth1, Eth2, EthFlow;
+    Real m1, m2, L1, L2, T1, T2, cond1, cond2, condMean, Eth1, Eth2, EthFlow;
     
     m1 = mass[pos1];
     m2 = mass[pos2];
+    L1 = L[pos1];
+    L2 = L[pos2];
     T1 = T[pos1];
     T2 = T[pos2];
     cond1 = cond[pos1];
     cond2 = cond[pos2];
-    condMin = math::min(cond1, cond2);// conductivity is minimum value of two bodies
+    condMean = 1/(L1/cond1+L2/cond2);// heat pipe concept
     Eth1 = bodyEth[pos1];
     Eth2 = bodyEth[pos2];
     
     //compute how much energy should flow between bodies and check if energy doesn't drop below zero
-    EthFlow = condMin*A*dTime*(T1-T2);
+    EthFlow = condMean*A*dTime*(T1-T2);
     
     if (Eth1 - EthFlow < 0 and m1 > 0) //I check mass because zero mass mean the body temperature is constant. So if m1 = 0 its energy is unlimited.
     {

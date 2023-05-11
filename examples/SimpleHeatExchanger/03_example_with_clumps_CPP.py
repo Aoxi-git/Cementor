@@ -56,11 +56,12 @@ Tmin = 273.15
 ids = set([i for i in range(2,10,1)])
 
 hfcpp = SimpleHeatExchanger()
-hfcpp.iterPeriod = 100
+hfcpp.iterPeriod = 10
 
 bodyIds = []
 clumpIds = []
 mass = []
+L = []
 cap = []
 cond = []
 T = []
@@ -70,6 +71,7 @@ for b in O.bodies:
     bodyIds += [b.id]
     clumpIds += [b.clumpId]
     mass += [b.state.mass]
+    L += [b.shape.radius if isinstance(b.shape, Sphere) else (0 if isinstance(b.shape, Facet) else 0.5)]
     cap += [capacity]
     cond += [conductivity]
     if b.id in ids:
@@ -81,6 +83,7 @@ for b in O.bodies:
 hfcpp.bodyIds = bodyIds 
 hfcpp.clumpIds = clumpIds 
 hfcpp.mass = mass
+hfcpp.L = L
 hfcpp.cap = cap
 hfcpp.cond = cond 
 hfcpp.T = T 

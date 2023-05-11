@@ -27,6 +27,7 @@ public:
 	// clang-format off
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(SimpleHeatExchanger,PeriodicEngine,"Description...",
 		((vector<Real>,mass,,,"Mass of this body twin."))
+		((vector<Real>,L,,,"Characteristics length of the body (e.g. radius in case of spheres or zero in case of constant-temperature bodies (e.g. the ones without mass)."))
 		((vector<Real>,T,,,"T - temperature in [K]."))
 		((vector<Real>,cap,,,"Specific heat capacity [J/(kg*K)] (449 is value for granite)."))
 		((vector<Real>,cond,,,"An analog of heat conductivity but the unit is not [W/(m*K)] but [W/(m^2*K)] - need to be found by callibration."))
