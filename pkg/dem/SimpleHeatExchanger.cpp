@@ -11,7 +11,7 @@ YADE_PLUGIN((SimpleHeatExchanger));
 /************************ UniaxialStrainer **********************/
 CREATE_LOGGER(SimpleHeatExchanger);
 
-
+/*############ INITIALIZATION ##############*/
 void SimpleHeatExchanger::init()
 {
 	needsInit = false;
@@ -68,6 +68,60 @@ void SimpleHeatExchanger::init()
 
 }
 
+/*############ BODIES AND INTERACIONS HANDLING ##############*/
+
+void SimpleHeatExchanger::addRealBody(Body::id_t bId, Real L_, Real T_, Real cap_, Real cond_)  
+{
+    if (bodyIdtoPosition.size() == 0) init();// initialize if never initialized
+    needsInit = true;// also set flag for initialization since the body setup changed
+    
+    const auto b  = Body::byId(bId, scene);
+    if (!b) throw runtime_error("There is no bodi with given Id in the simulation.");
+    Real m = b->state->mass;
+    Body::id_t cId = b->clumpId;
+    
+    // If body id is in bodyIds, update properties, otherwise add Id at the end.
+    if (bodyIdtoPosition.count(bId) == 0 )
+    {
+        bodyIds.push_back(bId);
+        mass.push_back(m);
+        L.push_back(L_);
+        T.push_back(T_);
+        cap.push_back(cap_);
+        cond.push_back(cond_);
+        bodyReal.push_back(true);
+        clumpIds.push_back(cId);        
+    }
+    else
+    {
+        long pos = bodyIdtoPosition[bId];
+        mass[pos] = m;
+        L[pos] = L_;
+        T[pos] = T_;
+        cap[pos] = cap_;
+        cond[pos] = cond_;
+        bodyReal[pos] = true;
+        clumpIds[pos] = cId;
+    }
+	
+	return;
+
+}
+
+
+
+/*void SimpleHeatExchanger::addRealBodies(vector<Body::id_t> bodyIds_, vector<Real> L_, Real T_ = 273.15, Real cap_ = 449., Real cond_ = 3.0 ) 
+{
+    needsInit = true;
+	//long counter = bodyIds.size();
+	// If body id is in bodyIds, update properties, otherwise add Id at the end.
+	
+	return;
+
+}*/
+
+/*############ MAIN ACTION ##############*/
+
 void SimpleHeatExchanger::action()//
 {
     if (previousNumberOfBodies != bodyIds.size()) needsInit = true;
@@ -86,26 +140,8 @@ void SimpleHeatExchanger::action()//
 }
 
 
+/*############ HEAT FLOW AND TEMPERATURE CONTROLL ##############*/
 
-Real SimpleHeatExchanger::contactArea(Real r1, Real r2, Real penetrationDepth)//Provide radii of both spheres. If one of the radii is 0.0, assume that sphere is contacting facet.
-{
-	assert(penetrationDepth >= 0);// I don't think this assert works at all.
-	assert(r1 >= 0);
-	assert(r2 >= 0);
-	if (r1 == 0 and r2 == 0) throw runtime_error("Both radii cannot be equal to zero for ScGeom.");
-	
-	Real d = r1 + r2 - penetrationDepth;//# distance between bodies
-	Real a;//radius of intersection circle
-	
-	if (r1>0 and r2>0)//#two spheres case: https://mathworld.wolfram.com/Sphere-SphereIntersection.html
-        a = (0.5/d)*pow((4*pow(d,2)*pow(r1,2)-pow((pow(d,2)-pow(r2,2)+pow(r1,2)),2)),0.5);
-    else
-        a = pow((2*d*penetrationDepth-pow(penetrationDepth,2)),0.5);//#https://en.wikipedia.org/wiki/Spherical_cap
-  
-    Real area = Mathr::PI * pow(a,2);
-	return area;
-
-}
 
 void SimpleHeatExchanger::energyFlow()//
 {
@@ -180,6 +216,7 @@ void SimpleHeatExchanger::energyFlowOneInteraction(Body::id_t id1, Body::id_t id
     m2 = mass[pos2];
     L1 = L[pos1];
     L2 = L[pos2];
+    if (L1 == 0 and L2 == 0) throw runtime_error("Characteristic lengtch (L) of two bodies exchanging heat cannot be equal to zero.");
     T1 = T[pos1];
     T2 = T[pos2];
     cond1 = cond[pos1];
@@ -251,6 +288,27 @@ void SimpleHeatExchanger::updateTemp()//
             
         }
     };  
+}
+
+/*############ PRE AND POST PROCESSING ##############*/
+Real SimpleHeatExchanger::contactArea(Real r1, Real r2, Real penetrationDepth)//Provide radii of both spheres. If one of the radii is 0.0, assume that sphere is contacting facet.
+{
+	assert(penetrationDepth >= 0);// I don't think this assert works at all.
+	assert(r1 >= 0);
+	assert(r2 >= 0);
+	if (r1 == 0 and r2 == 0) throw runtime_error("Both radii cannot be equal to zero for ScGeom.");
+	
+	Real d = r1 + r2 - penetrationDepth;//# distance between bodies
+	Real a;//radius of intersection circle
+	
+	if (r1>0 and r2>0)//#two spheres case: https://mathworld.wolfram.com/Sphere-SphereIntersection.html
+        a = (0.5/d)*pow((4*pow(d,2)*pow(r1,2)-pow((pow(d,2)-pow(r2,2)+pow(r1,2)),2)),0.5);
+    else
+        a = pow((2*d*penetrationDepth-pow(penetrationDepth,2)),0.5);//#https://en.wikipedia.org/wiki/Spherical_cap
+  
+    Real area = Mathr::PI * pow(a,2);
+	return area;
+
 }
 
 void SimpleHeatExchanger::updateColors()//

@@ -24,8 +24,9 @@ private:
 
 public:
 	void action() override;
+	void addRealBody(Body::id_t bId, Real L_, Real T_ = 273.15, Real cap_ = 449., Real cond_ = 3.0 );
 	// clang-format off
-		YADE_CLASS_BASE_DOC_ATTRS_CTOR(SimpleHeatExchanger,PeriodicEngine,"Description...",
+		YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(SimpleHeatExchanger,PeriodicEngine,"Description...",//_PY required to make methods accesible
 		((vector<Real>,mass,,,"Mass of this body twin."))
 		((vector<Real>,L,,,"Characteristics length of the body (e.g. radius in case of spheres or zero in case of constant-temperature bodies (e.g. the ones without mass)."))
 		((vector<Real>,T,,,"T - temperature in [K]."))
@@ -44,9 +45,9 @@ public:
 		((Real,maxT,,,"Maximum temperature for color scale."))
         ((bool,colorize,true,,"Whether color of bodies should be updated based on the temperature."))  
 		((bool,needsInit,true,,"Should be set to true if setup changes, so the the bodyEth is initialized. Authomatically turns true if number of bodies changes."))
-
 			,//!!!!!!!! uwaga - ten przecinek dopiero po wszystkich argumentach
-			/*ctor*/; 
+			/*ctor*/,
+		.def("addRealBody",&SimpleHeatExchanger::addRealBody,"Simplified adding of the real body, since some of the properties are taken from body information.")// makes the method accesible in python
 		);
 	// clang-format on
 	DECLARE_LOGGER;
