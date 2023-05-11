@@ -1328,4 +1328,22 @@ __ https://youtu.be/nAIBxWQ32-o
 
 
 
+ViscoelasticBoundaryCondition
+^^^^^^^^^^^^^^^^^^^^^
+
+.. _refFastViscoelasticSingleElement:
+
+* refFastViscoelasticSingleElement_, :ysrc:`source file<examples/viscoelastic-supports/single-element.py>`, `video`__.
+
+__ https://youtu.be/02gh9dzzjX8
+
+
+
+
+.. _refFastViscoelasticDiscreteFoundation:
+
+* refFastViscoelasticDiscreteFoundation_, :ysrc:`source file<examples/viscoelastic-supports/discrete-foundation.py>`, `video`__.
+
+__ https://youtu.be/G52NUijtFOA
+
 

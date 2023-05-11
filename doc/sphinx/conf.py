@@ -555,7 +555,7 @@ my_latex_preamble = r'''
 
 % Metadata of the pdf output
 \hypersetup{pdftitle={Yade Documentation}}
-\hypersetup{pdfauthor={Vaclav Smilauer; Vasileios Angelidakis; Emanuele Catalano; Robert Caulk; Bruno Chareyre; William Chevremont; Sergei Dorofeenko; Jerome Duriez; Nolan Dyck; Jan Elias; Burak Er; Alexander Eulitz; Anton Gladky; Ning Guo; Christian Jakob; Francois Kneib; Janek Kozicki; Donia Marzougui; Raphael Maurin; Chiara Modenese; Gary Pekmezi; Luc Scholtes; Luc Sibille; Jan Stransky; Thomas Sweijen; Klaus Thoeni; Chao Yuan}}
+\hypersetup{pdfauthor={Vaclav Smilauer; Vasileios Angelidakis; Emanuele Catalano; Robert Caulk; Bruno Chareyre; William Chevremont; Sergei Dorofeenko; Jerome Duriez; Nolan Dyck; Jan Elias; Burak Er; Alexander Eulitz; Anton Gladky; Ning Guo; Christian Jakob; Francois Kneib; Janek Kozicki; Donia Marzougui; Raphael Maurin; Chiara Modenese; Gary Pekmezi; Luc Scholtes; Luc Sibille; Jan Stransky; Thomas Sweijen; Klaus Thoeni; Chao Yuan; Karol Brzezinski}}
 \hypersetup{pdfkeywords={Discrete element method; dem; yade; documentation; manual; python; c++; git, hydromechanical coupling}}
 
 % symbols
@@ -832,6 +832,7 @@ my_maketitle=r'''
  \item \text{\sffamily\bfseries\normalsize Thomas Sweijen} \text{\sffamily\small Utrecht University}
  \item \text{\sffamily\bfseries\normalsize Klaus Thoeni} \text{\sffamily\small The University of Newcastle (Australia)}
  \item \text{\sffamily\bfseries\normalsize Chao Yuan} \text{\sffamily\small Univ. Grenoble Alpes, 3SR lab.}
+ \item \text{\sffamily\bfseries\normalsize Karol Brzezi\'{n}ski} \text{\sffamily\small Warsaw University of Technology}
 \end{itemize}
 
 
