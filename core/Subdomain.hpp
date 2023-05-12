@@ -319,7 +319,7 @@ public:
 		Real                     mass  = 0;
 		const shared_ptr<Scene>& scene = Omega::instance().getScene();
 		for (unsigned k = 0; k < ids.size(); k++) {
-			const shared_ptr<Body>& b = Body::byId(ids[k], scene);
+			const auto b = Body::byId(ids[k], scene);
 			if (!b or b->getIsSubdomain()) continue;
 			center += b->state->mass * b->state->pos;
 			mass += b->state->mass;

@@ -855,8 +855,8 @@ py::list Shop::getBodyIdsContacts(Body::id_t bodyID)
 	py::list ret;
 	if (bodyID < 0) { throw std::logic_error("BodyID should be a positive value!"); }
 
-	const shared_ptr<Scene>& scene = Omega::instance().getScene();
-	const shared_ptr<Body>&  b     = Body::byId(bodyID, scene);
+	const auto scene = Omega::instance().getScene();
+	const auto  b     = Body::byId(bodyID, scene);
 
 	for (Body::MapId2IntrT::iterator it = b->intrs.begin(), end = b->intrs.end(); it != end; ++it) {
 		ret.append((*it).first);

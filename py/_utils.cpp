@@ -79,7 +79,7 @@ py::tuple interactionAnglesHistogram(int axis, int mask, size_t bins, py::tuple 
 	shared_ptr<Scene> rb = Omega::instance().getScene();
 	for (const auto& i : *rb->interactions) {
 		if (!i->isReal()) continue;
-		const shared_ptr<Body>&b1 = Body::byId(i->getId1(), rb), b2 = Body::byId(i->getId2(), rb);
+		const auto b1 = Body::byId(i->getId1(), rb), b2 = Body::byId(i->getId2(), rb);
 		if (!b1->maskOk(mask) || !b2->maskOk(mask)) continue;
 		if (useBB && !Shop::isInBB(b1->state->pos, bbMin, bbMax) && !Shop::isInBB(b2->state->pos, bbMin, bbMax)) continue;
 		if (sphSph && (!dynamic_cast<Sphere*>(b1->shape.get()) || !dynamic_cast<Sphere*>(b2->shape.get()))) continue;
@@ -117,7 +117,7 @@ py::tuple bodyNumInteractionsHistogram(py::tuple aabb)
 	for (const auto& i : *rb->interactions) {
 		if (!i->isReal()) continue;
 		const Body::id_t       id1 = i->getId1(), id2 = i->getId2();
-		const shared_ptr<Body>&b1 = Body::byId(id1, rb), b2 = Body::byId(id2, rb);
+		const auto b1 = Body::byId(id1, rb), b2 = Body::byId(id2, rb);
 		if ((useBB && Shop::isInBB(b1->state->pos, bbMin, bbMax)) || !useBB) {
 			if (b1->isClumpMember()) bodyNumIntr[b1->clumpId] += 1; //count bodyNumIntr for the clump, not for the member
 			else
@@ -135,7 +135,7 @@ py::tuple bodyNumInteractionsHistogram(py::tuple aabb)
 	vector<int> bins;
 	bins.resize(maxIntr + 1, 0);
 	for (size_t id = 0; id < bodyNumIntr.size(); id++) {
-		const shared_ptr<Body>& b = Body::byId(id, rb);
+		const auto b = Body::byId(id, rb);
 		if (b) {
 			if (bodyNumIntr[id] > 0) bins[bodyNumIntr[id]] += 1;
 			// 0 is handled specially: add body to the 0 bin only if it is inside the bb requested (if applicable)

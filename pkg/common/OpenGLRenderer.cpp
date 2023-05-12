@@ -186,7 +186,7 @@ void OpenGLRenderer::render(const shared_ptr<Scene>& _scene, Body::id_t selectio
 	for (size_t i = 0; i < (size_t)numClipPlanes; i++) {
 		// someone could have modified those from python and truncate the vectors; fill those here in that case
 		if (i == clipPlaneSe3.size()) clipPlaneSe3.push_back(Se3r(Vector3r::Zero(), Quaternionr::Identity()));
-		if (i == clipPlaneActive.size()) clipPlaneActive.push_back(false);
+		if (i == clipPlaneActive.size()) clipPlaneActive.push_back(static_cast<int>(false));
 		if (i == clipPlaneNormals.size()) clipPlaneNormals.push_back(Vector3r::UnitX());
 		// end filling stuff modified from python
 		if (clipPlaneActive[i]) clipPlaneNormals[i] = clipPlaneSe3[i].orientation * Vector3r(0, 0, 1);
@@ -322,7 +322,7 @@ void OpenGLRenderer::renderIGeom()
 			if (!I->geom) continue;        // avoid refcount manipulations if the interaction is not real anyway
 			shared_ptr<IGeom> ig(I->geom); // keep reference so that ig does not disappear suddenly while being rendered
 			if (!ig) continue;
-			const shared_ptr<Body>&b1 = Body::byId(I->getId1(), scene), b2 = Body::byId(I->getId2(), scene);
+			const auto b1 = Body::byId(I->getId1(), scene), b2 = Body::byId(I->getId2(), scene);
 			if (!(bodyDisp[I->getId1()].isDisplayed || bodyDisp[I->getId2()].isDisplayed)) continue;
 			glPushMatrix();
 			geomDispatcher(ig, I, b1, b2, intrWire);
@@ -341,7 +341,7 @@ void OpenGLRenderer::renderIPhys()
 		for (const auto& I : *scene->interactions) {
 			shared_ptr<IPhys> ip(I->phys);
 			if (!ip) continue;
-			const shared_ptr<Body>&b1 = Body::byId(I->getId1(), scene), b2 = Body::byId(I->getId2(), scene);
+			const auto b1 = Body::byId(I->getId1(), scene), b2 = Body::byId(I->getId2(), scene);
 			Body::id_t             id1 = I->getId1(), id2 = I->getId2();
 			if (!(bodyDisp[id1].isDisplayed || bodyDisp[id2].isDisplayed)) continue;
 			glPushMatrix();

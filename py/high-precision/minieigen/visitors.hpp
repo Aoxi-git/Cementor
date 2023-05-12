@@ -443,7 +443,7 @@ public:
 	static std::string __str__(const py::object& obj)
 	{
 		std::ostringstream oss;
-		const VectorT&     self = py::extract<VectorT>(obj)();
+		const auto         self = py::extract<VectorT>(obj)();
 		bool               list = (Dim == Eigen::Dynamic && self.size() > 0);
 		oss << object_class_name(obj) << (list ? "([" : "(");
 		Vector_data_stream(self, oss);
@@ -852,7 +852,7 @@ private:
 	static std::string __str__(const py::object& obj)
 	{
 		std::ostringstream oss;
-		const MatrixT&     m = py::extract<MatrixT>(obj)();
+		const auto         m = py::extract<MatrixT>(obj)();
 		oss << object_class_name(obj) << "(";
 		bool wrap = ((dyn() && m.rows() > 1) || (!dyn() && m.rows() > 3));
 		// non-wrapping fixed-size: flat list of numbers, not rows as tuples (Matrix3)

@@ -387,6 +387,14 @@ if(ENABLE_USEFUL_ERRORS)
     MESSAGE(STATUS   "g++ version 7.0 <= " ${CMAKE_CXX_COMPILER_VERSION} " <8.X.X, setting -Wno-int-in-bool-context")
     SET(WORKAROUND_LIBRARY_WARNINGS "${WORKAROUND_LIBRARY_WARNINGS} -Wno-int-in-bool-context")
   ENDIF()
+
+  # It maybe a bug in the early version of gcc 13. Try to remove this workaround in the future.
+  IF(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 13.0 )
+    MESSAGE(STATUS   "g++ version  " ${CMAKE_CXX_COMPILER_VERSION} " > 13 setting -Wno-error=array-bounds=")
+    SET(WORKAROUND_LIBRARY_WARNINGS "${WORKAROUND_LIBRARY_WARNINGS} -Wno-error=array-bounds=")
+  ENDIF()
+
+
   # eigen < 3.3.5
   IF("${EIGEN3_WORLD_VERSION}.${EIGEN3_MAJOR_VERSION}.${EIGEN3_MINOR_VERSION}" VERSION_LESS 3.3.5)
     MESSAGE(STATUS   "Eigen version ${EIGEN3_WORLD_VERSION}.${EIGEN3_MAJOR_VERSION}.${EIGEN3_MINOR_VERSION} < 3.3.5, setting -Wno-shadow")
