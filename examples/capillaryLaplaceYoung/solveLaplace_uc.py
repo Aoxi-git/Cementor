@@ -57,7 +57,7 @@ def solveLaplace_uc(theta, rRatio, uStar, delta1Cons, deltaZ, save):
 			[dist, vol, force, delta1, delta2, eStar, nn11, nn33, out] = solveLiqBridge(rRatio, theta, uStar, delta1, dzUsed, 0, 0, 0)
 		sol_u[i, :] = [dist, uStar, vol, force, delta1, delta2, eStar, nn11, nn33]
 	# timeEndLoop = time.clock() # gives the same measurements than time.time()
-	# print 'Here, loop took '+str(timeEndLoop-timeStartLoop)+' s'
+	# print('Here, loop took '+str(timeEndLoop-timeStartLoop)+' s')
 
 	# Get rid of unphysical solutions with negativ distances and/or volume:
 	physSol = sol_u[numpy.logical_and(sol_u[:, 0] >= 0, sol_u[:, 2] >= 0), :]

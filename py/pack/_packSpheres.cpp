@@ -20,8 +20,8 @@ try {
 	        "SpherePack",
 	        "Set of spheres represented as centers and radii. This class is returned by :yref:`yade.pack.randomDensePack`, "
 	        ":yref:`yade.pack.randomPeriPack` and others. The object supports iteration over spheres, as in \n\n\t>>> sp=SpherePack()\n\t>>> for "
-	        "center,radius in sp: print center,radius\n\n\t>>> for sphere in sp: print sphere[0],sphere[1]   ## same, but without unpacking the tuple "
-	        "automatically\n\n\t>>> for i in range(0,len(sp)): print sp[i][0], sp[i][1]   ## same, but accessing spheres by index\n\n\n.. admonition:: "
+	        "center,radius in sp: print(center,radius)\n\n\t>>> for sphere in sp: print(sphere[0],sphere[1])   ## same, but without unpacking the tuple "
+	        "automatically\n\n\t>>> for i in range(0,len(sp)): print(sp[i][0], sp[i][1])   ## same, but accessing spheres by index\n\n\n.. admonition:: "
 	        "Special constructors\n\n\tConstruct from list of ``[(c1,r1),(c2,r2),…]``. To convert two same-length lists of ``centers`` and ``radii``, "
 	        "construct with ``zip(centers,radii)``.\n",
 	        boost::python::init<boost::python::optional<boost::python::list>>(

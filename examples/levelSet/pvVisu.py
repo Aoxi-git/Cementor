@@ -30,7 +30,7 @@ def pvVisu(prefix='', itSnap=[0], thres=False, multiblockLS=False, idBodies=[0])
 			lsBodFiles = []  # will include all (time passing) files for that body
 			for it in itSnap:
 				lsBodFiles.append(prefix + 'lsBody' + str(bod) + '.' + str(it) + '.vts')
-			# print 'Reading',lsBodFiles
+			# print('Reading',lsBodFiles)
 			allReaders.append(XMLStructuredGridReader(FileName=lsBodFiles))
 
 	scene = GetAnimationScene()

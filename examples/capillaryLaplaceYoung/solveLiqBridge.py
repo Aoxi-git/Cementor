@@ -77,7 +77,7 @@ def solveLiqBridge(rRatio, theta, uStar, delta1, deltaZ, plot, plot3D, speak):
 		step = step + 1
 	#----------------------------------------------------------------------
 	# tpsEnd = time.time()
-	# print 'This took'+str(tpsEnd-tps)
+	# print('This took'+str(tpsEnd-tps))
 
 	# --------------- Output computations from now on: --------------------
 	# tps = time.time()
@@ -152,7 +152,7 @@ def solveLiqBridge(rRatio, theta, uStar, delta1, deltaZ, plot, plot3D, speak):
 		out = 1
 
 	# tpsEnd = time.time()
-	# print 'This took'+str(tpsEnd-tps)
+	# print('This took'+str(tpsEnd-tps))
 
 	return dist, vol, force, delta1, delta2, eStar, nn11, nn33, out
 

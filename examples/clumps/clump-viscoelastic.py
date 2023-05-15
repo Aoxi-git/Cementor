@@ -54,7 +54,7 @@ clump = O.bodies[clpId]
 spheres = [O.bodies[id] for id in sphId]
 
 print('\nClump:\n======')
-#print '\nMaterial:'
+#print('\nMaterial:')
 if clump.mat:
 	print(clump.mat.dict())
 else:
