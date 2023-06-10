@@ -172,7 +172,6 @@ Real Shop::kineticEnergy(Scene* _scene, Body::id_t* maxId)
 			// inertia tensor rotation from http://www.kwon3d.com/theory/moi/triten.html
 			Matrix3r mI;
 			mI << state->inertia[0], 0, 0, 0, state->inertia[1], 0, 0, 0, state->inertia[2];
-			//E+=.5*state->angVel.transpose().dot((T.transpose()*mI*T)*state->angVel);
 			E += .5 * angVel.transpose().dot((T * mI * T.transpose()) * angVel);
 		} else {
 			E += 0.5 * angVel.dot(state->inertia.cwiseProduct(angVel));

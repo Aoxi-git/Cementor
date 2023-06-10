@@ -665,8 +665,7 @@ try {
 	        (py::args("findMaxId") = false),
 	        "Compute overall kinetic energy of the simulation as\n\n.. math:: "
 	        "\\sum\\frac{1}{2}\\left(m_i\\vec{v}_i^2+\\vec{\\omega}(\\mat{I}\\vec{\\omega}^T)\\right).\n\nFor :yref:`aspherical<Body.aspherical>` bodies, "
-	        "the inertia tensor $\\mat{I}$ is transformed to global frame, before multiplied by $\\vec{\\omega}$, therefore the value should be "
-	        "accurate.\n");
+	        "necessary frame transformations are applied to the inertia tensor $\\mat{I}$ as stored in :yref:`state.inertia<State.inertia>`.\n");
 	py::def("sumForces",
 	        sumForces,
 	        (py::arg("ids"), py::arg("direction")),
