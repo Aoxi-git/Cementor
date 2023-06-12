@@ -149,7 +149,7 @@ O.engines = [
                 [Ip2_FrictMat_FrictMat_FrictPhys()],
                 [Law2_ScGeom_FrictPhys_CundallStrack()],
         ),
-        NewtonIntegrator(damping=.1, exactAsphericalRot=True, gravity=(1e-2, 1e-2, -1000)),
+        NewtonIntegrator(damping=.1, gravity=(1e-2, 1e-2, -1000)),
         RotationEngine(ids=rotateIDs, angularVelocity=100.0, rotationAxis=[0, -1, 0], rotateAroundZero=1, zeroPoint=[-7.0, -6.0, -5.0]),
         HarmonicMotionEngine(A=[0, 0, 0.5], f=[0, 0, 20.0], fi=[0.0, 0.0, pi], ids=vibrationPlate),
         HarmonicRotationEngine(

@@ -139,7 +139,7 @@ A simple *simulation loop* using the *Potential Blocks* reads as:
 			[Ip2_FrictMat_FrictMat_KnKsPBPhys(kn_i=1e8, ks_i=1e7, Knormal=1e8, Kshear=1e7, viscousDamping=0.2)],
 			[Law2_SCG_KnKsPBPhys_KnKsPBLaw(label='law', neverErase=False, allowViscousAttraction=False)]
 		),
-		NewtonIntegrator(damping=0.2, exactAsphericalRot=True, gravity=[0,0,-9.81]),
+		NewtonIntegrator(damping=0.2, gravity=[0,0,-9.81]),
 		PotentialBlockVTKRecorder(fileName='./vtk/file_prefix', iterPeriod=1000, twoDimension=True, sampleX=30, sampleY=30, sampleZ=30, maxDimension=0.2, label='vtkRecorder')
 	]
 
@@ -240,7 +240,7 @@ To define a body using the :yref:`PotentialParticle` or :yref:`PotentialBlock` s
 
   b=Body()
   b.shape=PotentialParticle(...)
-  b.aspherical=True # To be used in conjunction with exactAsphericalRot=True in the NewtonIntegrator
+  b.aspherical=True # For NewtonIntegrator to apply an appropriate body rotation integrator
   # V: Volume
   # I11, I22, I33: Principal inertias
   utils._commonBodySetup(b,V,Vector3(I11,I22,I33), material='frictionless', pos=(0,0,0), fixed=False)
@@ -263,7 +263,7 @@ For example, to define a :yref:`PotentialBlock`:
 
   b=Body()
   b.shape=PotentialBlock(R=0.0, ...) #here we set R=0.0 to trigger automatic calculation of R
-  b.aspherical=True # To be used in conjunction with exactAsphericalRot=True
+  b.aspherical=True # For NewtonIntegrator to apply an appropriate body rotation integrator
   utils._commonBodySetup(b,b.shape.volume,b.shape.inertia, material='frictionless', pos=Vector3(xPos,yPos,zPos), fixed=False)
   b.state.ori=b.shape.orientation # this will rotate the particle to its initial random system. If b.state.ori=Quaternion.Identity, the PB is oriented to its principal axes 
   O.bodies.append(b)

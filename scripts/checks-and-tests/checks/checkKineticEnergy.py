@@ -32,7 +32,7 @@ O.dt = 0.0001
 O.trackEnergy=True
 O.engines=[ForceResetter(),InsertionSortCollider([]),
         InteractionLoop([],[],[]),
-        NewtonIntegrator(damping=0.0, gravity=[0,0,0], label='newton', kinSplit=True, exactAsphericalRot=True)]
+        NewtonIntegrator(damping=0.0, gravity=[0,0,0], label='newton', kinSplit=True)]
 
 O.step()
 E0_1 = utils.kineticEnergy()

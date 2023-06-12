@@ -25,7 +25,7 @@ O.engines = [
                 [Ip2_FrictMat_FrictMat_KnKsPBPhys(kn_i=Kn, ks_i=Ks, Knormal=Kn, Kshear=Ks, useFaceProperties=False, viscousDamping=0.2)],
                 [Law2_SCG_KnKsPBPhys_KnKsPBLaw(label='law', neverErase=False, allowViscousAttraction=False)]
         ),
-        NewtonIntegrator(damping=0.0, exactAsphericalRot=True, gravity=[0, 0, -9.81], label='newton'),
+        NewtonIntegrator(damping=0.0, gravity=[0, 0, -9.81], label='newton'),
 ]
 
 # ------------------------------------------------------------------------------------------------------------------------------------------ #

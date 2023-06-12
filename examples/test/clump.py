@@ -8,7 +8,7 @@ O.engines = [
                 Bo1_Box_Aabb(),
         ]),
         InteractionLoop([Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()], [Ip2_FrictMat_FrictMat_FrictPhys()], [Law2_ScGeom_FrictPhys_CundallStrack()]),
-        NewtonIntegrator(damping=.2, exactAsphericalRot=True, gravity=[0, 0, -9.81])
+        NewtonIntegrator(damping=.2, gravity=[0, 0, -9.81])
 ]
 # support
 O.bodies.append(box([0, 0, -1.5], [3, 3, .2], fixed=True))

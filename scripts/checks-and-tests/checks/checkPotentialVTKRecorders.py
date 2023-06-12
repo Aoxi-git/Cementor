@@ -110,7 +110,7 @@ if ('POTENTIAL_PARTICLES' in features) and ('VTK' in features):
 	                [Ip2_FrictMat_FrictMat_KnKsPhys(kn_i=5e8, ks_i=5e7, Knormal=5e8, Kshear=5e7, useFaceProperties=False, viscousDamping=0.1)],
 	                [Law2_SCG_KnKsPhys_KnKsLaw(label='PPlaw', neverErase=False)]
 	        ),
-	        NewtonIntegrator(damping=0.0, exactAsphericalRot=True, gravity=[0, 0, 0]),  # Here we deactivate gravity,
+	        NewtonIntegrator(damping=0.0, gravity=[0, 0, 0]),  # Here we deactivate gravity,
 	        PotentialParticleVTKRecorder(
 	                fileName=vtkSaveDir + 'pp',
 	                firstIterRun=10,
@@ -218,7 +218,7 @@ if ('POTENTIAL_BLOCKS' in features) and ('VTK' in features):
 	                [Law2_SCG_KnKsPBPhys_KnKsPBLaw(label='PBlaw', neverErase=False, allowViscousAttraction=True)
 	                ]  # In this example, we do NOT use Talesnick
 	        ),
-	        NewtonIntegrator(damping=0.0, exactAsphericalRot=True, gravity=[0, 0, 0]),  # Here we deactivate gravity
+	        NewtonIntegrator(damping=0.0, gravity=[0, 0, 0]),  # Here we deactivate gravity
 	        PotentialBlockVTKRecorder(
 	                fileName=vtkSaveDir + 'pb',
 	                firstIterRun=10,

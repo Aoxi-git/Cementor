@@ -35,7 +35,7 @@ O.engines = [
                 [Law2_SCG_KnKsPBPhys_KnKsPBLaw(label='law', neverErase=False, allowViscousAttraction=True, traceEnergy=False)]
         ),
         #GlobalStiffnessTimeStepper(),
-        NewtonIntegrator(damping=0.0, exactAsphericalRot=True, gravity=[0, -9.81, 0]),
+        NewtonIntegrator(damping=0.0, gravity=[0, -9.81, 0]),
         PotentialBlockVTKRecorder(
                 fileName='./vtk/cubePBscaled', iterPeriod=10000, twoDimension=False, sampleX=50, sampleY=50, sampleZ=50, maxDimension=0.2, label='vtkRecorder'
         )

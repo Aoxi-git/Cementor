@@ -22,7 +22,7 @@ if ('POTENTIAL_BLOCKS' in features):
 	                [Ip2_FrictMat_FrictMat_KnKsPBPhys(kn_i=Kn, ks_i=Ks, Knormal=Kn, Kshear=Ks, useFaceProperties=False, viscousDamping=0.1)],
 	                [Law2_SCG_KnKsPBPhys_KnKsPBLaw(label='law', neverErase=False, allowViscousAttraction=True)]  # In this example, we do NOT use Talesnick
 	        ),
-	        NewtonIntegrator(damping=0.0, exactAsphericalRot=True, gravity=[0, 0, 0]),  # Here we deactivate gravity
+	        NewtonIntegrator(damping=0.0, gravity=[0, 0, 0]),  # Here we deactivate gravity
 	]
 
 	# ----------------------------------------------------------------------------------------------------------------------------------------------- #

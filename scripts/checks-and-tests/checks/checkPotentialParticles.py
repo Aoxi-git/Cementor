@@ -22,7 +22,7 @@ if ('POTENTIAL_PARTICLES' in features):
 	                [Ip2_FrictMat_FrictMat_KnKsPhys(kn_i=Kn, ks_i=Ks, Knormal=Kn, Kshear=Ks, useFaceProperties=False, viscousDamping=0.1)],
 	                [Law2_SCG_KnKsPhys_KnKsLaw(label='law', neverErase=False)]
 	        ),
-	        NewtonIntegrator(damping=0.0, exactAsphericalRot=True, gravity=[0, 0, 0]),  # Here we deactivate gravity
+	        NewtonIntegrator(damping=0.0, gravity=[0, 0, 0]),  # Here we deactivate gravity
 	]
 
 	# ----------------------------------------------------------------------------------------------------------------------------------------------- #

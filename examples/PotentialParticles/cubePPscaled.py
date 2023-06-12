@@ -23,7 +23,7 @@ O.engines = [
                 [Ip2_FrictMat_FrictMat_KnKsPhys(kn_i=1e8, ks_i=1e7, Knormal=1e8, Kshear=1e7, useFaceProperties=False, viscousDamping=0.05)],
                 [Law2_SCG_KnKsPhys_KnKsLaw(label='law', neverErase=False)]
         ),
-        NewtonIntegrator(damping=0.0, exactAsphericalRot=True, gravity=[0, -9.81, 0]),
+        NewtonIntegrator(damping=0.0, gravity=[0, -9.81, 0]),
         PotentialParticleVTKRecorder(
                 fileName='./vtk/cubePPscaled', label='vtkRecorder', twoDimension=False, iterPeriod=5000, sampleX=50, sampleY=50, sampleZ=50, maxDimension=0.2
         )
