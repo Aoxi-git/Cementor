@@ -567,7 +567,7 @@ def createPlots(subPlots=True, scatterSize=60, wider=False):
 			for d in ySpecs2:
 				yNames.add(d)
 				line, = pylab.plot(data[pStrip], data[d[0]], d[1], label=xlateLabel(d[0]))
-				line2, = pylab.plot([], [], d[1], color=line.get_color(), alpha=afterCurrentAlpha)
+				line2, = pylab.plot([], [], d[1], alpha=afterCurrentAlpha)
 				# use (0,0) if there are no data yet
 				scatterPt = [0, 0] if len(data[pStrip]) == 0 else (data[pStrip][current], data[d[0]][current])
 				# if current value is NaN, use zero instead
