@@ -1,5 +1,7 @@
 /*************************************************************************
-*  2021 jerome.duriez@inrae.fr                                           *
+*  2021 Jerome Duriez, jerome.duriez@inrae.fr, original script.          *
+*  2023 Danny van der Haven, dannyvdhaven@gmail.com, visualisation and   *
+*   volume interactions.                                                 *
 *  This program is free software, see file LICENSE for details.          *
 *************************************************************************/
 
@@ -246,6 +248,57 @@ Vector3r LevelSet::normal(const Vector3r& pt) const
 	return Vector3r(nx, ny, nz).normalized(); // do we really need the normalized() ?.. normally, no
 }
 
+Vector3r LevelSet::normalUnbound(const Vector3r& pt) const
+{
+	// Currently necessary for volume-based particle wall interactions.
+	// Returns the normal vector at pt, according to (2) Kawamoto2016.
+	// A version that is not restricted to the bounds of the current lsGrid.
+	// Does not need to be that accurate. Use the normal of the closest grid point.
+	// But b = ptInside - distInside*nInside, n = (pt-b).normalized() would be better. 
+	Vector3i indices = lsGrid->closestCornerUnbound(pt);
+	int xInd(indices[0]), yInd(indices[1]), zInd(indices[2]);
+
+	Vector3i gpPerAxis = lsGrid->nGP;
+	int nGPx(gpPerAxis[0]), nGPy(gpPerAxis[1]), nGPz(gpPerAxis[2]);
+	Real spac = lsGrid->spacing;
+	
+	// Initialise the inside point as the current point.
+	Vector3r ptInside = pt;
+	int xIndInside = xInd, yIndInside = yInd, zIndInside = zInd;
+
+	// Check if point is indeed inside the bounds. If not, adjust the indices.
+	bool outsideBounds = xInd < 0 || yInd < 0 || zInd < 0 || xInd > (nGPx-1) || yInd > (nGPy-1) || zInd > (nGPz-1);
+	if ( outsideBounds ) {
+		// Get closest point inside the domain.
+		xIndInside = math::max(0,math::min(xInd,nGPx-2));
+		yIndInside = math::max(0,math::min(yInd,nGPy-2));
+		zIndInside = math::max(0,math::min(zInd,nGPz-2));
+	}
+
+	Vector3r cornerInside = lsGrid->gridPoint(xIndInside, yIndInside, zIndInside);
+
+	if ( outsideBounds ) {
+		// Add some spacing because the computation for the normal needs a point inside the domain, not on the edge of the domain.
+		ptInside = Vector3r(cornerInside[0] + 0.5*spac, cornerInside[1] + 0.5*spac, cornerInside[2] + 0.5*spac); // Is there a nicer way to do this?
+	}
+
+	Real xRed((ptInside[0] - cornerInside[0]) / spac),
+		yRed((ptInside[1] - cornerInside[1]) / spac),
+		zRed((ptInside[2] - cornerInside[2]) / spac);	// dimensionless x,y,z of 3., top p. 4 Kawamoto2016
+	Real nx(0), ny(0), nz(0);	// The x, y, z components of normal, computed below
+	for (int indA = 0; indA < 2; indA++) {
+		for (int indB = 0; indB < 2; indB++) {
+			for (int indC = 0; indC < 2; indC++) {
+				Real lsVal = distField[xIndInside + indA][yIndInside + indB][zIndInside + indC];
+				nx += lsVal * (2 * indA - 1) * ((1 - indB) * (1 - yRed) + indB * yRed) * ((1 - indC) * (1 - zRed) + indC * zRed);
+				ny += lsVal * (2 * indB - 1) * ((1 - indA) * (1 - xRed) + indA * xRed) * ((1 - indC) * (1 - zRed) + indC * zRed);
+				nz += lsVal * (2 * indC - 1) * ((1 - indA) * (1 - xRed) + indA * xRed) * ((1 - indB) * (1 - yRed) + indB * yRed);
+			}
+		}
+	}
+	return Vector3r(nx, ny, nz).normalized();
+}
+
 void LevelSet::initSurfNodes()
 {
 	// Obtaining the boundary nodes through "ray tracing", starting from the center
@@ -435,6 +488,69 @@ Real LevelSet::distance(const Vector3r& pt) const
 	return (pt[0] - lsGrid->gridPoint(xInd, yInd, zInd)[0]) / lsGrid->spacing * (f1yz - f0yz) + f0yz;
 }
 
+Real LevelSet::distanceUnbound(const Vector3r& pt) const
+{
+	// Same as in LevelSet::distance(), we work in the "reference configuration" or local axes
+	Vector3i indices = lsGrid->closestCornerUnbound(pt);
+
+	Vector3i gpPerAxis = lsGrid->nGP;
+	int nGPx(gpPerAxis[0]), nGPy(gpPerAxis[1]), nGPz(gpPerAxis[2]);
+	int xInd(indices[0]), yInd(indices[1]), zInd(indices[2]);
+
+	if ( xInd < 0 || yInd < 0 || zInd < 0 || xInd > (nGPx-1) || yInd > (nGPy-1) || zInd > (nGPz-1) ) {
+		// Do extrapolation.
+		// The level set value computed outside the lsGrid does not need to be that accurate.
+		// Get one of the closest points on the grid, use the level set to get the closest
+		// point on the surface, and use the distance w.r.t. that point.
+
+		// Get closest point inside the domain.
+		int xIndInside = math::max(0,math::min(xInd,nGPx-2));
+		int yIndInside = math::max(0,math::min(yInd,nGPy-2));
+		int zIndInside = math::max(0,math::min(zInd,nGPz-2));
+		Vector3r ptInside = lsGrid->gridPoint(xIndInside, yIndInside, zIndInside);
+
+		// This is a faster version of LevelSet::normal() for points exactly on the grid
+		Real nx(0), ny(0), nz(0);	// The x, y, z components of normal, computed below
+		// The dimensionless x,y,z of top p. 4 Kawamoto2016 are all zero here.
+		for (int indA = 0; indA < 2; indA++) {
+			for (int indB = 0; indB < 2; indB++) {
+				for (int indC = 0; indC < 2; indC++) {
+					Real lsVal = distField[xIndInside + indA][yIndInside + indB][zIndInside + indC];
+					nx += lsVal * (2 * indA - 1) * (1 - indB) * (1 - indC);
+					ny += lsVal * (2 * indB - 1) * (1 - indA) * (1 - indC);
+					nz += lsVal * (2 * indC - 1) * (1 - indA) * (1 - indB);
+				}
+			}
+		}
+		Vector3r normalInside = Vector3r(nx, ny, nz).normalized();
+		Real distanceInside = distance(ptInside);
+
+		// Compute closest surface point
+		Vector3r ptSurface = ptInside - distanceInside*normalInside;
+		// Take the distance to the surface
+		return (pt-ptSurface).norm();
+	} else{
+		// Do interpolation.
+		Real                               f0yz(NaN), f1yz(NaN); // distance values at the same y and z as pt and for a x-value just before (resp. after) pt
+		std::array<Real, 2>                yzCoord = { pt[1], pt[2] };
+		std::array<Real, 2>                yExtr   = { lsGrid->gridPoint(xInd, yInd, zInd)[1], lsGrid->gridPoint(xInd, yInd + 1, zInd)[1] };
+		std::array<Real, 2>                zExtr   = { lsGrid->gridPoint(xInd, yInd, zInd)[2], lsGrid->gridPoint(xInd, yInd, zInd + 1)[2] };
+		std::array<std::array<Real, 2>, 2> knownValx0;
+		knownValx0[0][0] = distField[xInd][yInd][zInd];
+		knownValx0[0][1] = distField[xInd][yInd][zInd + 1];
+		knownValx0[1][0] = distField[xInd][yInd + 1][zInd];
+		knownValx0[1][1] = distField[xInd][yInd + 1][zInd + 1];
+		std::array<std::array<Real, 2>, 2> knownValx1;
+		knownValx1[0][0] = distField[xInd + 1][yInd][zInd];
+		knownValx1[0][1] = distField[xInd + 1][yInd][zInd + 1];
+		knownValx1[1][0] = distField[xInd + 1][yInd + 1][zInd];
+		knownValx1[1][1] = distField[xInd + 1][yInd + 1][zInd + 1];
+		f0yz             = ShopLS::biInterpolate(yzCoord, yExtr, zExtr, knownValx0);
+		f1yz             = ShopLS::biInterpolate(yzCoord, yExtr, zExtr, knownValx1);
+		return (pt[0] - lsGrid->gridPoint(xInd, yInd, zInd)[0]) / lsGrid->spacing * (f1yz - f0yz) + f0yz;
+	}
+}
+
 Real LevelSet::getVolume()
 {
 	if (!initDone) init();
@@ -511,6 +627,22 @@ int LevelSet::getMarchingCubeNbTriangles()
 	if (!initDone) init();
 	if (!initDoneMarchingCubes) computeMarchingCubes();
 	return marchingCubesData.nbTriangles;
+}
+
+bool LevelSet::getHasAABE()
+{
+	if (!initDone) init();
+	return hasAABE;
+}
+
+Vector3r LevelSet::getAxesAABE()
+{
+	if (!initDone) init();
+	if(hasAABE){
+	  return axesAABE;
+	}else{
+	  return Vector3r::Zero();
+	}
 }
 
 } // namespace yade
