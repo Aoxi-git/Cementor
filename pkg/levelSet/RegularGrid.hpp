@@ -16,6 +16,7 @@ public:
 	        boost::python::dict&) override; // way to go for constructor variants: adding a .def(boost::python::init<..>) does not seem to work
 	//	adopting const member functions for the following, so that the compiler knows they should not change anything of *this:
 	Vector3i closestCorner(const Vector3r&) const; // the i,j,k grid indices of the closest "smaller" grid point
+	Vector3i closestCornerUnbound(const Vector3r&) const; // the i,j,k grid indices of the closest "smaller" grid point, with no restiction to be within the grid itself
 	Vector3r getDims() const;
 	Vector3r gridPoint(int, int, int) const;
 	//	Vector3r gridPoint(Vector3i) const; // would make sense for the C++ world, but would require extra work for the python exposure to work (as an overloaded C++ function)
