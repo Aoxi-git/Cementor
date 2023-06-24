@@ -32,6 +32,7 @@ public:
 		.def("max",&RegularGrid::max,"Returns the maximum corner of the grid.")
 		.def("dims",&RegularGrid::getDims,"Returns the grid dimensions along the three axes, as a Vector3.")
 		.def("closestCorner",&RegularGrid::closestCorner,(boost::python::arg("pt")),"Returns the Vector3i indices of the closest gridpoint which is smaller (for all components) than *pt*.")
+		.def("closestCornerUnbound",&RegularGrid::closestCornerUnbound,(boost::python::arg("pt")),"Returns the Vector3i indices of the closest gridpoint that is smaller (for all axes) than *pt*. For this function, the point pt does not have to lie within :yref:`distField<LevelSet.distField>`. It will return -1 for a coordinate below the minimum value and the number of grid points for a number above the maximum value.")
 				    );
 	// clang-format on
 	DECLARE_LOGGER;
