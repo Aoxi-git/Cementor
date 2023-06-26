@@ -74,6 +74,8 @@ bool Ig2_Box_Sphere_ScGeom::go(
 		cOnBox_boxLocal[2] = extents[2];
 		inside             = false;
 	}
+	
+	const Real sphereRadiusForBox = (hertzian) ? hertzFac * s->radius :  s->radius;
 
 	shared_ptr<ScGeom> scm;
 	if (inside) {
@@ -128,7 +130,7 @@ bool Ig2_Box_Sphere_ScGeom::go(
 		scm->contactPoint = 0.5 * (pt1 + pt2);
 		// 		scm->normal2 = normal2;
 		scm->penetrationDepth = (pt1 - pt2).norm();
-		scm->radius1          = s->radius;
+		scm->radius1          = sphereRadiusForBox;
 		scm->radius2          = s->radius;
 		c->geom               = scm;
 		scm->precompute(state1, state2, scene, c, normal2, isNew, shift2, true);
@@ -169,7 +171,7 @@ bool Ig2_Box_Sphere_ScGeom::go(
 			scm = YADE_PTR_CAST<ScGeom>(c->geom);
 		scm->contactPoint     = 0.5 * (pt1 + pt2);
 		scm->penetrationDepth = depth;
-		scm->radius1          = s->radius;
+		scm->radius1          = sphereRadiusForBox;
 		scm->radius2          = s->radius;
 		c->geom               = scm;
 		//FIXME : NOT TESTED : do we precompute correctly if boxes are moving?

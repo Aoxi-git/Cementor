@@ -18,6 +18,9 @@
 namespace yade { // Cannot have #include directive inside.
 
 class Ig2_Box_Sphere_ScGeom : public IGeomFunctor {
+private:
+	const Real hertzFac = 1e8;
+	
 public:
 	virtual bool
 	go(const shared_ptr<Shape>&       cm1,
@@ -39,7 +42,9 @@ public:
 
 	// clang-format off
 	YADE_CLASS_BASE_DOC_ATTRS(Ig2_Box_Sphere_ScGeom,IGeomFunctor,"Create an interaction geometry :yref:`ScGeom` from :yref:`Box` and :yref:`Sphere`, representing the box with a projected virtual sphere of same radius.",
-    ((Real,interactionDetectionFactor,1,,"Enlarge sphere radii by this factor (if >1), to permit creation of distant interactions.\n\nInteractionGeometry will be computed when interactionDetectionFactor*(rad) > distance.\n\n.. note::\n\t This parameter is functionally coupled with :yref:`Bo1_Sphere_Aabb::aabbEnlargeFactor`, which will create larger bounding boxes and should be of the same value.")))
+    ((Real,interactionDetectionFactor,1,,"Enlarge sphere radii by this factor (if >1), to permit creation of distant interactions.\n\nInteractionGeometry will be computed when interactionDetectionFactor*(rad) > distance.\n\n.. note::\n\t This parameter is functionally coupled with :yref:`Bo1_Sphere_Aabb::aabbEnlargeFactor`, which will create larger bounding boxes and should be of the same value."))
+	((bool,hertzian,false,,"If True, the equivalent radius for the Box (:yref:`ScGeom.refR1`) is chosen as 1e8 times the Sphere's radius (closer to Hertzian theory, where it is infinite). Both are equal if False"))
+    )
 	// clang-format on
 	FUNCTOR2D(Box, Sphere);
 	DEFINE_FUNCTOR_ORDER_2D(Box, Sphere);
