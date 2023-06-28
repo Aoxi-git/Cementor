@@ -249,6 +249,8 @@ They can be installed from the command line of your Linux distribution, assuming
 		libmetis-dev python3-bibtexparser python3-future coinor-clp coinor-libclp-dev \
 		python3-mpmath libmpfr-dev libmpfrc++-dev libmpc-dev texlive-xetex
 
+Note: on Ubuntu 22.04, the VTK library should be ``libvtk9-dev``.
+
 Most of the list above is very likely already packaged for your distribution. In case you are still confronted
 with some errors concerning not available packages (e.g., package ``libmetis-dev`` is not available) it may be necessary
 to add yade external ppa from https://launchpad.net/~yade-users/+archive/external (see below) as well as http://www.yade-dem.org/packages (see the top of this page)::
