@@ -16,7 +16,7 @@ except ImportError:
 # See LP:1254708 for more details
 # (old site, fixed bug) https://bugs.launchpad.net/yade/+bug/1254708
 
-sys.path.insert(1,'${runtimePREFIX}/${LIBRARY_OUTPUT_PATH}/yade${SUFFIX}/py')
+sys.path.insert(${PYTHONPATH_POS},'${runtimePREFIX}/${LIBRARY_OUTPUT_PATH}/yade${SUFFIX}/py')
 
 # get yade path (allow YADE_PREFIX to override)
 prefix,suffix='${runtimePREFIX}' if 'YADE_PREFIX' not in os.environ else os.environ['YADE_PREFIX'],'${SUFFIX}'
