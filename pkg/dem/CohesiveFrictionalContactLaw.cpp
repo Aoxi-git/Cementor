@@ -10,6 +10,7 @@
 #include <core/Omega.hpp>
 #include <core/Scene.hpp>
 #include <pkg/dem/ScGeom.hpp>
+#include <lib/base/LoggingUtils.hpp>
 
 namespace yade { // Cannot have #include directive inside.
 
@@ -115,6 +116,13 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	CohFrictPhys* phys            = YADE_CAST<CohFrictPhys*>(ip.get());
 	Vector3r&     shearForceFirst = phys->shearForce;
 
+	if (consistencyCheck)
+	{
+		if (phys->maxRollPl >= 0. and phys->maxTwistPl < 0.) LOG_WARN_ONCE("rolling moment is bounded but twisting moment is not (interaction "<<id1<<"-"<<id2<<"), check etaRoll and etaTwist of the materials if it is not intentional.");
+		if (phys->maxRollPl < 0. and phys->maxTwistPl >= 0.) LOG_WARN_ONCE("twisting moment is bounded but rolling moment is not (interaction "<<id1<<"-"<<id2<<"), check etaRoll and etaTwist of the materials if it is not intentional.");
+		consistencyCheck = false;
+	}
+	
 	if (contact->isFresh(scene)) shearForceFirst = Vector3r::Zero();
 	Real un = geom->penetrationDepth;
 	Real Fn = phys->kn * (un - phys->unp);
@@ -210,7 +218,7 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 			/// Plasticity ///
 			// limit rolling moment to the plastic value, if required
 			if (phys->maxRollPl >= 0.) { // do we want to apply plasticity?
-				Real RollMax = phys->maxRollPl * phys->normalForce.norm();
+				Real RollMax = phys->maxRollPl * math::max(0., Fn);
 				if (!useIncrementalForm)
 					LOG_WARN("If :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::useIncrementalForm` is false, then plasticity will not "
 					         "be applied correctly (the total formulation would not reproduce irreversibility).");
@@ -226,7 +234,7 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 			}
 			// limit twisting moment to the plastic value, if required
 			if (phys->maxTwistPl >= 0.) { // do we want to apply plasticity?
-				Real TwistMax = phys->maxTwistPl * phys->normalForce.norm();
+				Real TwistMax = phys->maxTwistPl * math::max(0., Fn);
 				if (!useIncrementalForm)
 					LOG_WARN("If :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::useIncrementalForm` is false, then plasticity will not "
 					         "be applied correctly (the total formulation would not reproduce irreversibility).");
@@ -239,7 +247,8 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 						if (twistdissip > 0) scene->energy->add(twistdissip, "twistDissip", twistDissipIx, /*reset*/ false);
 					}
 				}
-			}
+			} 
+			
 			// Apply moments now
 			Vector3r moment = phys->moment_twist + phys->moment_bending;
 			scene->forces.addTorque(id1, -moment);
