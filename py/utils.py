@@ -373,8 +373,8 @@ def levelSetBody(
         nodesPath=2,
         nodesTol=50,
         orientation=Quaternion(1, 0, 0, 0),
-		hasAABE=False,
-		axesAABE=Vector3.Zero,
+        hasAABE=False,
+        axesAABE=Vector3.Zero,
         dynamic=True,
         material=-1
 ):
