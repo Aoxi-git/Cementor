@@ -1,7 +1,6 @@
 /*************************************************************************
 *  2021 Jerome Duriez, jerome.duriez@inrae.fr, original code             *
-*  2023 Danny van der Haven, dannyvdhaven@gmail.com, visualisation and   *
-*   volume interactions.                                                 *
+*  2023 Danny van der Haven, dannyvdhaven@gmail.com, volume interactions *
 *  This program is free software, see file LICENSE for details.          *
 *************************************************************************/
 

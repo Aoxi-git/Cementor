@@ -373,6 +373,8 @@ def levelSetBody(
         nodesPath=2,
         nodesTol=50,
         orientation=Quaternion(1, 0, 0, 0),
+		hasAABE=False,
+		axesAABE=Vector3.Zero,
         dynamic=True,
         material=-1
 ):
@@ -392,6 +394,8 @@ def levelSetBody(
 	:param int nodesPath: path for the boundary nodes, passed to :yref:`LevelSet.nodesPath`
 	:param Real nodesTol: tolerance while ray tracing boundary nodes, passed to :yref:`LevelSet.nodesTol`
 	:param Quaternion orientation: the initial orientation of the body
+	:param bool hasAABE: flag indicating if the axis-aligned bounding ellipsoid (AABE), passed to :yref:`LevelSet.hasAABE`
+	:param Vector3 axesAABE: principal half-axes of the axis aligned bounding ellipsoid (AABE), passed to :yref:`LevelSet.axesAABE`
 	:param bool dynamic: passed to :yref:`Body.dynamic`
 	:param Material material: passed to :yref:`Body.material`
 	:return: a corresponding body instance"""
@@ -449,6 +453,9 @@ def levelSetBody(
 	else:
 		b.aspherical = True
 	b.state.ori = b.state.refOri = orientation
+	b.shape.hasAABE = hasAABE
+	if hasAABE:
+		b.shape.axesAABE = axesAABE
 	return b
 
 
