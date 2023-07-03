@@ -60,7 +60,7 @@ public:
 		((shared_ptr<RegularGrid>,lsGrid,new RegularGrid,Attr::readonly,"The :yref:`regular grid<RegularGrid>` carrying :yref:`distField<LevelSet.distField>`, in local axes."))
 		((bool,twoD,false,Attr::readonly,"True for z-invariant shapes. Serves to restrict the definition of :yref:`surfNodes<LevelSet.surfNodes>` in the (x,y) plane."))
 		((Real,smearCoeff,1.5,,"Rules the smearing coefficient $\\varepsilon > 0$ of the Heaviside step function for a smooth integration of the particle's volume close to its surface (the higher $\\varepsilon$ the smoother, i.e. the more diffuse the surface in terms of volume integration). Given in reciprocal multiples of $R_{cell}$ the half diagonal of the cells of the :yref:`lsGrid<LevelSet.lsGrid>`: $\\varepsilon = R_{cell}\\times 1/$ *smearCoeff* (smearing is deactivated if negative)."))
-		((bool,hasAABE,false,,"Flag to indicate whether an axis-aligned bounding ellipsoid (AABE) has been provided by the user. If true, you must specify AABE axes. Only works for VLS-DEM."))
+		((bool,hasAABE,false,,"Flag to indicate whether an axis-aligned bounding ellipsoid (AABE) has been provided by the user. If true, you must specify :yref:`axisAABE<LevelSet.axisAABE>`. Only works for VLS-DEM."))
 		((Vector3r,axesAABE,,,"The half lengths of the principal axes of the axis-aligned bounding ellipsoid (AABE) of the level-set shape. Format (rx,ry,rz). Only works for VLS-DEM."))
 
 		,
@@ -87,8 +87,8 @@ public:
 		.def("marchingCubesVertices",&LevelSet::getMarchingCubeTriangles,"Returns the vertices for a surface triangulation obtained after executing the Marching Cubes algorithm on :yref:`distField<LevelSet.distField>`.")
 		.def("marchingCubesNormals",&LevelSet::getMarchingCubeNormals,"Returns the normals for a surface triangulation obtained after executing the Marching Cubes algorithm on :yref:`distField<LevelSet.distField>`.")
 		.def("marchingCubesNbTriangles",&LevelSet::getMarchingCubeNbTriangles,"Returns the number of triangles forming the surface triangulation as per the Marching Cubes algorithm (executed on :yref:`distField<LevelSet.distField>`).")
-		.def("getHasAABE",&LevelSet::getHasAABE,"Returns the whether the half length of the principal axes of the axis-aligned bounding ellipsoid (AABE) of the level-set shape have been set.")
-		.def("getAxesAABE",&LevelSet::getAxesAABE,"Returns the half length of the principal axes of the axis-aligned bounding ellipsoid (AABE) of the level-set shape. Format is (rx,ry,rz). Returns the zero vector if no AABE was specified.")
+		.def("getHasAABE",&LevelSet::getHasAABE,"Returns :yref:`hasAABE<LevelSet.hasAABE>`, a bool indicating the whether the half length of the principal axes of the axis-aligned bounding ellipsoid (AABE) of the level-set shape have been set.")
+		.def("getAxesAABE",&LevelSet::getAxesAABE,"Returns :yref:`axisAABE<LevelSet.axisAABE>`, the half length of the principal axes of the axis-aligned bounding ellipsoid (AABE) of the level-set shape. Format is (rx,ry,rz). Returns the zero vector if no AABE was specified.")
 	)
 	// clang-format on
 	REGISTER_CLASS_INDEX(LevelSet, Shape); // necessary for such a Shape-derived class, see https://yade-dem.org/doc/prog.html#indexing-dispatch-types
