@@ -33,10 +33,8 @@ private:
 	};
 	mcData marchingCubesData; // Actual marching cubes data holder
 public:
-	Real             distance(const Vector3r&) const; // gives through interpolation the distance from a point to the surface
-	Real             distanceUnbound(const Vector3r&) const; // Gives the distance from a point to the surface either by inter- or extrapolation
-	Vector3r         normal(const Vector3r&) const;   // gives the outwards normal at some point
-	Vector3r         normalUnbound(const Vector3r&) const;   // Gives the outward normal either by inter- or extrapolation
+	Real             distance(const Vector3r&, const bool& unbound = false) const; // gives the distance from a point to the surface
+	Vector3r         normal(const Vector3r&, const bool& unbound = false) const;   // gives the outwards normal at some point
 	Real             getVolume();                     // these 3 get*() may call init() if not already done, they can not be const-declared
 	Vector3r         getCenter();
 	Vector3r         getInertia();
