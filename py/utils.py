@@ -389,7 +389,7 @@ def levelSetBody(
 	:param Real spacing: spatial increment of the :yref:`level set grid<LevelSet.lsGrid>`, if you picked a pre-defined *shape* or a *clump*
 	:param list distField: the :yref:`discrete distance field<LevelSet.distField>` on *grid* (if given) as a list (of list of list; use .tolist() if working initially with 3D numpy arrays), where distField[i][j][k] is the distance value at grid.gridPoint(i,j,k)
 	:param RegularGrid grid: the :yref:`grid carrying the distance field<LevelSet.lsGrid>`, when the latter is directly assigned through *distField*
-        :param Real smearCoeff: passed to :yref:`LevelSet.smearCoeff`
+    :param Real smearCoeff: passed to :yref:`LevelSet.smearCoeff`
 	:param int nSurfNodes: number of boundary nodes, passed to :yref:`LevelSet.nSurfNodes`
 	:param int nodesPath: path for the boundary nodes, passed to :yref:`LevelSet.nodesPath`
 	:param Real nodesTol: tolerance while ray tracing boundary nodes, passed to :yref:`LevelSet.nodesTol`
