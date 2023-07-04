@@ -283,6 +283,7 @@ void ForceContainer::reset(long iter, bool resetAll)
 	if (!permForceUsed) synced = true;
 	else
 		synced = false;
+	permForceSynced = false;
 	lastReset = iter;
 }
 #endif
