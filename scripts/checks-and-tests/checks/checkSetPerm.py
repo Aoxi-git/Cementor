@@ -25,8 +25,8 @@ O.wait()
 v = O.bodies[ID].state.vel[0]
 w = O.bodies[ID].state.angVel[0]
 
-if v < mth.Real("1.0") - mth.Real("1.0e-4"):
-    raise YadeCheckError("setPermF not working, expected vel = 0.5, got vel = ", v)
+if abs(v - mth.Real("1.0001")) > mth.Real("1e-10"):
+    raise YadeCheckError("setPermF not working, expected vel = 1.0001, got vel = ", v)
 
-if w < mth.Real("1.0"):
-    raise YadeCheckError("setPermT not working, expected angVel = 0.5, got angVel = ", w)
+if abs(w - mth.Real("1.0001")) > mth.Real("1e-10"):
+    raise YadeCheckError("setPermT not working, expected angVel = 1.0001, got angVel = ", w)
