@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import datetime
+import traceback
 
 
 class YadeCheckError(Exception):
@@ -84,6 +85,7 @@ for script in scriptsToRun:
 			print("___________________________________")
 		except Exception as e:
 			failedScripts.append(script)
+			traceback.print_exc()
 			print('\033[91m', script, " failure, caught exception ", e.__class__.__name__, ": ", e, '\033[0m')
 		O.reset()
 	elif (not mustCheck(script)[0]):
