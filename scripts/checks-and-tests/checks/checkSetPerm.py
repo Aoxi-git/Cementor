@@ -16,7 +16,7 @@ O.engines=[
 O.forces.setPermF(ID, mne.Vector3(1.0, 0, 0))
 O.forces.setPermT(ID, mne.Vector3(1.0, 0, 0))
 
-O.stopAtTime = mth.Real("1.0")
+O.stopAtIter = 10000
 O.dt = mth.Real("1.0e-4")
 
 O.run()
@@ -25,8 +25,8 @@ O.wait()
 v = O.bodies[ID].state.vel[0]
 w = O.bodies[ID].state.angVel[0]
 
-if abs(v - mth.Real("1.0001")) > mth.Real("1e-10"):
-    raise YadeCheckError("setPermF not working, expected vel = 1.0001, got vel = ", v)
+if abs(v - mth.Real("1.0")) > 1000*mth.epsilon():
+    raise YadeCheckError("setPermF not working, expected vel = 1.0, got vel = ", v)
 
-if abs(w - mth.Real("1.0001")) > mth.Real("1e-10"):
-    raise YadeCheckError("setPermT not working, expected angVel = 1.0001, got angVel = ", w)
+if abs(w - mth.Real("1.0")) > 1000*mth.epsilon():
+    raise YadeCheckError("setPermT not working, expected angVel = 1.0, got angVel = ", w)
