@@ -451,6 +451,9 @@ To add a new check, the following steps must be performed:
 2. Inside the new script use ``checksPath`` when it is necessary to load some data file, like :ysrc:`scripts/checks-and-tests/checks/data/100spheres`
 3. When error occurs raise exception with command ``raise YadeCheckError(messageString)``
 
+
+.. warning:: Due the limitation of :ysrccommit:`execfile <942c1712671adf3b2cda6c0b/scripts/checks-and-tests/checks/checkList.py#L75>` the local variables created in one check script are passed down to the check scripts executed after it. Hence creating a local variable in one script called e.g. ``Body`` will break the scripts executed after it, when they will try to create a new ``Body()``. The workaround is to use unique non-trivial variable names in the check scripts.
+
 GUI Tests
 -----------
 
