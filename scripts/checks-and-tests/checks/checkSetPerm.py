@@ -1,8 +1,8 @@
 import yade.math as mth
 import yade.minieigenHP as mne
 
-Body = utils.sphere(mne.Vector3(0, 0, 0), 1.0)
-ID = O.bodies.append(Body)
+someSphere = utils.sphere(mne.Vector3(0, 0, 0), 1.0)
+ID = O.bodies.append(someSphere)
 O.bodies[ID].state.mass = mth.Real("1.0")
 O.bodies[ID].state.inertia = mne.Vector3(1.0, 1.0, 1.0)
 
