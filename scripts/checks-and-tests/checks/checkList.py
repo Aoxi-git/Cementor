@@ -33,7 +33,7 @@ skipScripts = ['checkList.py']
 # use this if you want to test only one script, it takes precedence over skipScripts.
 onlyOneScript = []
 
-mpiScripts = ['checkMPI.py', 'checkMPISilo.py', 'checkMPI4PYcomm.py']
+mpiScripts = ['checkMPI.py', 'checkMPISilo.py', 'checkMPI4PYcomm.py', 'checkMPYcomm.py']
 # singleCore = singleCore + mpiScripts # ignore hybrid MPIxOMP
 
 
