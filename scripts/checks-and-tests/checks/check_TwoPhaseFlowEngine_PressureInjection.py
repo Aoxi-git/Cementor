@@ -5,6 +5,7 @@ if (('PFVFLOW' in features) and ('TWOPHASEFLOW' in features)):
 	from yade import plot
 	import time
 	from math import *
+	import builtins
 
 	num_spheres = 1000  # number of spheres
 	young = 1e6
@@ -93,7 +94,7 @@ if (('PFVFLOW' in features) and ('TWOPHASEFLOW' in features)):
 	flow.iniVoidVolumes = True
 	newton.damping = 0.1
 	GlobalStiffnessTimeStepper.dead = True
-	O.dt = min(0.8 * PWaveTimeStep(), 0.8 * 1. / 1200. * pi / flow.viscosity * graindensity * radius**2)
+	O.dt = builtins.min(0.8 * PWaveTimeStep(), 0.8 * 1. / 1200. * pi / flow.viscosity * graindensity * radius**2)
 	O.dynDt = False
 
 	flow.surfaceTension = 0.0

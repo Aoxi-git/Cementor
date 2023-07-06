@@ -4,6 +4,7 @@ from __future__ import print_function
 from past.builtins import execfile
 import yade
 import math
+import builtins
 import os
 import sys
 import time
@@ -77,7 +78,7 @@ for script in scriptsToRun:
 			execfile(checksPath + "/" + script)
 			t1 = time.time()
 			elapsedTime = t1 - t0
-			maxElapsedTime = max(elapsedTime, maxElapsedTime)
+			maxElapsedTime = builtins.max(elapsedTime, maxElapsedTime)
 			print(
 			        "Status:\033[92m success\033[0m, time spent on this check:" + ("\033[92m " if elapsedTime < 30 else "\033[91m ") +
 			        str(datetime.timedelta(seconds=elapsedTime)) + "\033[0m"
