@@ -197,6 +197,7 @@ void ForceContainer::sync()
 #pragma GCC diagnostic ignored "-Wpragmas"
 // this is to remove warning about manipulating raw memory
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
 
 void ForceContainer::reset(long iter, bool resetAll)
 {
@@ -210,10 +211,18 @@ void ForceContainer::reset(long iter, bool resetAll)
 // no need to reset force-torque per thread since they are set to zero in sync() already
 #pragma omp parallel for schedule(static)
 		for (unsigned long k = 0; k < currSize; k++) /*_force[sdIds[k]]=Vector3r::Zero(); */
+#if (YADE_REAL_BIT <= 64)
 			memset(&_force[sdIds[k]], 0, sizeof(Vector3r));
+#else
+			_force[sdIds[k]] = Vector3r::Zero();
+#endif
 #pragma omp parallel for schedule(static)
 		for (unsigned long k = 0; k < currSize; k++) /*_torque[sdIds[k]]=Vector3r::Zero();*/
+#if (YADE_REAL_BIT <= 64)
 			memset(&_torque[sdIds[k]], 0, sizeof(Vector3r));
+#else
+			_torque[sdIds[k]] = Vector3r::Zero();
+#endif
 		// those need a reset per-thread OTOH
 		if (resetAll) {
 			for (unsigned long k = 0; k < currSize; k++)
@@ -224,13 +233,25 @@ void ForceContainer::reset(long iter, bool resetAll)
 		}
 
 	} else { // else reset everything
+#if (YADE_REAL_BIT <= 64)
 		memset(&_force[0], 0, sizeof(Vector3r) * size);
 		memset(&_torque[0], 0, sizeof(Vector3r) * size);
+#else
+		// the standard way, perfectly optimized by compiler.
+		std::fill(_force.begin(), _force.end(), Vector3r::Zero());
+		std::fill(_torque.begin(), _torque.end(), Vector3r::Zero());
+#endif
 	}
 
 	if (resetAll and permForceUsed) {
+#if (YADE_REAL_BIT <= 64)
 		memset(&_permForce[0], 0, sizeof(Vector3r) * size);
 		memset(&_permTorque[0], 0, sizeof(Vector3r) * size);
+#else
+		// the standard way, perfectly optimized by compiler.
+		std::fill(_permForce.begin(), _permForce.end(), Vector3r::Zero());
+		std::fill(_permTorque.begin(), _permTorque.end(), Vector3r::Zero());
+#endif
 		permForceUsed = false;
 	}
 
@@ -241,51 +262,8 @@ void ForceContainer::reset(long iter, bool resetAll)
 	lastReset       = iter;
 }
 
+#if (YADE_REAL_BIT <= 64)
 #pragma GCC diagnostic pop
-
-#else
-// The same function, but don't use memset
-void ForceContainer::reset(long iter, bool resetAll)
-{
-	syncSizesOfContainers();
-	const shared_ptr<Scene>& scene = Omega::instance().getScene();
-	size_t                   currSize;
-	if (scene->bodies->useRedirection) { //if using short lists we only reset forces for bodies not-vanished
-		scene->bodies->updateRealBodies();
-		const auto& sdIds = scene->bodies->realBodies;
-		currSize          = sdIds.size();
-// no need to reset force-torque per thread since they are set to zero in sync() already
-#pragma omp parallel for schedule(static)
-		for (unsigned long k = 0; k < currSize; k++)
-			_force[sdIds[k]] = Vector3r::Zero();
-#pragma omp parallel for schedule(static)
-		for (unsigned long k = 0; k < currSize; k++)
-			_torque[sdIds[k]] = Vector3r::Zero();
-		// those need a reset per-thread OTOH
-		if (resetAll) {
-			for (unsigned long k = 0; k < currSize; k++)
-				_permForce[sdIds[k]] = Vector3r::Zero();
-			for (unsigned long k = 0; k < currSize; k++)
-				_permTorque[sdIds[k]] = Vector3r::Zero();
-			permForceUsed = false;
-		}
-	} else { // else reset everything
-		// the standard way, perfectly optimized by compiler.
-		std::fill(_force.begin(), _force.end(), Vector3r::Zero());
-		std::fill(_torque.begin(), _torque.end(), Vector3r::Zero());
-	}
-	if (resetAll and permForceUsed) {
-		// the standard way, perfectly optimized by compiler.
-		std::fill(_permForce.begin(), _permForce.end(), Vector3r::Zero());
-		std::fill(_permTorque.begin(), _permTorque.end(), Vector3r::Zero());
-		permForceUsed = false;
-	}
-	if (!permForceUsed) synced = true;
-	else
-		synced = false;
-	permForceSynced = false;
-	lastReset = iter;
-}
 #endif
 
 void ForceContainer::resize(size_t newSize, int threadN)
