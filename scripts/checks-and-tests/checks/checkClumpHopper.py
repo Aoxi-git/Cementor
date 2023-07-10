@@ -5,7 +5,6 @@
 from __future__ import print_function
 from builtins import range
 import itertools
-from numpy import *
 
 kinEnergyMax = 100000
 # Parameters
