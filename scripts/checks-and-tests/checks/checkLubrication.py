@@ -3,7 +3,6 @@
 
 #from yade import plot
 import math
-import builtins
 import os
 
 m_density = 1000
@@ -27,7 +26,7 @@ def check():
 			u_ = m_radius * math.exp(-8 / 9 * O.time / m_tauc)
 			ul = m_radius * m_roughness * 2 + 4. / 3. * math.pi * m_radius**3 * m_density * m_gravity / ph.kn
 
-			u_ = builtins.max(u_, ul)
+			u_ = max(u_, ul)
 			# Take roughness into account
 
 			#plot.addData( t = O.time, u=u, u_=u_);

@@ -2,7 +2,6 @@ from yade import pack
 from yade import export
 from yade import timing
 from yade import plot
-import builtins
 
 if ('PFVFLOW' in features):
 
@@ -90,7 +89,7 @@ if ('PFVFLOW' in features):
 	flow.iniVoidVolumes = True
 	newton.damping = 0.1
 	GlobalStiffnessTimeStepper.dead = True
-	O.dt = builtins.min(0.8 * PWaveTimeStep(), 0.8 * 1. / 1200. * pi / flow.viscosity * graindensity * radius**2)
+	O.dt = min(0.8 * PWaveTimeStep(), 0.8 * 1. / 1200. * pi / flow.viscosity * graindensity * radius**2)
 	O.dynDt = False
 
 	O.run(1, 1)

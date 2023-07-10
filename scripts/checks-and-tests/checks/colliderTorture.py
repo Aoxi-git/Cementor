@@ -2,7 +2,6 @@
 # This script checks collider correctness and performance in bouncing spheres with heavy erase/insert along with iterations
 
 import time
-import builtins
 
 newton.gravity = (0, -10, 0)
 newton.damping = 0
@@ -132,7 +131,7 @@ def signature():
 def testFraction(fraction, withInsert=True):
 	collider.__call__()  #init
 	times = []
-	n = builtins.max(1, int(2 * N * N * fraction))
+	n = max(1, int(2 * N * N * fraction))
 	erase(n)
 	if withInsert:
 		insert(n)
