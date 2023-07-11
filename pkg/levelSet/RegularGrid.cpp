@@ -36,7 +36,7 @@ Vector3i RegularGrid::closestCorner(const Vector3r& pt, const bool& unbound) con
 
 	if(unbound){
 	// Return the indices of the closest gridpoint that is smaller (for all axes) than pt. Used to locate pt both within or outside lsGrid.
-	// Check all axes, if the point is outside the bounds assing an index outside of the list. Otherwise, assign the closest smaller corner index.
+	// Check all axes, if the point is outside the bounds assign an index outside of the list. Otherwise, assign the closest smaller corner index.
 	for (unsigned int index = 0; index < 3; index++) {
 		if (pt[index] < gridMin[index] - epsilonScaled){
 			retIndices[index] = -1;
