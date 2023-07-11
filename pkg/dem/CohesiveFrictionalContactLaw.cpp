@@ -124,138 +124,181 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	}
 	
 	if (contact->isFresh(scene)) shearForceFirst = Vector3r::Zero();
-	Real un = geom->penetrationDepth;
+	const Real& un = geom->penetrationDepth;
+	State* de1        = Body::byId(id1, scene)->state.get();
+	State* de2        = Body::byId(id2, scene)->state.get();
+
+	//  ____________________ 1. Linear elasticity giving "trial" force/torques _________________
+	
+	// NORMAL
 	Real Fn = phys->kn * (un - phys->unp);
+	
+	// SHEAR
+	// creep if necessecary
+	if (shear_creep) shearForceFirst -= phys->ks * (shearForceFirst * dt / creep_viscosity);
+	// update orientation
+	Vector3r&       shearForce = geom->rotate(phys->shearForce);
+	// increment
+	const Vector3r& dus        = geom->shearIncrement();
+	shearForce -= phys->ks * dus;
 
-	if (phys->fragile && (-Fn) > phys->normalAdhesion) {
-		// BREAK due to tension
-		return false;
-	} else {
-		if ((-Fn) > phys->normalAdhesion) { //normal plasticity
-			Fn        = -phys->normalAdhesion;
-			phys->unp = un + phys->normalAdhesion / phys->kn;
-			if (phys->unpMax >= 0
-			    && -phys->unp > phys->unpMax) // Actually unpMax should be defined as a function of the average particule sizes for instance
-				return false;
+	// TORQUES
+	bool computeMoment = phys->momentRotationLaw && (!phys->cohesionBroken || always_use_moment_law);
+	if (computeMoment) {
+		if (!useIncrementalForm) {
+			if (twist_creep) {
+				Real        viscosity_twist     = creep_viscosity * math::pow((2 * math::min(geom->radius1, geom->radius2)), 2) / 16.0;
+				Real        angle_twist_creeped = geom->getTwist() * (1 - dt / viscosity_twist);
+				Quaternionr q_twist(AngleAxisr(geom->getTwist(), geom->normal));
+				Quaternionr q_twist_creeped(AngleAxisr(angle_twist_creeped, geom->normal));
+				Quaternionr q_twist_delta(q_twist_creeped * q_twist.conjugate());
+				geom->twistCreep = geom->twistCreep * q_twist_delta;
+			}
+			if (phys->ktw >0) phys->moment_twist   = (geom->getTwist() * phys->ktw) * geom->normal;
+			else phys->moment_twist = Vector3r::Zero();
+			if (phys->kr >0) phys->moment_bending = geom->getBending() * phys->kr;
+			else phys->moment_bending = Vector3r::Zero();
+		} else { // Use incremental formulation to compute moment_twis and moment_bending (no twist_creep is applied)
+			if (twist_creep)
+				LOG_WARN_ONCE("Law2_ScGeom6D_CohFrictPhys_CohesionMoment: no twis creep is included if the incremental formulation is used.");
+			Vector3r relAngVel = geom->getRelAngVel(de1, de2, dt);
+			// *** Bending ***//
+			if (phys->kr >0) {
+				Vector3r relAngVelBend = relAngVel - geom->normal.dot(relAngVel) * geom->normal; // keep only the bending part
+				// incremental formulation for the bending moment (as for the shear part)
+				phys->moment_bending           = geom->rotate(phys->moment_bending); // rotate moment vector (updated)
+				phys->moment_bending           = phys->moment_bending - phys->kr * relAngVelBend * dt;
+			}
+			else phys->moment_bending = Vector3r::Zero();
+			// ----------------------------------------------------------------------------------------
+			// *** Torsion ***//
+			if (phys->ktw > 0) {
+				Vector3r relAngVelTwist = geom->normal.dot(relAngVel) * geom->normal;
+				Vector3r relRotTwist    = relAngVelTwist * dt; // component of relative rotation along n
+				// incremental formulation for the torsional moment
+				phys->moment_twist           = geom->rotate(phys->moment_twist);             // rotate moment vector (updated)
+				phys->moment_twist           = phys->moment_twist - phys->ktw * relRotTwist;
+			}
+			else phys->moment_twist = Vector3r::Zero();
 		}
-		phys->normalForce = Fn * geom->normal;
-		State* de1        = Body::byId(id1, scene)->state.get();
-		State* de2        = Body::byId(id2, scene)->state.get();
-		///////////////////////// CREEP START ///////////
-		if (shear_creep) shearForceFirst -= phys->ks * (shearForceFirst * dt / creep_viscosity);
-		///////////////////////// CREEP END ////////////
+	}
+	//  ____________________ 2. Failure and plasticity _________________
+	
+	
 
-		Vector3r&       shearForce = geom->rotate(phys->shearForce);
-		const Vector3r& dus        = geom->shearIncrement();
-
-		//Linear elasticity giving "trial" shear force
-		shearForce -= phys->ks * dus;
-
-		Real Fs    = phys->shearForce.norm();
-		Real maxFs = phys->shearAdhesion;
+// 	void checkFailureCriteria(ScGeom6D* geom, CohFrictPhys* phys, Real Fn, bool computeMoment)
+	
+	// Check normal force first since other components depend on it
+	if (phys->fragile && (-Fn) > phys->normalAdhesion) return false; // break due to tension, interaction will be reset
+	
+	if ((-Fn) > phys->normalAdhesion) { //normal plasticity
+		Fn        = -phys->normalAdhesion;
+		phys->unp = un + phys->normalAdhesion / phys->kn;
+		if (phys->unpMax >= 0
+			&& -phys->unp > phys->unpMax) // Actually unpMax should be defined as a function of the average particule sizes for instance
+			return false;
+	}
+	phys->normalForce = Fn * geom->normal;
+	
+	Real Fs = phys->ks>0 ? phys->shearForce.norm() : 0;
+	Real maxFs = 0;
+	Real scalarRoll = 0;
+	Real scalarTwist = 0;
+	Real RollMax = 0;
+	Real TwistMax = 0;
+	if (computeMoment) {
+		scalarRoll = phys->kr>0 ? phys->moment_bending.norm() : 0;
+		scalarTwist = phys->ktw>0 ? phys->moment_twist.norm() : 0;
+	}
+	// if one component leads to failure, it can change the threshold for other components too, hence a "while" to recompute all when one fails
+	bool allTested = false;
+	while (not allTested) {
+		// Max shear force		
+		maxFs = phys->shearAdhesion;
 		if (!phys->cohesionDisablesFriction || maxFs == 0) maxFs += Fn * phys->tangensOfFrictionAngle;
 		maxFs = math::max((Real)0, maxFs);
-		if (Fs > maxFs) { //Plasticity condition on shear force
-			if (phys->fragile && !phys->cohesionBroken) {
-				phys->SetBreakingState();
-				maxFs = max((Real)0, Fn * phys->tangensOfFrictionAngle);
-			}
-			maxFs               = maxFs / Fs;
-			Vector3r trialForce = shearForce;
-			shearForce *= maxFs;
-			if (scene->trackEnergy || traceEnergy) {
-				Real sheardissip = ((1 / phys->ks) * (trialForce - shearForce)) /*plastic disp*/.dot(shearForce) /*active force*/;
-				if (sheardissip > 0) {
-					plasticDissipation += sheardissip;
-					if (scene->trackEnergy) scene->energy->add(sheardissip, "shearDissip", shearDissipIx, /*reset*/ false);
-				}
-			}
-			if (Fn < 0) phys->normalForce = Vector3r::Zero(); //Vector3r::Zero()
+		if (phys->fragile and not phys->cohesionBroken and Fs > maxFs) {
+			phys->SetBreakingState(always_use_moment_law);
+			continue;
 		}
-		//Apply the force
-		applyForceAtContactPoint(
-		        -phys->normalForce - shearForce,
-		        geom->contactPoint,
-		        id1,
-		        de1->se3.position,
-		        id2,
-		        de2->se3.position + (scene->isPeriodic ? scene->cell->intrShiftPos(contact->cellDist) : Vector3r::Zero()));
-
-		/// Moment law  ///
-		if (phys->momentRotationLaw && (!phys->cohesionBroken || always_use_moment_law)) {
-			if (!useIncrementalForm) {
-				if (twist_creep) {
-					Real        viscosity_twist     = creep_viscosity * math::pow((2 * math::min(geom->radius1, geom->radius2)), 2) / 16.0;
-					Real        angle_twist_creeped = geom->getTwist() * (1 - dt / viscosity_twist);
-					Quaternionr q_twist(AngleAxisr(geom->getTwist(), geom->normal));
-					Quaternionr q_twist_creeped(AngleAxisr(angle_twist_creeped, geom->normal));
-					Quaternionr q_twist_delta(q_twist_creeped * q_twist.conjugate());
-					geom->twistCreep = geom->twistCreep * q_twist_delta;
-				}
-				phys->moment_twist   = (geom->getTwist() * phys->ktw) * geom->normal;
-				phys->moment_bending = geom->getBending() * phys->kr;
-			} else { // Use incremental formulation to compute moment_twis and moment_bending (no twist_creep is applied)
-				if (twist_creep)
-					throw std::invalid_argument("Law2_ScGeom6D_CohFrictPhys_CohesionMoment: no twis creep is included if the incremental "
-					                            "form for the rotations is used.");
-				Vector3r relAngVel = geom->getRelAngVel(de1, de2, dt);
-				// *** Bending ***//
-				Vector3r relAngVelBend = relAngVel - geom->normal.dot(relAngVel) * geom->normal; // keep only the bending part
-				Vector3r relRotBend    = relAngVelBend * dt;                                     // relative rotation due to rolling behaviour
-				// incremental formulation for the bending moment (as for the shear part)
-				Vector3r& momentBend = phys->moment_bending;
-				momentBend           = geom->rotate(momentBend); // rotate moment vector (updated)
-				momentBend           = momentBend - phys->kr * relRotBend;
-				// ----------------------------------------------------------------------------------------
-				// *** Torsion ***//
-				Vector3r relAngVelTwist = geom->normal.dot(relAngVel) * geom->normal;
-				Vector3r relRotTwist    = relAngVelTwist * dt; // component of relative rotation along n  FIXME: sign?
-				// incremental formulation for the torsional moment
-				Vector3r& momentTwist = phys->moment_twist;
-				momentTwist           = geom->rotate(momentTwist);             // rotate moment vector (updated)
-				momentTwist           = momentTwist - phys->ktw * relRotTwist; // FIXME: sign?
+		if (computeMoment) {
+			// Check rolling
+			if (phys->kr > 0 and (phys->maxRollPl >= 0. or phys->rollingAdhesion >=0)) {
+				RollMax = phys->rollingAdhesion;
+				if (!phys->cohesionDisablesFriction or phys->cohesionBroken) RollMax += phys->maxRollPl * Fn;
+				RollMax = math::max((Real)0, RollMax);
 			}
-			/// Plasticity ///
-			// limit rolling moment to the plastic value, if required
-			if (phys->maxRollPl >= 0.) { // do we want to apply plasticity?
-				Real RollMax = phys->maxRollPl * math::max(0., Fn);
-				if (!useIncrementalForm)
-					LOG_WARN("If :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::useIncrementalForm` is false, then plasticity will not "
-					         "be applied correctly (the total formulation would not reproduce irreversibility).");
-				Real scalarRoll = phys->moment_bending.norm();
-				if (scalarRoll > RollMax) { // fix maximum rolling moment
-					Real ratio = RollMax / scalarRoll;
-					phys->moment_bending *= ratio;
-					if (scene->trackEnergy) {
-						Real bendingdissip = ((1 / phys->kr) * (scalarRoll - RollMax) * RollMax) /*active force*/;
-						if (bendingdissip > 0) scene->energy->add(bendingdissip, "bendingDissip", bendingDissipIx, /*reset*/ false);
-					}
-				}
+			if (phys->fragile and not phys->cohesionBroken and scalarRoll > RollMax) {
+				phys->SetBreakingState(always_use_moment_law);
+				continue;
 			}
-			// limit twisting moment to the plastic value, if required
-			if (phys->maxTwistPl >= 0.) { // do we want to apply plasticity?
-				Real TwistMax = phys->maxTwistPl * math::max(0., Fn);
-				if (!useIncrementalForm)
-					LOG_WARN("If :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::useIncrementalForm` is false, then plasticity will not "
-					         "be applied correctly (the total formulation would not reproduce irreversibility).");
-				Real scalarTwist = phys->moment_twist.norm();
-				if (scalarTwist > TwistMax) { // fix maximum rolling moment
-					Real ratio = TwistMax / scalarTwist;
-					phys->moment_twist *= ratio;
-					if (scene->trackEnergy) {
-						Real twistdissip = ((1 / phys->ktw) * (scalarTwist - TwistMax) * TwistMax) /*active force*/;
-						if (twistdissip > 0) scene->energy->add(twistdissip, "twistDissip", twistDissipIx, /*reset*/ false);
-					}
-				}
-			} 
-			
-			// Apply moments now
-			Vector3r moment = phys->moment_twist + phys->moment_bending;
-			scene->forces.addTorque(id1, -moment);
-			scene->forces.addTorque(id2, moment);
+			// Check twisting		
+			if (phys->ktw > 0 and (phys->maxTwistPl >= 0. or phys->twistingAdhesion >=0)) {
+				TwistMax = phys->twistingAdhesion;
+				if (!phys->cohesionDisablesFriction or (phys->cohesionBroken and always_use_moment_law)) TwistMax += phys->maxTwistPl * Fn;
+				TwistMax = math::max((Real)0, TwistMax);
+			}
+			if (phys->fragile and not phys->cohesionBroken and scalarTwist > TwistMax) {
+				phys->SetBreakingState(always_use_moment_law);
+				continue;
+			}
 		}
-		/// Moment law END       ///
+		allTested = true;
 	}
+	if (phys->cohesionBroken and Fn < 0) phys->normalForce = Vector3r::Zero(); // cancel the traction computed above if it's now broken
+	
+	if (Fs > maxFs) { //Plasticity condition on shear force
+		maxFs               = maxFs / Fs;
+		Vector3r trialForce = shearForce;
+		shearForce *= maxFs;
+		if (scene->trackEnergy || traceEnergy) {
+			Real sheardissip = ((1 / phys->ks) * (trialForce - shearForce)) /*plastic disp*/.dot(shearForce) /*active force*/;
+			if (sheardissip > 0) {
+				plasticDissipation += sheardissip;
+				if (scene->trackEnergy) scene->energy->add(sheardissip, "shearDissip", shearDissipIx, /*reset*/ false);
+			}
+		}
+	}
+	//Apply the force
+	applyForceAtContactPoint(
+			-phys->normalForce - shearForce,
+			geom->contactPoint,
+			id1,
+			de1->se3.position,
+			id2,
+			de2->se3.position + (scene->isPeriodic ? scene->cell->intrShiftPos(contact->cellDist) : Vector3r::Zero()));
+
+	if (computeMoment) {
+		// limit rolling moment to the plastic value, if required
+		if (!useIncrementalForm)
+				LOG_WARN_ONCE("If :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::useIncrementalForm` is false, then plasticity will not "
+							"be applied correctly (the total formulation would not reproduce irreversibility).");
+		if (scalarRoll > RollMax) { // fix maximum rolling moment
+			Real ratio = RollMax / scalarRoll;
+			phys->moment_bending *= ratio;
+			if (scene->trackEnergy) {
+				Real bendingdissip = ((1 / phys->kr) * (scalarRoll - RollMax) * RollMax) /*active force*/;
+				if (bendingdissip > 0) scene->energy->add(bendingdissip, "bendingDissip", bendingDissipIx, /*reset*/ false);
+			}
+		}
+		// limit twisting moment to the plastic value, if required
+		if (!useIncrementalForm)
+				LOG_WARN_ONCE("If :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::useIncrementalForm` is false, then plasticity will not "
+							"be applied correctly (the total formulation would not reproduce irreversibility).");
+		if (scalarTwist > TwistMax) { // fix maximum rolling moment
+			Real ratio = TwistMax / scalarTwist;
+			phys->moment_twist *= ratio;
+			if (scene->trackEnergy) {
+				Real twistdissip = ((1 / phys->ktw) * (scalarTwist - TwistMax) * TwistMax) /*active force*/;
+				if (twistdissip > 0) scene->energy->add(twistdissip, "twistDissip", twistDissipIx, /*reset*/ false);
+			}
+		}
+		// Apply moments now
+		Vector3r moment = phys->moment_twist + phys->moment_bending;
+		scene->forces.addTorque(id1, -moment);
+		scene->forces.addTorque(id2, moment);
+	}
+	/// Moment law END       ///
 	return true;
 }
 
