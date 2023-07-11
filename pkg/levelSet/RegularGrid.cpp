@@ -35,19 +35,19 @@ Vector3i RegularGrid::closestCorner(const Vector3r& pt, const bool& unbound) con
 	Real     epsilonScaled(Mathr::EPSILON * spacing);
 
 	if(unbound){
-	// Return the indices of the closest gridpoint that is smaller (for all axes) than pt. Used to locate pt both within or outside lsGrid.
-	// Check all axes, if the point is outside the bounds assign an index outside of the list. Otherwise, assign the closest smaller corner index.
-	for (unsigned int index = 0; index < 3; index++) {
-		if (pt[index] < gridMin[index] - epsilonScaled){
-			retIndices[index] = -1;
-		} else if (pt[index] > gridMax[index] + epsilonScaled){
-			retIndices[index] = nGP[index];
-		} else {
-			retIndices[index] = int((pt[index] - gridMin[index]) / spacing); // Casting to int floors the value
+		// Return the indices of the closest gridpoint that is smaller (for all axes) than pt. Used to locate pt both within or outside lsGrid.
+		// Check all axes, if the point is outside the bounds assign an index outside of the list. Otherwise, assign the closest smaller corner index.
+		for (unsigned int index = 0; index < 3; index++) {
+			if (pt[index] < gridMin[index] - epsilonScaled){
+				retIndices[index] = -1;
+			} else if (pt[index] > gridMax[index] + epsilonScaled){
+				retIndices[index] = nGP[index];
+			} else {
+				retIndices[index] = int((pt[index] - gridMin[index]) / spacing); // Casting to int floors the value
+			}
 		}
-	}
-	// No need to check whether pt lies exactly on a boundary of the grid or not.
-	// In such rare cases, any level-set extrapolation will result in a nearly identical values anyway.
+		// No need to check whether pt lies exactly on a boundary of the grid or not.
+		// In such rare cases, any level-set extrapolation will result in a nearly identical values anyway.
 
 	}else{
 		//	Return the indices of the closest gridpoint which is smaller (for all components) than pt, for locating pt only within lsGrid
