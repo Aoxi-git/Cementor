@@ -395,7 +395,7 @@ def levelSetBody(
 	:param Real nodesTol: tolerance while ray tracing boundary nodes, passed to :yref:`LevelSet.nodesTol`
 	:param Quaternion orientation: the initial orientation of the body
 	:param bool hasAABE: flag indicating if the axis-aligned bounding ellipsoid (AABE), passed to :yref:`LevelSet.hasAABE`
-	:param Vector3 axesAABE: principal half-axes of the axis aligned bounding ellipsoid (AABE), passed to :yref:`LevelSet.axesAABE`
+	:param Vector3 axesAABE: principal half-axes of the axis aligned bounding ellipsoid (AABE) when *hasAABE*, passed to :yref:`LevelSet.axesAABE`
 	:param bool dynamic: passed to :yref:`Body.dynamic`
 	:param Material material: passed to :yref:`Body.material`
 	:return: a corresponding body instance"""
