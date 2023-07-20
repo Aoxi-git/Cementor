@@ -33,8 +33,6 @@ public:
 		((Real,etaTwist,-1.,,"Dimensionless twisting strength. If negative, twist moment will be elastic."))
 		((Real,normalCohesion,-1,,"Tensile strength, homogeneous to a pressure. If negative the normal force is purely elastic."))
 		((Real,shearCohesion,-1,,"Shear strength, homogeneous to a pressure. If negative the shear force is purely elastic."))
-		((Real,rollingCohesion,-1,,"Rolling/bending strength, homogeneous to a pressure. If negative the torque is purely elastic."))
-		((Real,twistingCohesion,-1,,"Twisting strength, homogeneous to a pressure. If negative the torque is purely elastic."))
 		((bool,fragile,true,,"do cohesion disappear when contact strength is exceeded"))
 		((bool,momentRotationLaw,false,,"Use bending/twisting moment at contact. The contact may have moments only if both bodies have this flag true. See :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment.always_use_moment_law` for details."))
 		,
