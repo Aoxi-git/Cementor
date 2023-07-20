@@ -164,9 +164,8 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	{
 		if (phys->maxRollPl >= 0. and phys->maxTwistPl < 0.) LOG_WARN_ONCE("rolling moment is bounded but twisting moment is not (interaction "<<id1<<"-"<<id2<<"), check etaRoll and etaTwist of the materials if it is not intentional.");
 		if (phys->maxRollPl < 0. and phys->maxTwistPl >= 0.) LOG_WARN_ONCE("twisting moment is bounded but rolling moment is not (interaction "<<id1<<"-"<<id2<<"), check etaRoll and etaTwist of the materials if it is not intentional.");
-		if	((phys->maxRollPl >= 0. or phys->rollingAdhesion >=0 or phys->maxTwistPl or phys->twistingAdhesion >= 0) and not useIncrementalForm) LOG_WARN_ONCE("If :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::useIncrementalForm` is false, then plasticity will not "
-							"be applied correctly to torques (the total formulation will not reproduce irreversibility).");
-
+		if	((phys->maxRollPl >= 0. or phys->rollingAdhesion >=0 or phys->maxTwistPl or phys->twistingAdhesion >= 0) and not useIncrementalForm) LOG_WARN_ONCE("If :yref:`Law2_ScGeom6D_CohFrictPhys_CohesionMoment::useIncrementalForm` is false, then plasticity will not be applied correctly to torques (the total formulation will not reproduce irreversibility).");
+		if	((always_use_moment_law or phys->maxRollPl!=0 or phys->maxTwistPl != 0 or phys->ktw !=0 or phys->kr !=0) and not phys->momentRotationLaw) LOG_WARN_ONCE("Interaction "  <<id1<<"-"<<id2<< "has some parameters related to contact moment defined but it will be ignored because i.phys.momentRotationLaw is False. Make sure momentRotationLaw is True in the material class if moments are needed.");
 		consistencyCheck = false;
 	}
 	
@@ -244,6 +243,7 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 
 	// fragile case
 	if (phys->fragile and not phys->cohesionBroken) {
+		// check if the interaction breaks. If it breaks, remove cohesion and chack plasticity again
 		bool breaks = checkPlasticity(geom, phys, Fn, Fs, maxFs, scalarRoll, maxRoll, scalarTwist, maxTwist, computeMoment, /*checkAll?*/ false);
 		if (breaks) {
 			// delete interaction if contact is lost 
@@ -253,7 +253,7 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 			checkPlasticity(geom, phys, Fn, Fs, maxFs, scalarRoll, maxRoll, scalarTwist, maxTwist, computeMoment, true);
 		}
 	}
-	// 2/ ductile/broken case
+	// ductile/broken case
 	else checkPlasticity(geom, phys, Fn, Fs, maxFs, scalarRoll, maxRoll, scalarTwist, maxTwist, computeMoment, true);
 	
 	// delete interaction if no contact
@@ -340,9 +340,13 @@ void Ip2_CohFrictMat_CohFrictMat_CohFrictPhys::go(
 	}
 
 	if (geom) {
-		const auto normalAdhPreCalculated
+		const auto normalCohPreCalculated
 		        = (normalCohesion) ? (*normalCohesion)(b1->id, b2->id) : math::min(sdec1->normalCohesion, sdec2->normalCohesion);
-		const auto shearAdhPreCalculated = (shearCohesion) ? (*shearCohesion)(b1->id, b2->id) : math::min(sdec1->shearCohesion, sdec2->shearCohesion);
+		const auto shearCohPreCalculated = (shearCohesion) ? (*shearCohesion)(b1->id, b2->id) : math::min(sdec1->shearCohesion, sdec2->shearCohesion);
+		// the max stress in pure bending is 4*M/πr^3 = 4*M/(Ar) (for a circular cross-section), if it controls failure, max moment is (r/4)*normalAdhesion
+		const auto rollingAdhPreCalculated  = (rollingCohesion) ? (*rollingCohesion)(b1->id, b2->id) : 0.25 * normalCohPreCalculated * pow(math::min(geom->radius2, geom->radius1), 3);
+		// the max shear stress in pure twisting is 2*Mt/πr^3 = 2*Mt/(Ar) (for a circular cross-section), if it controls failure, max moment is (r/2)*shearAdhesion
+		const auto twistingAdhPreCalculated  = (twistingCohesion) ? (*twistingCohesion)(b1->id, b2->id) : 0.5 * shearCohPreCalculated * pow(math::min(geom->radius2, geom->radius1), 3);
 
 		if (!interaction->phys) {
 			interaction->phys            = shared_ptr<CohFrictPhys>(new CohFrictPhys());
@@ -380,8 +384,10 @@ void Ip2_CohFrictMat_CohFrictMat_CohFrictPhys::go(
 
 			if ((setCohesionOnNewContacts || setCohesionNow) && sdec1->isCohesive && sdec2->isCohesive) {
 				contactPhysics->cohesionBroken = false;
-				contactPhysics->normalAdhesion = normalAdhPreCalculated * pow(math::min(Db, Da), 2);
-				contactPhysics->shearAdhesion  = shearAdhPreCalculated * pow(math::min(Db, Da), 2);
+				contactPhysics->normalAdhesion = normalCohPreCalculated * pow(math::min(Db, Da), 2);
+				contactPhysics->shearAdhesion  = shearCohPreCalculated * pow(math::min(Db, Da), 2);
+				contactPhysics->rollingAdhesion  = rollingAdhPreCalculated * pow(math::min(geom->radius2, geom->radius1), 3);
+				contactPhysics->twistingAdhesion  = twistingAdhPreCalculated * pow(math::min(geom->radius2, geom->radius1), 3);
 				geom->initRotations(*(Body::byId(interaction->getId1(), scene)->state), *(Body::byId(interaction->getId2(), scene)->state));
 				contactPhysics->fragile = (sdec1->fragile || sdec2->fragile);
 			}
@@ -395,9 +401,10 @@ void Ip2_CohFrictMat_CohFrictMat_CohFrictPhys::go(
 			CohFrictPhys* contactPhysics = YADE_CAST<CohFrictPhys*>(interaction->phys.get());
 			if ((setCohesionNow && sdec1->isCohesive && sdec2->isCohesive) || contactPhysics->initCohesion) {
 				contactPhysics->cohesionBroken = false;
-				contactPhysics->normalAdhesion = normalAdhPreCalculated * pow(math::min(geom->radius2, geom->radius1), 2);
-				contactPhysics->shearAdhesion  = shearAdhPreCalculated * pow(math::min(geom->radius2, geom->radius1), 2);
-
+				contactPhysics->normalAdhesion = normalCohPreCalculated * pow(math::min(geom->radius2, geom->radius1), 2);
+				contactPhysics->shearAdhesion  = shearCohPreCalculated * pow(math::min(geom->radius2, geom->radius1), 2);
+				contactPhysics->rollingAdhesion  = rollingAdhPreCalculated * pow(math::min(geom->radius2, geom->radius1), 3);
+				contactPhysics->twistingAdhesion  = twistingAdhPreCalculated * pow(math::min(geom->radius2, geom->radius1), 3);
 				geom->initRotations(*(Body::byId(interaction->getId1(), scene)->state), *(Body::byId(interaction->getId2(), scene)->state));
 				contactPhysics->fragile      = (sdec1->fragile || sdec2->fragile);
 				contactPhysics->initCohesion = false;
