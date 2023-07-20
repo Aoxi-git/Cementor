@@ -134,7 +134,7 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::checkPlasticity(ScGeom6D* geom, 
 			if (phys->cohesionBroken or !phys->cohesionDisablesFriction) maxRoll += phys->maxRollPl * Fn;
 			maxRoll = math::max((Real)0, maxRoll);
 			scalarRoll = phys->moment_bending.norm();
-			breaks = breaks or scalarRoll > maxRoll;
+			breaks = breaks or (scalarRoll > maxRoll and phys->rollingAdhesion >0);
 			if (breaks and not checkAll) return true; 
 		}
 		// Check max twisting torque
@@ -143,7 +143,7 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::checkPlasticity(ScGeom6D* geom, 
 			if (phys->cohesionBroken or !phys->cohesionDisablesFriction) maxTwist += phys->maxTwistPl * Fn;
 			maxTwist = math::max((Real)0, maxTwist);
 			scalarTwist = phys->moment_twist.norm();
-			breaks = breaks or scalarTwist > maxTwist;
+			breaks = breaks or (scalarTwist > maxTwist and phys->twistingAdhesion >0);
 			if (breaks and not checkAll) return true; 
 		}
 	}
