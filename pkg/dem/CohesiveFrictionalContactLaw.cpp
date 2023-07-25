@@ -217,8 +217,48 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::checkPlasticity(ScGeom6D* geom, 
 }
 
 
-void Law2_ScGeom6D_CohFrictPhys_CohesionMoment::setElasticForces(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I)
+void Law2_ScGeom6D_CohFrictPhys_CohesionMoment::setElasticForces(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip, Interaction* I, bool computeMoment, Real& Fn, const Real& dt)
 {
+	State* de1        = Body::byId(I->getId1(), scene)->state.get();
+	State* de2        = Body::byId(I->getId2(), scene)->state.get();
+	ScGeom6D*     geom            = YADE_CAST<ScGeom6D*>(ig.get());
+	CohFrictPhys* phys            = YADE_CAST<CohFrictPhys*>(ip.get());
+	// NORMAL
+	Fn = phys->kn * (geom->penetrationDepth - phys->unp);
+	
+	// SHEAR
+// 	// update orientation
+// 	Vector3r&       shearForce = geom->rotate(phys->shearForce);
+	// increment
+	const Vector3r& dus        = geom->shearIncrement();
+	phys->shearForce -= phys->ks * dus;
+
+	// TORQUES
+	if (computeMoment) {
+		if (!useIncrementalForm) {
+			if (phys->ktw >0) phys->moment_twist   = (geom->getTwist() * phys->ktw) * geom->normal;
+			else phys->moment_twist = Vector3r::Zero();
+			if (phys->kr >0) phys->moment_bending = geom->getBending() * phys->kr;
+			else phys->moment_bending = Vector3r::Zero();
+		} else { // Use incremental formulation to compute moment_twis and moment_bending (no twist_creep is applied)
+			Vector3r relAngVel = geom->getRelAngVel(de1, de2, dt);
+			// *** Bending ***//
+			if (phys->kr >0) {
+				Vector3r relAngVelBend = relAngVel - geom->normal.dot(relAngVel) * geom->normal; // keep only the bending part
+				// incremental formulation for the bending moment (as for the shear part)
+				phys->moment_bending           = phys->moment_bending - phys->kr * relAngVelBend * dt;
+			}
+			else phys->moment_bending = Vector3r::Zero();
+			// ----------------------------------------------------------------------------------------
+			// *** Torsion ***//
+			if (phys->ktw > 0) {
+				Vector3r relAngVelTwist = geom->normal.dot(relAngVel) * geom->normal;
+				Vector3r relRotTwist    = relAngVelTwist * dt; // component of relative rotation along n
+				phys->moment_twist           = phys->moment_twist - phys->ktw * relRotTwist;
+			}
+			else phys->moment_twist = Vector3r::Zero();
+		}
+	}
 }
 
 bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip, Interaction* contact)
@@ -226,6 +266,8 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	const Real&   dt              = scene->dt;
 	const int&    id1             = contact->getId1();
 	const int&    id2             = contact->getId2();
+	State* de1        = Body::byId(id1, scene)->state.get();
+	State* de2        = Body::byId(id2, scene)->state.get();
 	ScGeom6D*     geom            = YADE_CAST<ScGeom6D*>(ig.get());
 	CohFrictPhys* phys            = YADE_CAST<CohFrictPhys*>(ip.get());
 	Vector3r&     shearForceFirst = phys->shearForce;
@@ -241,73 +283,42 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	}
 	
 	if (contact->isFresh(scene)) shearForceFirst = Vector3r::Zero();
-	State* de1        = Body::byId(id1, scene)->state.get();
-	State* de2        = Body::byId(id2, scene)->state.get();
 	
-	// creep if necessecary
+	//  ____________________ Creep current forces if necessary _________________
 	if (shear_creep) shearForceFirst -= phys->ks * (shearForceFirst * dt / creep_viscosity);
-
-	//  ____________________ 1. Linear elasticity giving "trial" force/torques _________________
-	
-
-	// NORMAL
-	Real Fn = phys->kn * (geom->penetrationDepth - phys->unp);
-	
-	// SHEAR
-	// update orientation
-	Vector3r&       shearForce = geom->rotate(phys->shearForce);
-	// increment
-	const Vector3r& dus        = geom->shearIncrement();
-	shearForce -= phys->ks * dus;
-
-	// TORQUES
-	if (computeMoment) {
+	if (twist_creep ) {
 		if (!useIncrementalForm) {
-			if (twist_creep) {
 				Real        viscosity_twist     = creep_viscosity * math::pow((2 * math::min(geom->radius1, geom->radius2)), 2) / 16.0;
 				Real        angle_twist_creeped = geom->getTwist() * (1 - dt / viscosity_twist);
 				Quaternionr q_twist(AngleAxisr(geom->getTwist(), geom->normal));
 				Quaternionr q_twist_creeped(AngleAxisr(angle_twist_creeped, geom->normal));
 				Quaternionr q_twist_delta(q_twist_creeped * q_twist.conjugate());
-				geom->twistCreep = geom->twistCreep * q_twist_delta;
-			}
-			if (phys->ktw >0) phys->moment_twist   = (geom->getTwist() * phys->ktw) * geom->normal;
-			else phys->moment_twist = Vector3r::Zero();
-			if (phys->kr >0) phys->moment_bending = geom->getBending() * phys->kr;
-			else phys->moment_bending = Vector3r::Zero();
-		} else { // Use incremental formulation to compute moment_twis and moment_bending (no twist_creep is applied)
-			if (twist_creep)
-				LOG_WARN_ONCE("Law2_ScGeom6D_CohFrictPhys_CohesionMoment: no twis creep is included if the incremental formulation is used.");
-			Vector3r relAngVel = geom->getRelAngVel(de1, de2, dt);
-			// *** Bending ***//
-			if (phys->kr >0) {
-				Vector3r relAngVelBend = relAngVel - geom->normal.dot(relAngVel) * geom->normal; // keep only the bending part
-				// incremental formulation for the bending moment (as for the shear part)
-				phys->moment_bending           = geom->rotate(phys->moment_bending); // rotate moment vector (updated)
-				phys->moment_bending           = phys->moment_bending - phys->kr * relAngVelBend * dt;
-			}
-			else phys->moment_bending = Vector3r::Zero();
-			// ----------------------------------------------------------------------------------------
-			// *** Torsion ***//
-			if (phys->ktw > 0) {
-				Vector3r relAngVelTwist = geom->normal.dot(relAngVel) * geom->normal;
-				Vector3r relRotTwist    = relAngVelTwist * dt; // component of relative rotation along n
-				// incremental formulation for the torsional moment
-				phys->moment_twist           = geom->rotate(phys->moment_twist);             // rotate moment vector (updated)
-				phys->moment_twist           = phys->moment_twist - phys->ktw * relRotTwist;
-			}
-			else phys->moment_twist = Vector3r::Zero();
-		}
+				geom->twistCreep = geom->twistCreep * q_twist_delta;			
+		} else LOG_WARN_ONCE("Law2_ScGeom6D_CohFrictPhys_CohesionMoment: no twis creep is included if the incremental formulation is used.");
 	}
-	//  ____________________ Failure and plasticity _________________
+	
+	//  ____________________  Update orientation ___________________________________
+	geom->rotate(phys->shearForce);
+	if (computeMoment and useIncrementalForm) {
+		if (phys->kr >0) geom->rotate(phys->moment_bending);
+		if (phys->ktw >0) geom->rotate(phys->moment_twist);
+	}
+
+	//  ____________________ Linear elasticity giving "trial" force/torques _________________
+	
+	Real Fn=0;
+	setElasticForces(ig, ip, contact, computeMoment, Fn, dt);
+
+	//  ____________________ Failure and plasticity _________________________________________
 
 	bool alive = checkPlasticity(geom, phys, Fn, computeMoment);	
-	// delete interaction if no contact
+	
+	// ____________________  Delete interaction if no contact  ______________________________
 	if (not alive) return false;
 
-	//Apply the force
+	//  ____________________  Apply the force _______________________________________________
 	applyForceAtContactPoint(
-			-phys->normalForce - shearForce,
+			-phys->normalForce - phys->shearForce,
 			geom->contactPoint,
 			id1,
 			de1->se3.position,

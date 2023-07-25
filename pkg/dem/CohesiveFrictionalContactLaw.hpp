@@ -96,6 +96,9 @@ public:
 	Real                    getPlasticDissipation() const;
 	void                    initPlasticDissipation(Real initVal = 0);
 	
+	
+	void 					setElasticForces(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip, Interaction* I, bool computeMoment, Real& Fn, const Real& dt);
+	
 	// This function corrects the trial elastic forces and increment energy dissipation,
 	//  it returns true if there is active force/torque, false if the particles are detached (fragile interaction, then the interaction is deleted)
 	bool                    checkPlasticity(ScGeom6D* geom,  CohFrictPhys* phys, Real& Fn, bool computeMoment);
