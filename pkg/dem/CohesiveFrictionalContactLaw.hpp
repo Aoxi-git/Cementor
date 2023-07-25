@@ -96,10 +96,9 @@ public:
 	Real                    getPlasticDissipation() const;
 	void                    initPlasticDissipation(Real initVal = 0);
 	
-	// This function returns true if the force/torque exceed the resistance of the contact
-	// After execution, the parameters from Fn to maxTwist have consistent values if the contact does not break or if it is not fragile
-	// If a fragile contact and breaks, a second execution is necessary to update the maxValues
-	bool                    checkPlasticity(ScGeom6D* geom,  CohFrictPhys* phys, Real& Fn, Real& Fs, Real& maxFs, Real& scalarRoll, Real& maxRoll, Real& scalarTwist, Real& maxTwist, bool computeMoment, bool checkAll);
+	// This function corrects the trial elastic forces and increment energy dissipation,
+	//  it returns true if there is active force/torque, false if the particles are detached (fragile interaction, then the interaction is deleted)
+	bool                    checkPlasticity(ScGeom6D* geom,  CohFrictPhys* phys, Real& Fn, bool computeMoment);
 	
 	bool                    go(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I) override;
 	// clang-format off

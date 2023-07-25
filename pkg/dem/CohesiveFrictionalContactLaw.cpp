@@ -108,48 +108,118 @@ void CohesiveFrictionalContactLaw::action()
 }
 
 
-bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::checkPlasticity(ScGeom6D* geom,  CohFrictPhys* phys, Real& Fn, Real& Fs, Real& maxFs, Real& scalarRoll, Real& maxRoll, Real& scalarTwist, Real& maxTwist, bool computeMoment, bool checkAll)
+bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::checkPlasticity(ScGeom6D* geom, CohFrictPhys* phys, Real& Fn, bool computeMoment)
 {
+	// if one force/torque breaks, skip computing the others since the contact properties have changed.
+	// Update thresholds and compute again, with some recursive calls in section 1. Max recursion depth is 1.
+	
+	//  1. ____________________ Compare force components to their max value  _________________
+	const bool brittle = phys->fragile and not phys->cohesionBroken;
+	Real Fs = 0, maxFs = 0, scalarRoll=0, maxRoll=0, scalarTwist=0, maxTwist=0;
+	
 	// check tensile force magnitude and max plastic disp for normal direction
 	bool breaks = (-Fn) > phys->normalAdhesion or (phys->unpMax >= 0 and -(geom->penetrationDepth + phys->normalAdhesion / phys->kn) > phys->unpMax);
 	// no need to compute the rest if the contact breaks
-	if (breaks and not checkAll) return true; 
-	
+	if ((brittle or phys->unpMax >= 0) and breaks) {
+		phys->SetBreakingState(always_use_moment_law);
+		if (geom->penetrationDepth < 0) return false;  // FIXME: for fragile behavior the dissipated energy is not correct (possibly), it should include the elastic energy lost in breakage 
+		else return checkPlasticity(geom, phys, Fn, computeMoment);
+	}
 	// check max shear force
 	if (phys->ks>0) 
 	{
-		maxFs = phys->shearAdhesion;
+		Real maxFs = phys->shearAdhesion;
 		if (!phys->cohesionDisablesFriction || phys->cohesionBroken) maxFs += Fn * phys->tangensOfFrictionAngle;
 		maxFs = math::max((Real)0, maxFs);
 		Fs = phys->shearForce.norm();
 		breaks = breaks or Fs > maxFs;
-		if (breaks and not checkAll) return true;
+		if (brittle and breaks) {
+			phys->SetBreakingState(always_use_moment_law);
+			if (geom->penetrationDepth < 0) return false;
+			else return checkPlasticity(geom, phys, Fn, computeMoment);
+		}
 	}
-	
+	// check torques
 	if (computeMoment)
 	{
-		// Check max rolling torque
+		// rolling torque
 		if (phys->kr > 0 and (phys->maxRollPl >= 0. or phys->rollingAdhesion >=0)) {
 			maxRoll = phys->rollingAdhesion;
 			if (phys->cohesionBroken or !phys->cohesionDisablesFriction) maxRoll += phys->maxRollPl * Fn;
 			maxRoll = math::max((Real)0, maxRoll);
 			scalarRoll = phys->moment_bending.norm();
 			breaks = breaks or (scalarRoll > maxRoll and phys->rollingAdhesion >0);
-			if (breaks and not checkAll) return true; 
+			if (brittle and breaks) {
+				phys->SetBreakingState(always_use_moment_law);		
+				if (geom->penetrationDepth < 0) return false;
+				else return checkPlasticity(geom, phys, Fn, computeMoment);
+			}
 		}
-		// Check max twisting torque
+		// twisting torque
 		if (phys->ktw > 0 and (phys->maxTwistPl >= 0. or phys->twistingAdhesion >=0)) {
 			maxTwist = phys->twistingAdhesion;
 			if (phys->cohesionBroken or !phys->cohesionDisablesFriction) maxTwist += phys->maxTwistPl * Fn;
 			maxTwist = math::max((Real)0, maxTwist);
 			scalarTwist = phys->moment_twist.norm();
 			breaks = breaks or (scalarTwist > maxTwist and phys->twistingAdhesion >0);
-			if (breaks and not checkAll) return true; 
+			if (brittle and breaks) {
+				phys->SetBreakingState(always_use_moment_law);		
+				if (geom->penetrationDepth < 0) return false;
+				else return checkPlasticity(geom, phys, Fn, computeMoment);
+			}
+		}
+	}	
+	//  2. ____________________ Correct the forces and increment dissipated energy  _________________
+	if ((-Fn) > phys->normalAdhesion) { //normal plasticity
+		if (scene->trackEnergy || traceEnergy) {
+			Real dissipated = ((1 / phys->kn) * (-Fn - phys->normalAdhesion)) *phys->normalAdhesion;
+			plasticDissipation += dissipated;
+			if (scene->trackEnergy) scene->energy->add(dissipated, "normalDissip", normalDissipIx, /*reset*/ false);
+		}
+		Fn  = -phys->normalAdhesion;
+		phys->unp = geom->penetrationDepth + phys->normalAdhesion / phys->kn;
+	}
+	phys->normalForce = Fn * geom->normal;
+
+	if (Fs > maxFs) { //Plasticity condition on shear force
+		Real ratio = maxFs / Fs;
+		Vector3r trialForce = phys->shearForce;
+		phys->shearForce *= ratio;
+		if (scene->trackEnergy || traceEnergy) {
+			Real sheardissip = ((1 / phys->ks) * (trialForce - phys->shearForce)) /*plastic disp*/.dot(phys->shearForce) /*active force*/;
+			if (sheardissip > 0) {
+				plasticDissipation += sheardissip;
+				if (scene->trackEnergy) scene->energy->add(sheardissip, "shearDissip", shearDissipIx, /*reset*/ false);
+			}
+		}
+	}	
+	if (computeMoment) {
+		// limit rolling moment to the plastic value, if required
+		if (scalarRoll > maxRoll) { // fix maximum rolling moment
+			Real ratio = maxRoll / scalarRoll;
+			phys->moment_bending *= ratio;
+			if (scene->trackEnergy) {
+				Real bendingdissip = ((1 / phys->kr) * (scalarRoll - maxRoll) * maxRoll) /*active force*/;
+				if (bendingdissip > 0) scene->energy->add(bendingdissip, "bendingDissip", bendingDissipIx, /*reset*/ false);
+			}
+		}
+		// limit twisting moment to the plastic value, if required
+		if (scalarTwist > maxTwist) { // fix maximum rolling moment
+			Real ratio = maxTwist / scalarTwist;
+			phys->moment_twist *= ratio;
+			if (scene->trackEnergy) {
+				Real twistdissip = ((1 / phys->ktw) * (scalarTwist - maxTwist) * maxTwist) /*active force*/;
+				if (twistdissip > 0) scene->energy->add(twistdissip, "twistDissip", twistDissipIx, /*reset*/ false);
+			}
 		}
 	}
-	return breaks;
+	return true;
 }
 
+
+void Law2_ScGeom6D_CohFrictPhys_CohesionMoment::setElasticForces(shared_ptr<IGeom>& _geom, shared_ptr<IPhys>& _phys, Interaction* I)
+{
+}
 
 bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared_ptr<IPhys>& ip, Interaction* contact)
 {
@@ -159,6 +229,7 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	ScGeom6D*     geom            = YADE_CAST<ScGeom6D*>(ig.get());
 	CohFrictPhys* phys            = YADE_CAST<CohFrictPhys*>(ip.get());
 	Vector3r&     shearForceFirst = phys->shearForce;
+	bool computeMoment = phys->momentRotationLaw && (!phys->cohesionBroken || always_use_moment_law);
 
 	if (consistencyCheck)
 	{
@@ -170,18 +241,19 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	}
 	
 	if (contact->isFresh(scene)) shearForceFirst = Vector3r::Zero();
-	const Real& un = geom->penetrationDepth;
 	State* de1        = Body::byId(id1, scene)->state.get();
 	State* de2        = Body::byId(id2, scene)->state.get();
+	
+	// creep if necessecary
+	if (shear_creep) shearForceFirst -= phys->ks * (shearForceFirst * dt / creep_viscosity);
 
 	//  ____________________ 1. Linear elasticity giving "trial" force/torques _________________
 	
+
 	// NORMAL
-	Real Fn = phys->kn * (un - phys->unp);
+	Real Fn = phys->kn * (geom->penetrationDepth - phys->unp);
 	
 	// SHEAR
-	// creep if necessecary
-	if (shear_creep) shearForceFirst -= phys->ks * (shearForceFirst * dt / creep_viscosity);
 	// update orientation
 	Vector3r&       shearForce = geom->rotate(phys->shearForce);
 	// increment
@@ -189,7 +261,6 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 	shearForce -= phys->ks * dus;
 
 	// TORQUES
-	bool computeMoment = phys->momentRotationLaw && (!phys->cohesionBroken || always_use_moment_law);
 	if (computeMoment) {
 		if (!useIncrementalForm) {
 			if (twist_creep) {
@@ -228,62 +299,12 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 			else phys->moment_twist = Vector3r::Zero();
 		}
 	}
-	//  ____________________ 2. Failure and plasticity _________________
-	
-	Real Fs = 0;
-	Real maxFs = 0;
-	Real scalarRoll = 0;
-	Real scalarTwist = 0;
-	Real maxRoll = 0;
-	Real maxTwist = 0;
-	if (computeMoment) {
-		scalarRoll = phys->kr>0 ? phys->moment_bending.norm() : 0;
-		scalarTwist = phys->ktw>0 ? phys->moment_twist.norm() : 0;
-	}
+	//  ____________________ Failure and plasticity _________________
 
-	// fragile case
-	if (phys->fragile and not phys->cohesionBroken) {
-		// check if the interaction breaks. If it breaks, remove cohesion and chack plasticity again
-		bool breaks = checkPlasticity(geom, phys, Fn, Fs, maxFs, scalarRoll, maxRoll, scalarTwist, maxTwist, computeMoment, /*checkAll?*/ false);
-		if (breaks) {
-			// delete interaction if contact is lost 
-			if (geom->penetrationDepth < 0) return false;
-			// else update max values after breakage
-			phys->SetBreakingState(always_use_moment_law);
-			checkPlasticity(geom, phys, Fn, Fs, maxFs, scalarRoll, maxRoll, scalarTwist, maxTwist, computeMoment, true);
-		}
-	}
-	// ductile/broken case
-	else checkPlasticity(geom, phys, Fn, Fs, maxFs, scalarRoll, maxRoll, scalarTwist, maxTwist, computeMoment, true);
-	
+	bool alive = checkPlasticity(geom, phys, Fn, computeMoment);	
 	// delete interaction if no contact
-	if (phys->cohesionBroken and geom->penetrationDepth < 0) return false;
-		
-	//  ____________________ 3. Correct the forces, apply them on the particles, increment dissipated energy  _________________
-	
-	if ((-Fn) > phys->normalAdhesion) { //normal plasticity
-		if (scene->trackEnergy || traceEnergy) {
-			Real dissipated = ((1 / phys->kn) * (-Fn - phys->normalAdhesion)) *phys->normalAdhesion;
-			plasticDissipation += dissipated;
-			if (scene->trackEnergy) scene->energy->add(dissipated, "normalDissip", normalDissipIx, /*reset*/ false);
-		}
-		Fn        = -phys->normalAdhesion;
-		phys->unp = un + phys->normalAdhesion / phys->kn;
-	}
-	phys->normalForce = Fn * geom->normal;
+	if (not alive) return false;
 
-	if (Fs > maxFs) { //Plasticity condition on shear force
-		Real ratio = maxFs / Fs;
-		Vector3r trialForce = shearForce;
-		shearForce *= ratio;
-		if (scene->trackEnergy || traceEnergy) {
-			Real sheardissip = ((1 / phys->ks) * (trialForce - shearForce)) /*plastic disp*/.dot(shearForce) /*active force*/;
-			if (sheardissip > 0) {
-				plasticDissipation += sheardissip;
-				if (scene->trackEnergy) scene->energy->add(sheardissip, "shearDissip", shearDissipIx, /*reset*/ false);
-			}
-		}
-	}
 	//Apply the force
 	applyForceAtContactPoint(
 			-phys->normalForce - shearForce,
@@ -294,24 +315,6 @@ bool Law2_ScGeom6D_CohFrictPhys_CohesionMoment::go(shared_ptr<IGeom>& ig, shared
 			de2->se3.position + (scene->isPeriodic ? scene->cell->intrShiftPos(contact->cellDist) : Vector3r::Zero()));
 	
 	if (computeMoment) {
-		// limit rolling moment to the plastic value, if required
-		if (scalarRoll > maxRoll) { // fix maximum rolling moment
-			Real ratio = maxRoll / scalarRoll;
-			phys->moment_bending *= ratio;
-			if (scene->trackEnergy) {
-				Real bendingdissip = ((1 / phys->kr) * (scalarRoll - maxRoll) * maxRoll) /*active force*/;
-				if (bendingdissip > 0) scene->energy->add(bendingdissip, "bendingDissip", bendingDissipIx, /*reset*/ false);
-			}
-		}
-		// limit twisting moment to the plastic value, if required
-		if (scalarTwist > maxTwist) { // fix maximum rolling moment
-			Real ratio = maxTwist / scalarTwist;
-			phys->moment_twist *= ratio;
-			if (scene->trackEnergy) {
-				Real twistdissip = ((1 / phys->ktw) * (scalarTwist - maxTwist) * maxTwist) /*active force*/;
-				if (twistdissip > 0) scene->energy->add(twistdissip, "twistDissip", twistDissipIx, /*reset*/ false);
-			}
-		}
 		// Apply moments now
 		Vector3r moment = phys->moment_twist + phys->moment_bending;
 		scene->forces.addTorque(id1, -moment);

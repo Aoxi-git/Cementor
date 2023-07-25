@@ -123,9 +123,8 @@ getState()
 O.run(1,True)
 getState()
 
-difference = numpy.linalg.norm((numpy.linalg.norm(numpy.array(results) - numpy.array(expectedResults))))
+difference = numpy.linalg.norm(numpy.array(results) - numpy.array(expectedResults))
 if difference>1e-8: 
-	##raise YadeCheckError('Results of CohesiveFrictional law have changed (difference='+str(difference)+')')
-	print('Results of CohesiveFrictional law have changed (difference='+str(difference)+')')
+	raise YadeCheckError('Results of CohesiveFrictional law have changed (difference ='+str(numpy.array(results) - numpy.array(expectedResults))+')')
 else:
-	print("CohesiveFrictional model passed with difference="+str(difference))
+	print('CohesiveFrictional model passed with difference =',difference)
