@@ -1,3 +1,10 @@
-1. phase1_generateHostSample.py is for generating a host sample with a target porosity and void ratio. The host sample is saved after the execution of phase1_generateHostSample.py.
+1. phase1_generateHostSample.py is for generating a host sample with a target porosity and void ratio. 
+The host sample is saved after the execution of phase1_generateHostSample.py.
 
-2. phase2_addFinesInTargetMicrostructure.py is for generating fines with a specifical distribution pattern in the given host sample. The host sample generated from phase1_generateHostSample.py is imported. Therefore, phase2_addFinesInTargetMicrostructure.py should be executed after phase1_generateHostSample.py.
+2. phase2_addFinesInTargetMicrostructure.py is for generating fines with a specifical distribution pattern in the given host sample. 
+The host sample generated from phase1_generateHostSample.py is imported. 
+Therefore, phase2_addFinesInTargetMicrostructure.py should be executed after phase1_generateHostSample.py.
+
+3. Execute phase1_generateHostSample.py and phase2_addFinesInTargetMicrostructure.py by:
+yade phase1_generateHostSample.py
+yade phase2_addFinesInTargetMicrostructure.py
