@@ -1,3 +1,9 @@
+CeMM - A Python code to generate cemented granular materials with various microstructures using the Discrete element method (DEM)
+
+CeMM is based on YADE, an open-source DEM platform. The introduction of YADE is as follows.
+
+CeMM can be found in the folder of examples.
+
 ===================================
 YADE - Yet Another Dynamic Engine
 ===================================
