@@ -12,7 +12,7 @@ yade phase1_generateHostSample.py
 yade phase2_Cementor.py
 
 Note that using "yade phase2_Cementor.py", you work on one set of parameters at a time.
-To try multiple sets of parameters, you may use" yade-batch batch_params.txt phase2_Cementor.py"
+To try multiple sets of parameters at the same time, you may use" yade-batch batch_params.txt phase2_Cementor.py"
 
 For more information on batch mode, you may refer to YADE examples:
 https://yade-dev.gitlab.io/trunk/tutorial-examples.html?highlight=batch#oedometric-test
