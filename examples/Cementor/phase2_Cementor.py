@@ -9,7 +9,7 @@ from random import gauss
 import timeit
 
 
-
+## modify your input parameters here
 utils.readParamsFromTable(TRmin=0.0003,TRmax=0.00075,\
                           Ncc=15,Tcc=70,\
                           Nco=50,Tco=45,alpha=6.67)
