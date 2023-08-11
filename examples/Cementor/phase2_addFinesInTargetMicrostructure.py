@@ -7,7 +7,7 @@ import numpy as np
 import random
 from random import gauss
 import timeit
-import pickle
+
 
 
 utils.readParamsFromTable(TRmin=0.0003,TRmax=0.00075,\
@@ -91,6 +91,7 @@ selecetedCoatedSandIds=random.sample(hostSandIds,int(len(hostSandIds)*Tco/100))
 
 finesIdSortedByChain = np.zeros((len(selectedOriginalContacts), Ncc), dtype=int)
 
+## Function for generating fine particles in contact cementing type of distribution
 def addFines_cc():
     ii=0
     for i in selectedOriginalContacts:
@@ -108,7 +109,7 @@ def addFines_cc():
             args = [rootargsa, rootargsb, rootargsc]
             fineR = max(np.roots(args))
             h = (R1 - R2) * (fineR + d / 2) / (R1 + R2 - d) 
-            ro = sqrt((fineR + R2) ** 2 - (R2 - h - d / 2) ** 2)
+            ro = sqrt((fineR + R2) ** 2 - (R2 - h - d / 2) ** 2) # ro is the radius of the cement chain.
         else:
             vectorDirection = O.bodies[i.id1].state.pos - O.bodies[i.id2].state.pos
             vectorN = vectorDirection/vectorDirection.norm()
@@ -156,7 +157,7 @@ def addFines_cc():
         ii+=1
         
 
-## Function for generating fine particles with bridging type of mictrostructure
+## Function for generating fine particles in bridging type of distribution
 def addFines_Briging():
     global TRmin,TRmax
     for i in hostSandIds:
@@ -189,14 +190,13 @@ def addFines_Briging():
 
 
 
-###################### coating ###############################
 ### function for generating random unit vector
 def randomUnitVector():
     vec = [gauss(0, 1) for i in range(3)]
     mag = sum(x**2 for x in vec) ** .5
     return [x/mag for x in vec]
 
-
+## Function for generating fine particles in coating type of distribution
 def addFines_coating():
     global alpha
     for j in selecetedCoatedSandIds:
@@ -267,7 +267,7 @@ def findUndesiredFines():
             undesiredFinesId_co.add(i)
 
 
-## ## undesiredFinesId_cc is the individual cement particles, and based on undesiredFinesId_cc, we can find the non-closed cement chain which should be deleted.
+## ## undesiredFinesId_cc is the individual cement particles, and based on undesiredFinesId_cc, we can find the non-closed cement chain which are deleted if you want to make a closed chain.
 undesiredFinesId_cc_extendedByChain=set()
 def findUndesiredFines_cc_extendedByChain():
     for i in undesiredFinesId_cc:
@@ -285,9 +285,6 @@ def removeUndesiredFines():
 
 ##undesiredFinesId_cc_extendedByChain is int64,
 ## undesiredFinesId_co, undesiredFinesId_bridging are int
-
-##
-
 
 def findFinalFines():
     global finalFinesId_cc,finalFinesId_co,finalFinesId_bridging,finalFinesId_total
@@ -323,28 +320,28 @@ mixSample()
 # =============================================================================
 
 def getEachTypeCementMassContentRatio():
-    mass_ccRing=mass_coat=mass_brig=mass_totalCement=0
+    mass_cc=mass_coat=mass_brig=mass_totalCement=0 # mass of fines in each distribution pattern, cc means contact cementing.
     ratioInTotalCement_cc=ratioInTotalCement_coating=0
     ratioInTotalCement_bridging=0
     global finalFinesId_cc,finalFinesId_co,finalFinesId_bridging,\
     finalFinesId_total
     for i in finalFinesId_cc:
-        mass_ccRing +=O.bodies[i].state.mass
+        mass_cc +=O.bodies[i].state.mass
     for i in finalFinesId_co:
         mass_coat +=O.bodies[i].state.mass
     for i in finalFinesId_bridging:
         mass_brig +=O.bodies[i].state.mass
     # for i in CaBeingLeft_poreFill:
     #     mass_poreFill +=O.bodies[i].state.mass
-    mass_totalCement=mass_ccRing+mass_coat+mass_brig
-    ratioInTotalCement_ccRing=mass_ccRing/mass_totalCement
+    mass_totalCement=mass_cc+mass_coat+mass_brig
+    ratioInTotalCement_cc=mass_cc/mass_totalCement
     ratioInTotalCement_coat=mass_coat/mass_totalCement
     ratioInTotalCement_brig=mass_brig/mass_totalCement
     # ratioInTotalCement_poreFill=mass_poreFill/mass_totalCement
-    return 'mass_ccRing',mass_ccRing,'mass_bridging', mass_brig,\
-    'mass_coating',mass_coat,'mass_totalCement',mass_totalCement,\
-    'ratioInTotalCement_ccRing',ratioInTotalCement_ccRing,'ratioInTotalCement_bridging',ratioInTotalCement_brig,\
-           'ratioInTotalCement_coating',ratioInTotalCement_coat
+    return 'mass_cc = ',mass_cc,'mass_bridging = ', mass_brig,\
+    'mass_coating = ',mass_coat,'mass_totalCement = ',mass_totalCement,\
+    'ratioInTotalCement_cc = ',ratioInTotalCement_cc,'ratioInTotalCement_bridging = ',ratioInTotalCement_brig,\
+           'ratioInTotalCement_coating = ',ratioInTotalCement_coat
 
 
 def getCementMassContent():
@@ -355,33 +352,47 @@ def getCementMassContent():
         totalMassOfSand += O.bodies[i].state.mass
     cementMassContent=totalMassOfCement/(totalMassOfSand+totalMassOfCement)
     cs=totalMassOfCement/totalMassOfSand
-    return 'totalMassOfSand',totalMassOfSand,'totalMassOfCement',\
-    totalMassOfCement,'cementMassContent',cementMassContent,'c/s',cs
+    return 'totalMassOfSand = ',totalMassOfSand,'totalMassOfCement = ',\
+    totalMassOfCement,'cementMassContent = ',cementMassContent,'cementMass/SandMass = ',cs
 
 
+## A function for calculating coordination number of sands and fines respectively.
+def coordinationNumber():
+    CN_s = 0  # contact number of sand
+    CN_f = 0  # contact number of fine
+    for i in hostSandIds:
+        for j in O.bodies[i].intrs():
+            if j.isReal:
+                CN_s += 1
+    for j in finalFinesId_total:
+        for k in O.bodies[j].intrs():
+            if k.isReal:
+                CN_f += 1
+    CN_all = CN_s + CN_f
+    Z_s= CN_s / len(hostSandIds) # coordination number of sand
+    Z_f= CN_f / len(finalFinesId_total) # coordination number of fine
+    Z_all = CN_all/(len(hostSandIds)+len(finalFinesId_total)) # coordination number of all particles
+    return Vector3(Z_s,Z_f,Z_all)
+
+    
 
 
-# f = open("outputPhase2_100kPa_mix4type_MassContent_TRmin{}_TRmax{}_Tcc{}_Tco{}.txt".format(TRmin,TRmax,Tcc,Tco), "a+")
-# f.write('TRmin{},TRmax{},Ncc{},Tcc{},Nco{},Tco{},,porosity{} \n' .format\
-#             (TRmin,TRmax,Ncc,Tcc,Nco,Tco,triax.porosity))
+## Here you may output some variables if you are interested.
+f = open("outputCementedSampleInfor_TRmin{}_TRmax{}_Tcc{}_Tco{}_alpha{}.txt".format(TRmin,TRmax,Tcc,Tco,alpha), "a+")
+f.write('Input params: TRmin = {},TRmax = {},Ncc = {},Tcc = {},Nco = {},Tco = {},alpha = {} \n' .format\
+            (TRmin,TRmax,Ncc,Tcc,Nco,Tco,alpha))
 
-# f.write('{} \n' .format(getEachTypeCementMassContentRatio()))
+f.write('{} \n' .format(getCementMassContent()))
 
-# f.write('{} \n' .format(getCementMassContent()))
-# # f.write('{} \n' .format(massContentAlongHeight()))
-# f.write('len(finalFinesId_total){},len(finalFinesId_cc){}, len(finalFinesId_bridging){}, len(finalFinesId_co){},  \n' .format\
-#             (len(finalFinesId_total),len(finalFinesId_cc),len(finalFinesId_bridging),len(finalFinesId_co)))
-# f.write('realtime{} \n' .format(O.realtime))
-# f.close()
+f.write('{} \n' .format(getEachTypeCementMassContentRatio()))
 
+f.write('Total number of fines left = {},\n number of fines in contact cementing pattern left = {},\n number of fines in bridging pattern left = {},\n number of fines in coaing pattern left= {} \n' .format\
+            (len(finalFinesId_total),len(finalFinesId_cc),len(finalFinesId_bridging),len(finalFinesId_co)))
 
-# ############ output some list which can be read in phase2.py
-# output = open('outputPhase2_100kPa_mix4type_tRmin{}_tRmax{}_Tcc{}_Tco{}_sandCememtlist.pkl'.format(tRmin,tRmax,Tcc,Tco), 'wb')
-# pickle.dump([hostSandIds,finesIdList_cc,finesIdList_bridging,finesIdList_co,\
-#             finalFinesId_cc,finalFinesId_bridging,finalFinesId_co,selectedOriginalContacts,selecetedCoatedSandIds], output,-1)
+f.write('Coordination number of sand = {},\n Coordination number of fine = {},\n Coordination number of all particles = {},\n ' .format\
+            (coordinationNumber()[0],coordinationNumber()[1],coordinationNumber()[2]))
 
-# output.close()
-
+f.close()
 
 
 ############
